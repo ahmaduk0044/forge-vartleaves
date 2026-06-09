@@ -286,6 +286,16 @@ tbody tr:hover .row-actions{opacity:1;}
 .icc-warn.green{background:var(--green-bg);border:1px solid rgba(16,185,129,0.25);color:var(--green);}
 .icc-scan-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;}
 .icc-scan-row:last-child{border-bottom:none;}
+.search-result-item{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;transition:background 0.12s;border-bottom:1px solid var(--border);}
+.search-result-item:last-child{border-bottom:none;}
+.search-result-item:hover{background:var(--surface2);}
+.intel-hint{font-size:10.5px;margin-top:3px;padding:4px 8px;border-radius:4px;display:inline-block;}
+.intel-hint.tip{background:rgba(59,130,246,0.1);color:var(--accent2);}
+.intel-hint.warn{background:var(--yellow-bg);color:var(--yellow);}
+.intel-hint.ok{background:var(--green-bg);color:var(--green);}
+.intel-hint.err{background:var(--red-bg);color:var(--red);}
+.workflow-next{display:flex;align-items:center;gap:8px;padding:9px 13px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:8px;margin-top:10px;font-size:12px;font-weight:600;color:var(--accent2);cursor:pointer;}
+.workflow-next:hover{background:rgba(37,99,235,0.15);}
 /* FBA SHIPMENTS */
 .fba-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;}
 .fba-card-head{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface2);border-bottom:1px solid var(--border);}
@@ -390,7 +400,7 @@ tbody tr:hover .row-actions{opacity:1;}
 <div class="main">
  <div class="topbar">
  <div class="topbar-title" id="page-title">Dashboard <span>Overview</span></div>
- <div class="search-box"><span style="color:var(--text3);font-size:12px">⌕</span><input type="text" placeholder="Search SKU, PO, ASIN..." id="global-search" oninput="SQ=this.value.toLowerCase();rp()"></div>
+ <div class="search-box"><span style="color:var(--text3);font-size:12px">⌕</span><input type="text" placeholder="Search SKU, PO, ASIN..." id="global-search" oninput="SQ=this.value.toLowerCase();rp();renderSearchResults(this.value)" autocomplete="off" onblur="setTimeout(()=>{const b=document.getElementById('search-dropdown');if(b)b.style.display='none'},200)"></div><div id="search-dropdown" style="display:none;position:absolute;top:36px;left:0;width:360px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:300;max-height:320px;overflow-y:auto"></div></div>
 
  <!-- CURRENCY BAR -->
  <div class="currency-bar" onclick="toggleCurrencyPanel()" title="Live Exchange Rates">
@@ -1137,6 +1147,59 @@ function nav(name){
  rp();
 }
 function rp(){renderPage(CP);updateBadges();}
+
+// SMART UNIVERSAL SEARCH ENGINE
+function smartSearch(q){
+ if(!q||q.length<2) return null;
+ const ql=q.toLowerCase();
+ const results={products:[],orders:[],freight:[],suppliers:[],inventory:[],launches:[]};
+ // Products — name, SKU, ASIN
+ DB.products.forEach(p=>{
+  if([p.sku,p.name,p.asin||''].join(' ').toLowerCase().includes(ql))
+   results.products.push({type:'Product',icon:'📦',label:p.sku+' — '+p.name,sub:p.brand+' · '+p.platform,action:`nav('products')`});
+ });
+ // Orders — PO number, SKU
+ DB.orders.forEach(o=>{
+  if([o.poNum,o.sku,o.supplierId].join(' ').toLowerCase().includes(ql))
+   results.orders.push({type:'PO',icon:'📋',label:o.poNum,sub:o.sku+' · '+o.stage,action:`nav('orders')`});
+ });
+ // Freight — FR number, tracking, SKU
+ DB.freight.forEach(f=>{
+  if([f.frNum,f.tracking||'',f.sku,f.poNum].join(' ').toLowerCase().includes(ql))
+   results.freight.push({type:'Freight',icon:'🚢',label:f.frNum+' · '+f.tracking,sub:f.sku+' · '+(f.shipStage||'—'),action:`nav('freight')`});
+ });
+ // Suppliers
+ DB.suppliers.forEach(s=>{
+  if([s.id,s.name,s.contact||''].join(' ').toLowerCase().includes(ql))
+   results.suppliers.push({type:'Supplier',icon:'🏭',label:s.id+' — '+s.name,sub:s.type+' · '+s.country,action:`nav('suppliers')`});
+ });
+ // FBA Shipments
+ if(typeof FBADB!=='undefined') FBADB.forEach(s=>{
+  const skuStr=(s.skus||[]).map(x=>x.sku).join(' ');
+  if([s.id,s.shipmentId||'',s.trackingNumber||'',skuStr].join(' ').toLowerCase().includes(ql))
+   results.freight.push({type:'FBA Ship',icon:'📬',label:s.id+(s.shipmentId?' · '+s.shipmentId:''),sub:s.status+' · '+skuStr.slice(0,30),action:`nav('fbaship')`});
+ });
+ return results;
+}
+
+function renderSearchResults(q){
+ const box=document.getElementById('search-dropdown');
+ if(!box) return;
+ if(!q||q.length<2){box.style.display='none';return;}
+ const r=smartSearch(q);
+ if(!r) return;
+ const all=[...r.products,...r.orders,...r.freight,...r.suppliers,...r.inventory,...r.launches];
+ if(!all.length){box.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--text3)">No results found</div>';box.style.display='block';return;}
+ box.innerHTML=all.slice(0,8).map(item=>`
+  <div class="search-result-item" onclick="${item.action};document.getElementById('search-dropdown').style.display='none';document.getElementById('global-search').value=''">
+   <span style="font-size:14px">${item.icon}</span>
+   <div style="flex:1;min-width:0">
+    <div style="font-size:12px;font-weight:600;color:var(--text)">${item.label}</div>
+    <div style="font-size:10.5px;color:var(--text3)">${item.type} · ${item.sub}</div>
+   </div>
+  </div>`).join('');
+ box.style.display='block';
+}
 function srt(t,f){ST[t+f]=!ST[t+f];if(t==='products')DB.products.sort((a,b)=>ST[t+f]?(a[f]>b[f]?1:-1):(a[f]<b[f]?1:-1));rp();}
 function updateBadges(){
  document.getElementById('nb-orders').textContent=DB.orders.filter(o=>o.payStatus==='Pending').length;
@@ -1412,6 +1475,25 @@ function openAddModal(){
  document.getElementById('modal-overlay').classList.add('open');
  if(CP==='orders'){valPO();setTimeout(autoFillPO,100);}
  if(CP==='freight')setTimeout(autoFillFR,100);
+}
+
+function getIntelHint(sku,qty){
+ // Returns smart hints about stock vs order qty
+ const inv=DB.inventory.find(i=>i.sku===sku);
+ const hints=[];
+ if(inv){
+  const avail=getAvail(inv);
+  const inbound=getInTransit(sku);
+  if(avail>0) hints.push({type:'ok',msg:`Current stock: ${avail} units available`});
+  if(inbound>0) hints.push({type:'tip',msg:`${inbound} units inbound (in transit)`});
+  if(qty>0&&avail+inbound>qty*2) hints.push({type:'warn',msg:`⚠ You already have ${avail+inbound} units — ordering ${qty} more may be excess`});
+  const vel=inv.velocity||0;
+  if(vel>0&&qty>0){
+   const dayCover=Math.floor(qty/vel);
+   hints.push({type:'tip',msg:`${qty} units = ~${dayCover} days of stock at current velocity`});
+  }
+ }
+ return hints;
 }
 
 function valPO(){
