@@ -434,88 +434,54 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
 </head>
 <body>
 
-<!-- FORGE LOGIN SCREEN -->
-<div id="forge-login-screen">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="login-logo-icon">F</div>
-      <div>
-        <div class="login-logo-text">FORGE</div>
-        <div class="login-logo-sub">by Vartleaves</div>
-      </div>
+<!-- ═══════════════════════════════════════
+     FORGE LOGIN SCREEN — Single instance
+═══════════════════════════════════════ -->
+<div id="forge-login-screen" style="position:fixed;inset:0;z-index:9999;background:#080b12;display:flex;align-items:center;justify-content:center;flex-direction:column">
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:white;margin:0 auto 12px;font-family:'JetBrains Mono',monospace;box-shadow:0 4px 20px rgba(37,99,235,0.4)">F</div>
+    <div style="font-size:24px;font-weight:800;color:#e2e8f0;letter-spacing:-0.5px">FORGE</div>
+    <div style="font-size:11px;color:#4a5a75;margin-top:3px;letter-spacing:2px;text-transform:uppercase">by Vartleaves</div>
+  </div>
+  <div style="background:#0e1420;border:1px solid #1c2840;border-radius:14px;padding:32px 36px;width:340px;box-shadow:0 24px 64px rgba(0,0,0,0.6)">
+    <div style="font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:4px">Welcome back</div>
+    <div style="font-size:12px;color:#4a5a75;margin-bottom:22px">Sign in to access your ERP system</div>
+    <div id="forge-login-error" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:7px;padding:9px 12px;font-size:12px;color:#ef4444;margin-bottom:14px"></div>
+    <div style="margin-bottom:13px">
+      <label style="font-size:10px;font-weight:700;color:#4a5a75;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px">Username</label>
+      <input id="forge-login-user" type="text" placeholder="Enter username" autocomplete="username"
+        style="width:100%;box-sizing:border-box;background:#141a26;border:1px solid #1c2840;border-radius:8px;padding:11px 13px;font-size:13px;color:#e2e8f0;outline:none;font-family:inherit"
+        onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#1c2840'"
+        onkeydown="if(event.key==='Enter')document.getElementById('forge-login-pass').focus()">
     </div>
-    <div class="login-title">Welcome back</div>
-    <div class="login-sub">Sign in to access your business operations system</div>
-    <div class="login-field">
-      <label class="login-label">Username</label>
-      <input class="login-input" id="login-user" type="text" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
-    </div>
-    <div class="login-field">
-      <label class="login-label">Password</label>
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;font-weight:700;color:#4a5a75;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px">Password</label>
       <div style="position:relative">
-        <input class="login-input" id="login-pass" type="password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-        <span onclick="toggleLoginPass()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:14px" id="pass-toggle">👁</span>
+        <input id="forge-login-pass" type="password" placeholder="Enter password" autocomplete="current-password"
+          style="width:100%;box-sizing:border-box;background:#141a26;border:1px solid #1c2840;border-radius:8px;padding:11px 36px 11px 13px;font-size:13px;color:#e2e8f0;outline:none;font-family:inherit"
+          onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#1c2840'"
+          onkeydown="if(event.key==='Enter')forgeLogin()">
+        <span id="forge-pw-eye" onclick="forgePwToggle()" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:15px;user-select:none">👁</span>
       </div>
     </div>
-    <button class="login-btn" onclick="doLogin()">Sign In →</button>
-    <div class="login-error" id="login-error">Incorrect username or password. Please try again.</div>
-    <div class="login-footer">
-      FORGE by Vartleaves · Secure Access Only<br>
-      <span id="login-attempt-info" style="color:var(--text3)"></span>
+    <button onclick="forgeLogin()"
+      style="width:100%;padding:12px;background:linear-gradient(135deg,#2563eb,#7c3aed);border:none;border-radius:9px;font-size:14px;font-weight:700;color:white;cursor:pointer;letter-spacing:0.3px;font-family:inherit">
+      Sign In →
+    </button>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid #1c2840;display:flex;align-items:center;gap:7px">
+      <div style="width:6px;height:6px;border-radius:50%;background:#10b981;flex-shrink:0"></div>
+      <div style="font-size:11px;color:#4a5a75">Secure · Role-based · Auto-logout on close</div>
     </div>
   </div>
+  <div style="margin-top:16px;font-size:10px;color:#1c2840">FORGE v3.1 · Vartleaves Limited · Confidential</div>
 </div>
+
+<!-- FORGE LOGIN SCREEN -->
 
 
 
 <!-- ══════════════════════════════════════════════ -->
 <!-- LOGIN SCREEN -->
-<!-- ══════════════════════════════════════════════ -->
-<div id="forge-login" style="position:fixed;inset:0;background:#080b12;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column">
-  <div style="text-align:center;margin-bottom:32px">
-    <div style="font-size:42px;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">FORGE</div>
-    <div style="font-size:12px;color:#4a5a75;margin-top:4px;letter-spacing:2px;text-transform:uppercase">Vartleaves Limited · ERP System</div>
-  </div>
-
-  <div style="background:#0e1420;border:1px solid #1c2840;border-radius:14px;padding:32px;width:340px;box-shadow:0 24px 64px rgba(0,0,0,0.6)">
-    <div style="font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:6px">Welcome back</div>
-    <div style="font-size:12px;color:#4a5a75;margin-bottom:24px">Sign in to continue to FORGE</div>
-
-    <div id="login-error" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:10px 13px;font-size:12px;color:#ef4444;margin-bottom:16px"></div>
-
-    <div style="margin-bottom:14px">
-      <label style="font-size:10px;font-weight:700;color:#4a5a75;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">Username</label>
-      <input id="login-user" type="text" placeholder="Enter username" autocomplete="username"
-        style="width:100%;box-sizing:border-box;background:#141a26;border:1px solid #1c2840;border-radius:8px;padding:10px 13px;font-size:13px;color:#e2e8f0;outline:none;transition:border-color 0.2s"
-        onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#1c2840'"
-        onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
-    </div>
-
-    <div style="margin-bottom:20px">
-      <label style="font-size:10px;font-weight:700;color:#4a5a75;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">Password</label>
-      <div style="position:relative">
-        <input id="login-pass" type="password" placeholder="Enter password" autocomplete="current-password"
-          style="width:100%;box-sizing:border-box;background:#141a26;border:1px solid #1c2840;border-radius:8px;padding:10px 36px 10px 13px;font-size:13px;color:#e2e8f0;outline:none;transition:border-color 0.2s"
-          onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#1c2840'"
-          onkeydown="if(event.key==='Enter')doLogin()">
-        <span onclick="toggleLoginPw()" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:#4a5a75" id="pw-eye">👁</span>
-      </div>
-    </div>
-
-    <button onclick="doLogin()" id="login-btn"
-      style="width:100%;padding:11px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;border-radius:8px;font-size:13px;font-weight:700;color:white;cursor:pointer;transition:opacity 0.2s;letter-spacing:0.5px"
-      onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-      Sign In →
-    </button>
-
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #1c2840;display:flex;align-items:center;gap:8px">
-      <div style="width:6px;height:6px;border-radius:50%;background:#10b981"></div>
-      <div style="font-size:11px;color:#4a5a75">Secure · Session-based · Auto-logout on close</div>
-    </div>
-  </div>
-
-  <div style="margin-top:20px;font-size:10px;color:#1c2840">FORGE v2.2 · Vartleaves Limited · Confidential</div>
-</div>
  <div class="logo"><div class="logo-mark">FORGE</div><div class="logo-sub">Vartleaves Limited</div></div>
  <div class="nav-section">
  <div class="nav-label">Overview</div>
@@ -4037,8 +4003,23 @@ function updateFBAStatus(id,status){
 // USER MANAGEMENT — Admin only
 // ═══════════════════════════════════════════════════
 function getUsersDB(){
- try{const s=localStorage.getItem('forge_users');if(s)return JSON.parse(s);}catch(e){}
- return FORGE_USERS.map(u=>({...u}));
+ try{
+  const s=localStorage.getItem('forge_users');
+  if(s){
+   const parsed=JSON.parse(s);
+   if(parsed&&parsed.length>0) return parsed;
+  }
+ }catch(e){}
+ // First load — seed defaults and save
+ const defaults=[
+  {username:'ahmed',    password:'Vartleaves@2026', role:'admin',  name:'Ahmed'},
+  {username:'wajahat',  password:'Forge@Waj2026',   role:'admin',  name:'Wajahat'},
+  {username:'fatima',   password:'View@Fat2026',     role:'viewer', name:'Fatima'},
+  {username:'abdullah', password:'View@Abd2026',     role:'viewer', name:'Abdullah'},
+  {username:'amna',     password:'View@Amna2026',    role:'viewer', name:'Amna'},
+ ];
+ localStorage.setItem('forge_users',JSON.stringify(defaults));
+ return defaults;
 }
 function saveUsersDB(users){
  localStorage.setItem('forge_users',JSON.stringify(users));
@@ -4151,15 +4132,15 @@ let CURRENT_USER=null;
 let loginAttempts=0;
 let lockoutUntil=0;
 
-function doLogin(){
+function forgeLogin(){
  const now=Date.now();
  if(now<lockoutUntil){
   const s=Math.ceil((lockoutUntil-now)/1000);
-  showLoginError('Too many attempts. Try again in '+s+' seconds.');return;
+  forgeLoginError('Too many attempts. Try again in '+s+' seconds.');return;
  }
- const username=(document.getElementById('login-user')?.value||'').trim().toLowerCase();
- const password=(document.getElementById('login-pass')?.value||'').trim();
- if(!username||!password){showLoginError('Please enter username and password.');return;}
+ const username=(document.getElementById('forge-login-user')?.value||'').trim().toLowerCase();
+ const password=(document.getElementById('forge-login-pass')?.value||'').trim();
+ if(!username||!password){forgeLoginError('Please enter username and password.');return;}
  const users=getUsersDB();
  const user=users.find(u=>u.username===username&&u.password===password);
  if(user){
@@ -4168,29 +4149,43 @@ function doLogin(){
   onLoginSuccess(user);
  } else {
   loginAttempts++;
-  if(loginAttempts>=5){lockoutUntil=now+30000;showLoginError('Too many attempts. Locked for 30 seconds.');}
-  else showLoginError('Incorrect credentials. '+(5-loginAttempts)+' attempts remaining.');
-  const box=document.querySelector('.login-box');
+  if(loginAttempts>=5){lockoutUntil=now+30000;forgeLoginError('Too many attempts. Locked for 30 seconds.');}
+  else forgeLoginError('Incorrect credentials. '+(5-loginAttempts)+' attempts remaining.');
+  const box=document.querySelector('#forge-login-screen > div:nth-child(2)');
   if(box){box.style.animation='shake 0.4s ease';setTimeout(()=>box.style.animation='',400);}
  }
 }
 
-function showLoginError(msg){
- const el=document.getElementById('login-error');
+// Keep doLogin as alias for compatibility
+function doLogin(){forgeLogin();}
+
+function forgeLoginError(msg){
+ const el=document.getElementById('forge-login-error');
  if(el){el.textContent=msg;el.style.display='block';}
 }
 
-function toggleLoginPass(){
- const inp=document.getElementById('login-pass');
- const tog=document.getElementById('pass-toggle');
+function forgePwToggle(){
+ const inp=document.getElementById('forge-login-pass');
+ const eye=document.getElementById('forge-pw-eye');
  if(!inp)return;
  inp.type=inp.type==='password'?'text':'password';
- if(tog)tog.textContent=inp.type==='password'?'👁':'🙈';
+ if(eye)eye.textContent=inp.type==='password'?'👁':'🙈';
 }
 
+// Keep old toggleLoginPass as alias
+function toggleLoginPass(){forgePwToggle();}
+
+function showLoginError(msg){forgeLoginError(msg);}
+
 function onLoginSuccess(user){
+ // Hide login screen
  const ls=document.getElementById('forge-login-screen');
- if(ls){ls.style.opacity='0';ls.style.transition='opacity 0.3s';setTimeout(()=>ls.style.display='none',300);}
+ if(ls){
+  ls.style.opacity='0';
+  ls.style.transition='opacity 0.3s';
+  setTimeout(()=>{ls.style.display='none';},300);
+ }
+ // Show user badge
  const badge=document.getElementById('user-badge-btn');
  const badgeName=document.getElementById('user-badge-name');
  const badgeRole=document.getElementById('user-badge-role');
