@@ -1103,6 +1103,15 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  </div>
  </div>
  <div style="padding:9px 12px;border-radius:7px;font-size:12.5px;display:none;background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,0.2)" id="cfg-saved">✅ Config saved to browser storage</div>
+
+ <!-- USER MANAGEMENT — Admin only -->
+ <div id="cfg-users-section" style="margin-top:24px;display:none">
+  <div style="font-size:10px;font-weight:700;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:1.5px;padding-bottom:7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+   <span>👥 User Management</span>
+   <button class="btn btn-sm" style="background:rgba(37,99,235,0.15);color:var(--accent2);border:1px solid rgba(37,99,235,0.3)" onclick="openAddUserModal()">+ Add User</button>
+  </div>
+  <div id="cfg-users-list"></div>
+ </div>
  </div>
  </div>
 
@@ -1544,6 +1553,7 @@ function loadConfig(){
  document.getElementById('cfg-margin').value=DB.config.margin;
  document.getElementById('cfg-buffer').value=DB.config.buffer;
  document.getElementById('cfg-name').value=DB.config.userName||'Ahmed';
+ renderUserManagement();
 }
 function saveConfig(){
  DB.config.rmbGbp=parseFloat(document.getElementById('cfg-rmb-gbp').value)||0.11;
@@ -4023,6 +4033,111 @@ function updateFBAStatus(id,status){
 }
 
 // ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// USER MANAGEMENT — Admin only
+// ═══════════════════════════════════════════════════
+function getUsersDB(){
+ try{const s=localStorage.getItem('forge_users');if(s)return JSON.parse(s);}catch(e){}
+ return FORGE_USERS.map(u=>({...u}));
+}
+function saveUsersDB(users){
+ localStorage.setItem('forge_users',JSON.stringify(users));
+ FORGE_USERS.length=0;users.forEach(u=>FORGE_USERS.push(u));
+}
+function renderUserManagement(){
+ const sec=document.getElementById('cfg-users-section');if(!sec)return;
+ if(!CURRENT_USER||CURRENT_USER.role!=='admin'){sec.style.display='none';return;}
+ sec.style.display='block';
+ const users=getUsersDB();
+ document.getElementById('cfg-users-list').innerHTML=users.map((u,i)=>`
+  <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:7px">
+   <div style="width:34px;height:34px;border-radius:50%;background:${u.role==='admin'?'linear-gradient(135deg,#2563eb,#7c3aed)':'linear-gradient(135deg,#059669,#0d9488)'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0">${u.name[0]}</div>
+   <div style="flex:1;min-width:0">
+    <div style="font-size:12.5px;font-weight:700;color:var(--text)">${u.name}</div>
+    <div style="font-size:10.5px;color:var(--text3)">@${u.username} · ${u.role==='admin'?'⚡ Admin':'👁 Viewer'}</div>
+   </div>
+   <div style="display:flex;gap:5px;flex-shrink:0">
+    <button class="action-btn" onclick="editUserModal(${i})">Edit</button>
+    ${u.username===CURRENT_USER?.username?
+     '<span style="font-size:10px;color:var(--text3);padding:3px 8px">You</span>':
+     `<button class="action-btn" style="color:var(--red)" onclick="deleteUser(${i})">Del</button>`
+    }
+   </div>
+  </div>`).join('');
+}
+function openAddUserModal(){
+ document.getElementById('modal-title').textContent='Add New User';
+ document.getElementById('modal-save-btn').style.display='flex';
+ document.getElementById('modal-body').innerHTML=`
+  <div class="form-grid">
+   <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="nu-name" placeholder="e.g. Hina"></div>
+   <div class="form-group"><label class="form-label">Username *</label>
+    <input class="form-input" id="nu-username" placeholder="e.g. hina" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')">
+    <div class="form-hint">Lowercase, no spaces</div>
+   </div>
+   <div class="form-group"><label class="form-label">Password *</label>
+    <input class="form-input" id="nu-pass" type="text" placeholder="Min 6 characters">
+    <div class="form-hint">Recommended: Name@Forge2026</div>
+   </div>
+   <div class="form-group"><label class="form-label">Role</label>
+    <select class="form-select" id="nu-role">
+     <option value="viewer">👁 Viewer — Read only</option>
+     <option value="admin">⚡ Admin — Full access</option>
+    </select>
+   </div>
+  </div>
+  <div style="background:var(--yellow-bg);border:1px solid rgba(245,158,11,0.25);border-radius:7px;padding:9px 12px;font-size:11.5px;color:var(--yellow);margin-top:8px">
+   ⚠️ Share credentials privately. Anyone with these can access FORGE.
+  </div>`;
+ document.getElementById('modal-save-btn').onclick=saveNewUser;
+ document.getElementById('modal-overlay').classList.add('open');
+}
+function saveNewUser(){
+ const name=(document.getElementById('nu-name')?.value||'').trim();
+ const username=(document.getElementById('nu-username')?.value||'').trim().toLowerCase();
+ const pass=(document.getElementById('nu-pass')?.value||'').trim();
+ const role=document.getElementById('nu-role')?.value||'viewer';
+ if(!name){showToast('Name required','error');return;}
+ if(!username||username.length<2){showToast('Username min 2 characters','error');return;}
+ if(!pass||pass.length<6){showToast('Password min 6 characters','error');return;}
+ const users=getUsersDB();
+ if(users.some(u=>u.username===username)){showToast(`"${username}" already exists`,'error');return;}
+ users.push({username,password:pass,role,name});
+ saveUsersDB(users);
+ showToast(`✅ ${name} added as ${role}`,'success');
+ closeModal();renderUserManagement();
+}
+function editUserModal(idx){
+ const users=getUsersDB();const u=users[idx];if(!u)return;
+ document.getElementById('modal-title').textContent='Edit — '+u.name;
+ document.getElementById('modal-save-btn').style.display='flex';
+ document.getElementById('modal-body').innerHTML=`
+  <div class="form-grid">
+   <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="eu-name" value="${u.name}"></div>
+   <div class="form-group"><label class="form-label">Username</label><input class="form-input" id="eu-username" value="${u.username}" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')"></div>
+   <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="eu-pass" type="text" value="${u.password}"></div>
+   <div class="form-group"><label class="form-label">Role</label>
+    <select class="form-select" id="eu-role">
+     <option value="viewer" ${u.role==='viewer'?'selected':''}>👁 Viewer</option>
+     <option value="admin" ${u.role==='admin'?'selected':''}>⚡ Admin</option>
+    </select>
+   </div>
+  </div>`;
+ document.getElementById('modal-save-btn').onclick=()=>{
+  const users2=getUsersDB();
+  users2[idx]={name:document.getElementById('eu-name').value||u.name,username:document.getElementById('eu-username').value||u.username,password:document.getElementById('eu-pass').value||u.password,role:document.getElementById('eu-role').value};
+  saveUsersDB(users2);showToast(`✅ ${users2[idx].name} updated`,'success');closeModal();renderUserManagement();
+ };
+ document.getElementById('modal-overlay').classList.add('open');
+}
+function deleteUser(idx){
+ const users=getUsersDB();const u=users[idx];if(!u)return;
+ if(u.username===CURRENT_USER?.username){showToast('Cannot delete yourself','error');return;}
+ if(!confirm('Delete "'+u.name+'" (@'+u.username+')?'))return;
+ users.splice(idx,1);saveUsersDB(users);
+ showToast(u.name+' removed','success');renderUserManagement();
+}
+
 // FORGE LOGIN SYSTEM
 // ═══════════════════════════════════════════════════
 const FORGE_USERS=[
@@ -4045,7 +4160,8 @@ function doLogin(){
  const username=(document.getElementById('login-user')?.value||'').trim().toLowerCase();
  const password=(document.getElementById('login-pass')?.value||'').trim();
  if(!username||!password){showLoginError('Please enter username and password.');return;}
- const user=FORGE_USERS.find(u=>u.username===username&&u.password===password);
+ const users=getUsersDB();
+ const user=users.find(u=>u.username===username&&u.password===password);
  if(user){
   CURRENT_USER=user;loginAttempts=0;
   localStorage.setItem('forge_session',JSON.stringify({username:user.username,role:user.role,name:user.name,loginAt:now}));
@@ -4127,7 +4243,8 @@ function checkForgeSession(){
   const s=JSON.parse(localStorage.getItem('forge_session')||'null');
   if(!s)return false;
   if(Date.now()-s.loginAt>8*60*60*1000){localStorage.removeItem('forge_session');return false;}
-  const user=FORGE_USERS.find(u=>u.username===s.username);
+  const users=getUsersDB();
+  const user=users.find(u=>u.username===s.username);
   if(!user)return false;
   CURRENT_USER=user;
   onLoginSuccess(user);
