@@ -341,9 +341,132 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
 .launch-insight.block{background:var(--red-bg);border:1px solid rgba(239,68,68,0.2);color:var(--red);}
 .launch-next-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(37,99,235,0.15);color:var(--accent2);border:1px solid rgba(37,99,235,0.3);cursor:pointer;transition:all 0.15s;}
 .launch-next-btn:hover{background:rgba(37,99,235,0.25);}
+
+/* ═══════════════════════════════════════
+   FORGE LOGIN SYSTEM
+═══════════════════════════════════════ */
+#forge-login-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;
+}
+.login-box{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:40px 44px;
+  width:100%;max-width:400px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.4);
+}
+.login-logo{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:28px;
+}
+.login-logo-icon{
+  width:44px;height:44px;border-radius:10px;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;color:white;
+  font-family:'JetBrains Mono',monospace;
+  box-shadow:0 4px 12px rgba(37,99,235,0.4);
+}
+.login-logo-text{font-size:22px;font-weight:800;color:var(--text);}
+.login-logo-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.login-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.login-sub{font-size:12.5px;color:var(--text3);margin-bottom:24px;}
+.login-field{margin-bottom:14px;}
+.login-label{font-size:11px;font-weight:700;color:var(--text2);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+.login-input{
+  width:100%;padding:11px 14px;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  color:var(--text);font-size:14px;
+  outline:none;transition:border-color 0.2s;
+  box-sizing:border-box;
+}
+.login-input:focus{border-color:var(--accent2);}
+.login-input::placeholder{color:var(--text3);}
+.login-btn{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  color:white;font-size:14px;font-weight:700;
+  border:none;border-radius:9px;cursor:pointer;
+  margin-top:6px;transition:opacity 0.2s;
+  letter-spacing:0.5px;
+}
+.login-btn:hover{opacity:0.9;}
+.login-error{
+  background:var(--red-bg);
+  border:1px solid rgba(239,68,68,0.3);
+  color:var(--red);
+  border-radius:8px;padding:10px 14px;
+  font-size:12.5px;margin-top:12px;
+  display:none;
+}
+.login-role-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
+  margin-bottom:20px;
+}
+.login-footer{
+  margin-top:20px;padding-top:16px;
+  border-top:1px solid var(--border);
+  font-size:11px;color:var(--text3);text-align:center;
+}
+/* Top bar user indicator */
+.user-badge{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 10px;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:7px;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+}
+.user-badge:hover{background:var(--surface3);}
+.user-dot{width:7px;height:7px;border-radius:50%;}
+.user-dot.admin{background:#10b981;box-shadow:0 0 5px #10b981;}
+.user-dot.viewer{background:#f59e0b;box-shadow:0 0 5px #f59e0b;}
+
 </style>
 </head>
 <body>
+
+<!-- FORGE LOGIN SCREEN -->
+<div id="forge-login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">F</div>
+      <div>
+        <div class="login-logo-text">FORGE</div>
+        <div class="login-logo-sub">by Vartleaves</div>
+      </div>
+    </div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to access your business operations system</div>
+    <div class="login-field">
+      <label class="login-label">Username</label>
+      <input class="login-input" id="login-user" type="text" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <div style="position:relative">
+        <input class="login-input" id="login-pass" type="password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <span onclick="toggleLoginPass()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:14px" id="pass-toggle">👁</span>
+      </div>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <div class="login-error" id="login-error">Incorrect username or password. Please try again.</div>
+    <div class="login-footer">
+      FORGE by Vartleaves · Secure Access Only<br>
+      <span id="login-attempt-info" style="color:var(--text3)"></span>
+    </div>
+  </div>
+</div>
+
+
 
 <!-- ══════════════════════════════════════════════ -->
 <!-- LOGIN SCREEN -->
@@ -485,7 +608,13 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <span id="refresh-icon" style="font-size:13px">🔄</span>
  </div>
 
- <!-- ICC BUTTON -->
+ <!-- USER BADGE -->
+    <div class="user-badge" onclick="showUserMenu()" id="user-badge-btn" style="display:none">
+      <div class="user-dot admin" id="user-role-dot"></div>
+      <span id="user-badge-name">—</span>
+      <span style="color:var(--text3);font-size:10px" id="user-badge-role"></span>
+    </div>
+    <!-- ICC BUTTON -->
  <div class="drive-indicator" onclick="nav('icc')" title="Inventory Cycle Calculator" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);padding:4px 10px">
  <span style="font-size:11px;font-weight:700;color:var(--purple)">⟳ ICC</span>
  </div>
@@ -3894,208 +4023,153 @@ function updateFBAStatus(id,status){
 }
 
 // ══════════════════════════════════════════════════
-// FORGE LOGIN SYSTEM — Role-based Access Control
-// ══════════════════════════════════════════════════
-
-// CREDENTIALS — Change these passwords
-const FORGE_USERS = [
-  {username:'ahmed',    password:'Vartleaves2026!', role:'admin',  name:'Ahmed'},
-  {username:'wajahat',  password:'Forge@Wajahat1',  role:'admin',  name:'Wajahat'},
-  {username:'fatima',   password:'View@Fatima1',    role:'viewer', name:'Fatima'},
-  {username:'abdullah', password:'View@Abdullah1',  role:'viewer', name:'Abdullah'},
-  {username:'amna',     password:'View@Amna1',      role:'viewer', name:'Amna'},
+// FORGE LOGIN SYSTEM
+// ═══════════════════════════════════════════════════
+const FORGE_USERS=[
+ {username:'ahmed',    password:'Vartleaves@2026', role:'admin',  name:'Ahmed'},
+ {username:'wajahat',  password:'Forge@Waj2026',   role:'admin',  name:'Wajahat'},
+ {username:'fatima',   password:'View@Fat2026',     role:'viewer', name:'Fatima'},
+ {username:'abdullah', password:'View@Abd2026',     role:'viewer', name:'Abdullah'},
+ {username:'amna',     password:'View@Amna2026',    role:'viewer', name:'Amna'},
 ];
-
-let CURRENT_USER = null;
+let CURRENT_USER=null;
+let loginAttempts=0;
+let lockoutUntil=0;
 
 function doLogin(){
-  const u = document.getElementById('login-user')?.value.trim().toLowerCase();
-  const p = document.getElementById('login-pass')?.value;
-  const errBox = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
-
-  if(!u || !p){
-    showLoginError('Please enter username and password');
-    return;
-  }
-
-  btn.textContent = 'Signing in...';
-  btn.style.opacity = '0.7';
-
-  // Simulate slight delay for UX
-  setTimeout(()=>{
-    const user = FORGE_USERS.find(x => x.username === u && x.password === p);
-    if(!user){
-      showLoginError('Incorrect username or password. Please try again.');
-      btn.textContent = 'Sign In →';
-      btn.style.opacity = '1';
-      // Clear password field
-      document.getElementById('login-pass').value = '';
-      document.getElementById('login-pass').focus();
-      return;
-    }
-
-    // Login success
-    CURRENT_USER = user;
-    sessionStorage.setItem('forge_session', JSON.stringify({
-      username: user.username,
-      name: user.name,
-      role: user.role,
-      loginTime: new Date().toISOString()
-    }));
-
-    // Hide login screen with fade
-    const loginEl = document.getElementById('forge-login');
-    loginEl.style.transition = 'opacity 0.4s';
-    loginEl.style.opacity = '0';
-    setTimeout(()=>{
-      loginEl.style.display = 'none';
-      applyRoleRestrictions(user.role);
-      showToast(`✅ Welcome back, ${user.name}!`, 'success');
-      autoLog('System', 'Login', `${user.name} (${user.role}) logged in`);
-    }, 400);
-  }, 500);
+ const now=Date.now();
+ if(now<lockoutUntil){
+  const s=Math.ceil((lockoutUntil-now)/1000);
+  showLoginError('Too many attempts. Try again in '+s+' seconds.');return;
+ }
+ const username=(document.getElementById('login-user')?.value||'').trim().toLowerCase();
+ const password=(document.getElementById('login-pass')?.value||'').trim();
+ if(!username||!password){showLoginError('Please enter username and password.');return;}
+ const user=FORGE_USERS.find(u=>u.username===username&&u.password===password);
+ if(user){
+  CURRENT_USER=user;loginAttempts=0;
+  localStorage.setItem('forge_session',JSON.stringify({username:user.username,role:user.role,name:user.name,loginAt:now}));
+  onLoginSuccess(user);
+ } else {
+  loginAttempts++;
+  if(loginAttempts>=5){lockoutUntil=now+30000;showLoginError('Too many attempts. Locked for 30 seconds.');}
+  else showLoginError('Incorrect credentials. '+(5-loginAttempts)+' attempts remaining.');
+  const box=document.querySelector('.login-box');
+  if(box){box.style.animation='shake 0.4s ease';setTimeout(()=>box.style.animation='',400);}
+ }
 }
 
 function showLoginError(msg){
-  const box = document.getElementById('login-error');
-  if(!box) return;
-  box.textContent = msg;
-  box.style.display = 'block';
-  // Shake animation
-  box.style.animation = 'none';
-  setTimeout(()=> box.style.animation = 'loginShake 0.4s ease', 10);
+ const el=document.getElementById('login-error');
+ if(el){el.textContent=msg;el.style.display='block';}
 }
 
-function toggleLoginPw(){
-  const inp = document.getElementById('login-pass');
-  const eye = document.getElementById('pw-eye');
-  if(!inp) return;
-  if(inp.type === 'password'){
-    inp.type = 'text';
-    if(eye) eye.textContent = '🙈';
-  } else {
-    inp.type = 'password';
-    if(eye) eye.textContent = '👁';
-  }
+function toggleLoginPass(){
+ const inp=document.getElementById('login-pass');
+ const tog=document.getElementById('pass-toggle');
+ if(!inp)return;
+ inp.type=inp.type==='password'?'text':'password';
+ if(tog)tog.textContent=inp.type==='password'?'👁':'🙈';
 }
 
-function applyRoleRestrictions(role){
-  // Show user info in topbar
-  const userBadge = document.createElement('div');
-  userBadge.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;font-size:11px';
-  userBadge.innerHTML = `
-    <div style="width:20px;height:20px;border-radius:50%;background:${role==='admin'?'var(--accent2)':'var(--green)'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white">${CURRENT_USER.name[0]}</div>
-    <span style="font-weight:600;color:var(--text)">${CURRENT_USER.name}</span>
-    <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:${role==='admin'?'rgba(37,99,235,0.15)':'rgba(16,185,129,0.15)'};color:${role==='admin'?'var(--accent2)':'var(--green)'};font-weight:700">${role.toUpperCase()}</span>
-    <span onclick="forgeLogout()" style="cursor:pointer;color:var(--text3);font-size:10px;margin-left:2px" title="Logout">⏏</span>
-  `;
-
-  // Insert before add-btn
-  const addBtn = document.getElementById('add-btn');
-  if(addBtn && addBtn.parentNode){
-    addBtn.parentNode.insertBefore(userBadge, addBtn);
-  }
-
-  // VIEWER restrictions — hide edit/add/delete controls
-  if(role === 'viewer'){
-    // Hide Add New button
-    const ab = document.getElementById('add-btn');
-    if(ab) ab.style.display = 'none';
-
-    // Hide Drive sync
-    const driveInd = document.getElementById('drive-indicator');
-    if(driveInd) driveInd.style.display = 'none';
-
-    // Add viewer banner
-    const banner = document.createElement('div');
-    banner.id = 'viewer-banner';
-    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(245,158,11,0.12);border-top:1px solid rgba(245,158,11,0.25);padding:6px 20px;font-size:11px;color:var(--yellow);z-index:100;display:flex;align-items:center;gap:8px';
-    banner.innerHTML = '👁 Viewer mode — You can view all data but cannot make changes. Contact Ahmed for edit access.';
-    document.body.appendChild(banner);
-
-    // Override edit/delete functions for viewer
-    window._editBlocked = function(){
-      showToast('⚠ Viewer access only — contact Ahmed to make changes', 'error');
-    };
-
-    // Override save functions
-    ['saveModal','saveFreightEdit','saveProdInfo','saveLaunchModal',
-     'saveFBAShipModal','saveConfig','advanceLaunch','advanceFBAStage',
-     'delOrder','delAct','deleteLaunch','deleteFBAShip'].forEach(fn => {
-      if(typeof window[fn] === 'function'){
-        window[fn] = window._editBlocked;
-      }
-    });
-  }
+function onLoginSuccess(user){
+ const ls=document.getElementById('forge-login-screen');
+ if(ls){ls.style.opacity='0';ls.style.transition='opacity 0.3s';setTimeout(()=>ls.style.display='none',300);}
+ const badge=document.getElementById('user-badge-btn');
+ const badgeName=document.getElementById('user-badge-name');
+ const badgeRole=document.getElementById('user-badge-role');
+ const dot=document.getElementById('user-role-dot');
+ if(badge)badge.style.display='flex';
+ if(badgeName)badgeName.textContent=user.name;
+ if(badgeRole)badgeRole.textContent=user.role==='admin'?'⚡ Admin':'👁 Viewer';
+ if(dot)dot.className='user-dot '+user.role;
+ if(user.role==='viewer')applyViewerMode();
+ showToast('Welcome, '+user.name+'! 👋','success');
 }
 
-function forgeLogout(){
-  if(!confirm('Sign out of FORGE?')) return;
-  sessionStorage.removeItem('forge_session');
-  CURRENT_USER = null;
-  // Reload page = back to login
-  location.reload();
+function applyViewerMode(){
+ const s=document.createElement('style');
+ s.textContent='#add-btn{display:none!important}.action-btn{display:none!important}#undo-btn{display:none!important}#redo-btn{display:none!important}#page-config{pointer-events:none;opacity:0.6}.launch-next-btn{display:none!important}.workflow-next{display:none!important}';
+ document.head.appendChild(s);
+ window.saveModal=()=>showToast('⛔ Viewer access — cannot edit','error');
+ window.openAddModal=()=>showToast('⛔ Viewer access — cannot add records','error');
 }
 
-// Check for existing session on load
+function showUserMenu(){
+ if(!CURRENT_USER)return;
+ const isAdmin=CURRENT_USER.role==='admin';
+ document.getElementById('modal-title').textContent=CURRENT_USER.name+' — '+(isAdmin?'Administrator':'Viewer');
+ document.getElementById('modal-body').innerHTML=`
+  <div style="text-align:center;padding:10px 0 20px">
+   <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:white;margin:0 auto 10px">${CURRENT_USER.name[0]}</div>
+   <div style="font-size:15px;font-weight:700;color:var(--text)">${CURRENT_USER.name}</div>
+   <div style="font-size:11.5px;color:var(--text3);margin-top:3px">${isAdmin?'⚡ Administrator — Full Access':'👁 Viewer — Read Only'}</div>
+  </div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+   ${isAdmin?
+    '<div style="font-size:12px;color:var(--green);margin-bottom:5px">✅ View all data</div><div style="font-size:12px;color:var(--green);margin-bottom:5px">✅ Add / Edit / Delete</div><div style="font-size:12px;color:var(--green);margin-bottom:5px">✅ Config settings</div><div style="font-size:12px;color:var(--green)">✅ Drive sync & export</div>':
+    '<div style="font-size:12px;color:var(--green);margin-bottom:5px">✅ View all data</div><div style="font-size:12px;color:var(--red);margin-bottom:5px">❌ Cannot add or edit</div><div style="font-size:12px;color:var(--red);margin-bottom:5px">❌ Cannot change settings</div><div style="font-size:12px;color:var(--red)">❌ Cannot sync</div>'
+   }
+  </div>
+  <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;color:var(--red)" onclick="doLogout()">🚪 Sign Out</button>`;
+ document.getElementById('modal-save-btn').style.display='none';
+ document.getElementById('modal-overlay').classList.add('open');
+}
+
+function doLogout(){
+ localStorage.removeItem('forge_session');
+ closeModal();
+ location.reload();
+}
+
 function checkForgeSession(){
-  const sess = sessionStorage.getItem('forge_session');
-  if(sess){
-    try{
-      const s = JSON.parse(sess);
-      const user = FORGE_USERS.find(x => x.username === s.username);
-      if(user){
-        CURRENT_USER = user;
-        const loginEl = document.getElementById('forge-login');
-        if(loginEl) loginEl.style.display = 'none';
-        applyRoleRestrictions(user.role);
-        return true;
-      }
-    }catch(e){}
-  }
-  return false;
+ try{
+  const s=JSON.parse(localStorage.getItem('forge_session')||'null');
+  if(!s)return false;
+  if(Date.now()-s.loginAt>8*60*60*1000){localStorage.removeItem('forge_session');return false;}
+  const user=FORGE_USERS.find(u=>u.username===s.username);
+  if(!user)return false;
+  CURRENT_USER=user;
+  onLoginSuccess(user);
+  return true;
+ }catch(e){return false;}
 }
 
-// Add shake animation CSS
+// Add shake animation
 (function(){
-  const s = document.createElement('style');
-  s.textContent = `
-    @keyframes loginShake {
-      0%,100%{transform:translateX(0)}
-      20%{transform:translateX(-8px)}
-      40%{transform:translateX(8px)}
-      60%{transform:translateX(-5px)}
-      80%{transform:translateX(5px)}
-    }
-    #forge-login input:focus{border-color:#2563eb!important;}
-    #viewer-banner{animation:slideUp 0.3s ease;}
-    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  `;
-  document.head.appendChild(s);
+ const s=document.createElement('style');
+ s.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
+ document.head.appendChild(s);
 })();
 
-// ══════════════════════════════════════════════════
-// INIT
+// ═══════════════════════════════════════════════════
+// INIT — App init first, then login gate
+// ═══════════════════════════════════════════════════
 nav('dashboard');
 initTheme();
 checkDriveStatus();
 fetchLiveRates();
 setInterval(()=>fetchLiveRates(),600000);
 updateUndoRedoBtns();
-// Check session AFTER init so app is ready
+
+// Check existing session — if valid skip login
 if(!checkForgeSession()){
-  // Show login — focus username field
-  setTimeout(()=>{
-    const u = document.getElementById('login-user');
-    if(u) u.focus();
-  }, 100);
+ setTimeout(()=>{
+  const u=document.getElementById('login-user');
+  if(u)u.focus();
+ },150);
 }
+
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeModal();document.getElementById('drive-overlay').classList.remove('open');document.getElementById('theme-panel').classList.remove('open');document.getElementById('currency-panel').classList.remove('open');}
-  if(e.ctrlKey&&e.key==='k'){e.preventDefault();document.getElementById('global-search').focus();}
-  if(e.ctrlKey&&e.key==='z'&&!e.shiftKey){e.preventDefault();undoAction();}
-  if((e.ctrlKey&&e.key==='y')||(e.ctrlKey&&e.shiftKey&&e.key==='z')){e.preventDefault();redoAction();}
+ if(e.key==='Escape'){
+  closeModal();
+  const d=document.getElementById('drive-overlay');if(d)d.classList.remove('open');
+  const t=document.getElementById('theme-panel');if(t)t.classList.remove('open');
+  const c=document.getElementById('currency-panel');if(c)c.classList.remove('open');
+ }
+ if(e.ctrlKey&&e.key==='k'){e.preventDefault();const g=document.getElementById('global-search');if(g)g.focus();}
+ if(e.ctrlKey&&e.key==='z'&&!e.shiftKey){e.preventDefault();undoAction();}
+ if((e.ctrlKey&&e.key==='y')||(e.ctrlKey&&e.shiftKey&&e.key==='Z')){e.preventDefault();redoAction();}
 });
 </script>
 </body>
