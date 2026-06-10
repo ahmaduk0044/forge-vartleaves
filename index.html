@@ -646,12 +646,19 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <option value="all">All Platforms + Couriers</option>
  <option value="fba">Amazon FBA UK only</option>
  <option value="ebay">eBay UK only</option>
- <option value="couriers">Couriers only</option>
- <option value="dpd">DPD only</option>
- <option value="ups">UPS only</option>
- <option value="evri">Evri only</option>
- <option value="royalmail">Royal Mail only</option>
- <option value="dhl">DHL only</option>
+ <option value="couriers">All Couriers (compare)</option>
+ <option value="cheapest">Cheapest Courier only</option>
+ <option value="evri">Evri Retail</option>
+ <option value="evribiz">Evri Business</option>
+ <option value="royalmail">Royal Mail</option>
+ <option value="parcelforce">Parcelforce 24</option>
+ <option value="dpd">DPD Next Day</option>
+ <option value="dpdlocal">DPD Local</option>
+ <option value="ups">UPS Standard</option>
+ <option value="upsexpress">UPS Express</option>
+ <option value="dhl">DHL Express</option>
+ <option value="yodel">Yodel</option>
+ <option value="amazon">Amazon Shipping</option>
  </select>
  </div>
  <div class="form-group"><label class="form-label">Load from SKU</label>
@@ -2218,87 +2225,178 @@ function getEbayFee(price,catKey){
 
 function getCourierRates(l,w,h,wg,chargeKg){
  const maxDim=Math.max(l,w,h);
+ const girth=2*(([l,w,h].sort((a,b)=>b-a)[1])+([l,w,h].sort((a,b)=>b-a)[2]));
+ const combinedLG=maxDim+girth;
  const results=[];
 
+ // ── EVRI (Retail) 2026 ──
  const evriOk=maxDim<=120&&(l+w+h)<=245&&chargeKg<=15;
  let evriP=0;
  if(evriOk){
- if(chargeKg<=0.5)evriP=3.10;
- else if(chargeKg<=1)evriP=3.39;
- else if(chargeKg<=2)evriP=3.59;
- else if(chargeKg<=5)evriP=4.19;
- else if(chargeKg<=10)evriP=5.99;
- else evriP=7.99;
+  if(chargeKg<=0.5)evriP=3.29;
+  else if(chargeKg<=1)evriP=3.49;
+  else if(chargeKg<=2)evriP=3.79;
+  else if(chargeKg<=5)evriP=4.49;
+  else if(chargeKg<=10)evriP=6.49;
+  else evriP=8.49;
  }
- results.push({name:'Evri',icon:'🟣',service:'Standard Parcel',transit:'2–3 days',eligible:evriOk,price:evriP,reason:'Exceeds Evri 120cm / 15kg limit'});
+ results.push({name:'Evri',icon:'🟣',service:'Standard Parcel',transit:'2–3 days',eligible:evriOk,price:evriP,reason:'Max: 120cm longest side, 245cm combined, 15kg'});
 
+ // ── EVRI BUSINESS 2026 (cheaper with account) ──
+ const evriBizOk=evriOk;
+ let evriBizP=0;
+ if(evriBizOk){
+  if(chargeKg<=0.5)evriBizP=2.49;
+  else if(chargeKg<=1)evriBizP=2.69;
+  else if(chargeKg<=2)evriBizP=2.89;
+  else if(chargeKg<=5)evriBizP=3.49;
+  else if(chargeKg<=10)evriBizP=4.99;
+  else evriBizP=6.99;
+ }
+ results.push({name:'Evri Business',icon:'🟣',service:'Business Account Rate',transit:'2–3 days',eligible:evriBizOk,price:evriBizP,reason:'Requires Evri business account'});
+
+ // ── ROYAL MAIL 2026 ──
  let rmSvc='',rmP=0,rmOk=true,rmT='',rmR='';
  if(chargeKg<=0.1&&maxDim<=24&&l<=24&&w<=16.5&&h<=0.5){
- rmSvc='Large Letter 1st Class';rmP=1.55;rmT='1–2 days';
+  rmSvc='Large Letter 1st Class';rmP=1.65;rmT='1–2 days';
  }else if(chargeKg<=0.1&&maxDim<=24){
- rmSvc='Large Letter 2nd Class';rmP=1.25;rmT='2–3 days';
+  rmSvc='Large Letter 2nd Class';rmP=1.35;rmT='2–3 days';
  }else if(chargeKg<=0.75&&maxDim<=45){
- rmSvc='Small Parcel';
- if(chargeKg<=0.1)rmP=3.49;
- else if(chargeKg<=0.25)rmP=3.79;
- else if(chargeKg<=0.5)rmP=3.99;
- else rmP=4.29;
- rmT='2–3 days';
+  rmSvc='Small Parcel';
+  if(chargeKg<=0.1)rmP=3.79;
+  else if(chargeKg<=0.25)rmP=4.09;
+  else if(chargeKg<=0.5)rmP=4.29;
+  else rmP=4.59;
+  rmT='2–3 days';
  }else if(chargeKg<=2&&maxDim<=61){
- rmSvc='Medium Parcel';
- if(chargeKg<=0.5)rmP=6.20;
- else if(chargeKg<=1)rmP=7.20;
- else rmP=8.50;
- rmT='2–3 days';
- }else if(chargeKg<=20&&maxDim<=120){
- rmSvc='Parcelforce 48';
- if(chargeKg<=5)rmP=9.99;
- else if(chargeKg<=10)rmP=14.99;
- else rmP=19.99;
- rmT='2 days';
+  rmSvc='Medium Parcel';
+  if(chargeKg<=0.5)rmP=6.50;
+  else if(chargeKg<=1)rmP=7.50;
+  else rmP=8.99;
+  rmT='2–3 days';
+ }else if(chargeKg<=30&&maxDim<=150){
+  rmSvc='Parcelforce 48';
+  if(chargeKg<=5)rmP=10.49;
+  else if(chargeKg<=10)rmP=15.49;
+  else if(chargeKg<=20)rmP=20.49;
+  else rmP=26.99;
+  rmT='2 days';
+ }else if(chargeKg<=30&&maxDim<=150){
+  rmSvc='Parcelforce 24';
+  if(chargeKg<=5)rmP=12.99;
+  else if(chargeKg<=10)rmP=17.99;
+  else if(chargeKg<=20)rmP=23.99;
+  else rmP=30.99;
+  rmT='Next day';
  }else{
- rmOk=false;rmR='Exceeds Royal Mail max size — use Parcelforce 24/freight';
+  rmOk=false;rmR='Exceeds Royal Mail/Parcelforce limits — use pallet/freight';
  }
  results.push({name:'Royal Mail',icon:'🔴',service:rmSvc,transit:rmT,eligible:rmOk,price:rmP,reason:rmR});
 
+ // ── PARCELFORCE 24 (separate entry for speed comparison) ──
+ const pfOk=chargeKg<=30&&maxDim<=150;
+ let pfP=0;
+ if(pfOk){
+  if(chargeKg<=5)pfP=12.99;
+  else if(chargeKg<=10)pfP=17.99;
+  else if(chargeKg<=20)pfP=23.99;
+  else pfP=30.99;
+ }
+ results.push({name:'Parcelforce 24',icon:'🔴',service:'Next Day Guaranteed',transit:'Next day by 1pm',eligible:pfOk,price:pfP,reason:'Max: 150cm, 30kg'});
+
+ // ── DPD 2026 ──
  const dpdOk=maxDim<=175&&chargeKg<=30;
  let dpdP=0;
  if(dpdOk){
- if(chargeKg<=1)dpdP=4.99;
- else if(chargeKg<=2)dpdP=5.49;
- else if(chargeKg<=5)dpdP=6.49;
- else if(chargeKg<=10)dpdP=8.49;
- else if(chargeKg<=20)dpdP=11.99;
- else dpdP=15.99;
+  if(chargeKg<=1)dpdP=5.29;
+  else if(chargeKg<=2)dpdP=5.79;
+  else if(chargeKg<=5)dpdP=6.79;
+  else if(chargeKg<=10)dpdP=8.99;
+  else if(chargeKg<=20)dpdP=12.49;
+  else dpdP=16.99;
  }
- results.push({name:'DPD',icon:'🔵',service:'DPD Next Day',transit:'Next day (book before 5pm)',eligible:dpdOk,price:dpdP,reason:'Exceeds DPD 175cm / 30kg limit'});
+ results.push({name:'DPD',icon:'🔵',service:'DPD Next Day',transit:'Next day (book before 5pm)',eligible:dpdOk,price:dpdP,reason:'Max: 175cm longest side, 30kg'});
 
+ // ── DPD LOCAL 2026 ──
+ const dpdLOk=maxDim<=120&&chargeKg<=20;
+ let dpdLP=0;
+ if(dpdLOk){
+  if(chargeKg<=1)dpdLP=4.79;
+  else if(chargeKg<=2)dpdLP=5.29;
+  else if(chargeKg<=5)dpdLP=6.29;
+  else if(chargeKg<=10)dpdLP=8.29;
+  else dpdLP=11.99;
+ }
+ results.push({name:'DPD Local',icon:'🔵',service:'DPD Local Next Day',transit:'Next day',eligible:dpdLOk,price:dpdLP,reason:'Max: 120cm, 20kg'});
+
+ // ── UPS 2026 ──
  const upsOk=maxDim<=270&&chargeKg<=70;
  let upsP=0;
  if(upsOk){
- if(chargeKg<=0.5)upsP=5.99;
- else if(chargeKg<=1)upsP=6.79;
- else if(chargeKg<=2)upsP=7.69;
- else if(chargeKg<=5)upsP=9.49;
- else if(chargeKg<=10)upsP=12.49;
- else if(chargeKg<=20)upsP=16.99;
- else if(chargeKg<=30)upsP=21.99;
- else upsP=29.99;
+  if(chargeKg<=0.5)upsP=6.29;
+  else if(chargeKg<=1)upsP=7.09;
+  else if(chargeKg<=2)upsP=7.99;
+  else if(chargeKg<=5)upsP=9.99;
+  else if(chargeKg<=10)upsP=12.99;
+  else if(chargeKg<=20)upsP=17.49;
+  else if(chargeKg<=30)upsP=22.99;
+  else upsP=31.99;
  }
- results.push({name:'UPS',icon:'🟤',service:'UPS Standard',transit:'1–2 days UK',eligible:upsOk,price:upsP,reason:'Exceeds UPS size/weight limits'});
+ results.push({name:'UPS Standard',icon:'🟤',service:'UPS Standard',transit:'1–2 days UK',eligible:upsOk,price:upsP,reason:'Max: 270cm, 70kg'});
 
+ // ── UPS EXPRESS 2026 ──
+ const upsExpOk=maxDim<=270&&chargeKg<=70;
+ let upsExpP=0;
+ if(upsExpOk){
+  if(chargeKg<=0.5)upsExpP=9.99;
+  else if(chargeKg<=1)upsExpP=11.49;
+  else if(chargeKg<=2)upsExpP=13.99;
+  else if(chargeKg<=5)upsExpP=16.99;
+  else if(chargeKg<=10)upsExpP=21.99;
+  else if(chargeKg<=20)upsExpP=28.99;
+  else upsExpP=39.99;
+ }
+ results.push({name:'UPS Express',icon:'🟤',service:'UPS Express Saver',transit:'Next day by noon',eligible:upsExpOk,price:upsExpP,reason:'Max: 270cm, 70kg'});
+
+ // ── DHL EXPRESS 2026 ──
  const dhlOk=maxDim<=120&&chargeKg<=30;
  let dhlP=0;
  if(dhlOk){
- if(chargeKg<=0.5)dhlP=7.49;
- else if(chargeKg<=1)dhlP=8.49;
- else if(chargeKg<=2)dhlP=9.49;
- else if(chargeKg<=5)dhlP=11.99;
- else if(chargeKg<=10)dhlP=14.99;
- else if(chargeKg<=20)dhlP=19.99;
- else dhlP=26.99;
+  if(chargeKg<=0.5)dhlP=7.99;
+  else if(chargeKg<=1)dhlP=8.99;
+  else if(chargeKg<=2)dhlP=9.99;
+  else if(chargeKg<=5)dhlP=12.49;
+  else if(chargeKg<=10)dhlP=15.99;
+  else if(chargeKg<=20)dhlP=20.99;
+  else dhlP=27.99;
  }
- results.push({name:'DHL',icon:'🟡',service:'DHL Express UK',transit:'1–2 days',eligible:dhlOk,price:dhlP,reason:'Exceeds DHL 120cm / 30kg limit'});
+ results.push({name:'DHL Express',icon:'🟡',service:'DHL Express UK',transit:'Next day by 12pm',eligible:dhlOk,price:dhlP,reason:'Max: 120cm, 30kg'});
+
+ // ── YODEL 2026 ──
+ const yodelOk=maxDim<=120&&chargeKg<=30&&(l+w+h)<=300;
+ let yodelP=0;
+ if(yodelOk){
+  if(chargeKg<=1)yodelP=2.99;
+  else if(chargeKg<=2)yodelP=3.29;
+  else if(chargeKg<=5)yodelP=3.99;
+  else if(chargeKg<=10)yodelP=5.49;
+  else if(chargeKg<=20)yodelP=7.99;
+  else yodelP=10.99;
+ }
+ results.push({name:'Yodel',icon:'🟠',service:'Yodel Standard',transit:'2–4 days',eligible:yodelOk,price:yodelP,reason:'Max: 120cm, 30kg, 300cm combined'});
+
+ // ── AMAZON SHIPPING 2026 (for Amazon sellers) ──
+ const amzShipOk=chargeKg<=30&&maxDim<=120;
+ let amzShipP=0;
+ if(amzShipOk){
+  if(chargeKg<=1)amzShipP=2.45;
+  else if(chargeKg<=2)amzShipP=2.75;
+  else if(chargeKg<=5)amzShipP=3.25;
+  else if(chargeKg<=10)amzShipP=4.75;
+  else if(chargeKg<=20)amzShipP=6.99;
+  else amzShipP=9.99;
+ }
+ results.push({name:'Amazon Shipping',icon:'🟠',service:'Amazon Shipping (Sellers)',transit:'1–2 days',eligible:amzShipOk,price:amzShipP,reason:'Only available to Amazon sellers via Seller Central'});
 
  return results;
 }
@@ -2437,35 +2535,50 @@ function calcFees(){
  </div>`;
  }
 
- const courierFilter={'dpd':'DPD','ups':'UPS','evri':'Evri','royalmail':'Royal Mail','dhl':'DHL'};
- const filteredCouriers=platform==='couriers'?couriers:
- courierFilter[platform]?couriers.filter(c=>c.name===courierFilter[platform]):
- (showCouriers?couriers:[]);
+ const courierNameMap={
+  'evri':'Evri','evribiz':'Evri Business','royalmail':'Royal Mail',
+  'parcelforce':'Parcelforce 24','dpd':'DPD','dpdlocal':'DPD Local',
+  'ups':'UPS Standard','upsexpress':'UPS Express',
+  'dhl':'DHL Express','yodel':'Yodel','amazon':'Amazon Shipping'
+ };
+ const eligibleCouriers=couriers.filter(c=>c.eligible).sort((a,b)=>a.price-b.price);
+ const cheapestCourier=eligibleCouriers[0];
+ const filteredCouriers=
+  platform==='couriers'?couriers:
+  platform==='cheapest'?couriers.filter(c=>c.name===cheapestCourier?.name):
+  courierNameMap[platform]?couriers.filter(c=>c.name===courierNameMap[platform]):
+  (showCouriers?couriers:[]);
 
  if(filteredCouriers.length){
- html+=`<div class="fee-platform">
- <div class="fee-platform-head">
- <div class="fee-platform-name">🚚 UK Courier Rates</div>
- <span class="fee-tier badge-grey" style="font-size:9px">Based on ${chargeKg}kg chargeable</span>
- </div>
- <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px">Published rate cards 2024 — actual rates may vary by account/volume</div>
- ${filteredCouriers.map(c=>`
- <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
- <div>
- <div style="font-size:12.5px;font-weight:700">${c.icon} ${c.name}</div>
- <div style="font-size:10.5px;color:var(--text3)">${c.service} · ${c.transit}</div>
- </div>
- <div style="text-align:right">
- <div style="font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${c.eligible?'var(--text)':'var(--red)'}">${c.eligible?'£'+c.price.toFixed(2):'❌ Oversize'}</div>
- ${!c.eligible?`<div style="font-size:9.5px;color:var(--red)">${c.reason}</div>`:''}
- </div>
- </div>`).join('')}
- <div style="margin-top:10px;padding:8px 10px;background:var(--surface3);border-radius:6px;font-size:11px;color:var(--text3)">
- 💡 Cheapest: <strong style="color:var(--green)">${filteredCouriers.filter(c=>c.eligible).sort((a,b)=>a.price-b.price)[0]?.name||'N/A'}</strong>
- at £${(filteredCouriers.filter(c=>c.eligible).sort((a,b)=>a.price-b.price)[0]?.price||0).toFixed(2)}
- </div>
- </div>`;
+  html+=`<div class="fee-platform">
+   <div class="fee-platform-head">
+    <div class="fee-platform-name">🚚 UK Courier Rates <span style="font-size:9px;color:var(--text3)">2026</span></div>
+    <span class="fee-tier badge-grey" style="font-size:9px">${chargeKg}kg chargeable · ${([l,w,h].sort((a,b)=>b-a)[0])}cm longest</span>
+   </div>
+   ${cheapestCourier?`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;margin-bottom:10px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:8px">
+    <span style="font-size:20px">🏆</span>
+    <div>
+     <div style="font-size:12px;font-weight:700;color:var(--green)">CHEAPEST: ${cheapestCourier.icon} ${cheapestCourier.name} — £${cheapestCourier.price.toFixed(2)}</div>
+     <div style="font-size:10.5px;color:var(--text3)">${cheapestCourier.service} · ${cheapestCourier.transit}</div>
+    </div>
+   </div>`:''}
+   <div style="font-size:9.5px;color:var(--text3);margin-bottom:8px">Retail rates 2026. Business/volume accounts may be lower. Surcharges may apply.</div>
+   ${filteredCouriers.map(c=>{
+    const isCheapest=c.eligible&&c.name===cheapestCourier?.name;
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px ${isCheapest?'8px':'0'};border-bottom:1px solid var(--border);${isCheapest?'background:rgba(16,185,129,0.05);border-radius:6px;':''}">
+     <div style="flex:1">
+      <div style="font-size:12px;font-weight:700">${c.icon} ${c.name}${isCheapest?' <span style="font-size:8.5px;background:var(--green);color:white;padding:1px 6px;border-radius:3px;margin-left:4px">CHEAPEST</span>':''}</div>
+      <div style="font-size:10.5px;color:var(--text3)">${c.service} · ${c.transit}</div>
+      ${!c.eligible?`<div style="font-size:9.5px;color:var(--red);margin-top:2px">❌ ${c.reason}</div>`:''}
+     </div>
+     <div style="text-align:right;flex-shrink:0;margin-left:10px">
+      <div style="font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${c.eligible?isCheapest?'var(--green)':'var(--text)':'var(--text3)'}">${c.eligible?'£'+c.price.toFixed(2):'N/A'}</div>
+     </div>
+    </div>`;
+   }).join('')}
+  </div>`;
  }
+
 
  if(platform==='all'&&price){
  const nets=[
