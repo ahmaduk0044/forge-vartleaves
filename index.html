@@ -4267,7 +4267,7 @@ updateUndoRedoBtns();
 // Check existing session — if valid skip login
 if(!checkForgeSession()){
  setTimeout(()=>{
-  const u=document.getElementById('login-user');
+  const u=document.getElementById('forge-login-user');
   if(u)u.focus();
  },150);
 }
