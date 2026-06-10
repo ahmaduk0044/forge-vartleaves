@@ -4195,6 +4195,12 @@ function onLoginSuccess(user){
  if(badgeRole)badgeRole.textContent=user.role==='admin'?'⚡ Admin':'👁 Viewer';
  if(dot)dot.className='user-dot '+user.role;
  if(user.role==='viewer')applyViewerMode();
+ // ── Init the app NOW after login ──
+ nav('dashboard');
+ checkDriveStatus();
+ fetchLiveRates();
+ setInterval(()=>fetchLiveRates(),600000);
+ updateUndoRedoBtns();
  showToast('Welcome, '+user.name+'! 👋','success');
 }
 
@@ -4255,23 +4261,11 @@ function checkForgeSession(){
 })();
 
 // ═══════════════════════════════════════════════════
-// INIT — App init first, then login gate
+// INIT — Login gate first, then app
 // ═══════════════════════════════════════════════════
-nav('dashboard');
 initTheme();
-checkDriveStatus();
-fetchLiveRates();
-setInterval(()=>fetchLiveRates(),600000);
-updateUndoRedoBtns();
 
-// Check existing session — if valid skip login
-if(!checkForgeSession()){
- setTimeout(()=>{
-  const u=document.getElementById('forge-login-user');
-  if(u)u.focus();
- },150);
-}
-
+// Keyboard shortcuts (always active)
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'){
   closeModal();
@@ -4283,6 +4277,16 @@ document.addEventListener('keydown',e=>{
  if(e.ctrlKey&&e.key==='z'&&!e.shiftKey){e.preventDefault();undoAction();}
  if((e.ctrlKey&&e.key==='y')||(e.ctrlKey&&e.shiftKey&&e.key==='Z')){e.preventDefault();redoAction();}
 });
+
+// Check session — if valid, init app; otherwise show login
+if(!checkForgeSession()){
+ // Show login screen, focus username
+ setTimeout(()=>{
+  const u=document.getElementById('forge-login-user');
+  if(u)u.focus();
+ },100);
+}
+// App init happens inside onLoginSuccess() after successful login
 </script>
 </body>
 </html>
