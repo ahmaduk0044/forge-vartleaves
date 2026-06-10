@@ -344,7 +344,55 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
 </style>
 </head>
 <body>
-<nav class="sidebar">
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- LOGIN SCREEN -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="forge-login" style="position:fixed;inset:0;background:#080b12;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column">
+  <div style="text-align:center;margin-bottom:32px">
+    <div style="font-size:42px;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">FORGE</div>
+    <div style="font-size:12px;color:#4a5a75;margin-top:4px;letter-spacing:2px;text-transform:uppercase">Vartleaves Limited · ERP System</div>
+  </div>
+
+  <div style="background:#0e1420;border:1px solid #1c2840;border-radius:14px;padding:32px;width:340px;box-shadow:0 24px 64px rgba(0,0,0,0.6)">
+    <div style="font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:6px">Welcome back</div>
+    <div style="font-size:12px;color:#4a5a75;margin-bottom:24px">Sign in to continue to FORGE</div>
+
+    <div id="login-error" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:10px 13px;font-size:12px;color:#ef4444;margin-bottom:16px"></div>
+
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;font-weight:700;color:#4a5a75;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">Username</label>
+      <input id="login-user" type="text" placeholder="Enter username" autocomplete="username"
+        style="width:100%;box-sizing:border-box;background:#141a26;border:1px solid #1c2840;border-radius:8px;padding:10px 13px;font-size:13px;color:#e2e8f0;outline:none;transition:border-color 0.2s"
+        onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#1c2840'"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;font-weight:700;color:#4a5a75;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">Password</label>
+      <div style="position:relative">
+        <input id="login-pass" type="password" placeholder="Enter password" autocomplete="current-password"
+          style="width:100%;box-sizing:border-box;background:#141a26;border:1px solid #1c2840;border-radius:8px;padding:10px 36px 10px 13px;font-size:13px;color:#e2e8f0;outline:none;transition:border-color 0.2s"
+          onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#1c2840'"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <span onclick="toggleLoginPw()" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:#4a5a75" id="pw-eye">👁</span>
+      </div>
+    </div>
+
+    <button onclick="doLogin()" id="login-btn"
+      style="width:100%;padding:11px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;border-radius:8px;font-size:13px;font-weight:700;color:white;cursor:pointer;transition:opacity 0.2s;letter-spacing:0.5px"
+      onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      Sign In →
+    </button>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #1c2840;display:flex;align-items:center;gap:8px">
+      <div style="width:6px;height:6px;border-radius:50%;background:#10b981"></div>
+      <div style="font-size:11px;color:#4a5a75">Secure · Session-based · Auto-logout on close</div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;font-size:10px;color:#1c2840">FORGE v2.2 · Vartleaves Limited · Confidential</div>
+</div>
  <div class="logo"><div class="logo-mark">FORGE</div><div class="logo-sub">Vartleaves Limited</div></div>
  <div class="nav-section">
  <div class="nav-label">Overview</div>
@@ -3845,17 +3893,209 @@ function updateFBAStatus(id,status){
  renderFBAShip();
 }
 
+// ══════════════════════════════════════════════════
+// FORGE LOGIN SYSTEM — Role-based Access Control
+// ══════════════════════════════════════════════════
+
+// CREDENTIALS — Change these passwords
+const FORGE_USERS = [
+  {username:'ahmed',    password:'Vartleaves2026!', role:'admin',  name:'Ahmed'},
+  {username:'wajahat',  password:'Forge@Wajahat1',  role:'admin',  name:'Wajahat'},
+  {username:'fatima',   password:'View@Fatima1',    role:'viewer', name:'Fatima'},
+  {username:'abdullah', password:'View@Abdullah1',  role:'viewer', name:'Abdullah'},
+  {username:'amna',     password:'View@Amna1',      role:'viewer', name:'Amna'},
+];
+
+let CURRENT_USER = null;
+
+function doLogin(){
+  const u = document.getElementById('login-user')?.value.trim().toLowerCase();
+  const p = document.getElementById('login-pass')?.value;
+  const errBox = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  if(!u || !p){
+    showLoginError('Please enter username and password');
+    return;
+  }
+
+  btn.textContent = 'Signing in...';
+  btn.style.opacity = '0.7';
+
+  // Simulate slight delay for UX
+  setTimeout(()=>{
+    const user = FORGE_USERS.find(x => x.username === u && x.password === p);
+    if(!user){
+      showLoginError('Incorrect username or password. Please try again.');
+      btn.textContent = 'Sign In →';
+      btn.style.opacity = '1';
+      // Clear password field
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-pass').focus();
+      return;
+    }
+
+    // Login success
+    CURRENT_USER = user;
+    sessionStorage.setItem('forge_session', JSON.stringify({
+      username: user.username,
+      name: user.name,
+      role: user.role,
+      loginTime: new Date().toISOString()
+    }));
+
+    // Hide login screen with fade
+    const loginEl = document.getElementById('forge-login');
+    loginEl.style.transition = 'opacity 0.4s';
+    loginEl.style.opacity = '0';
+    setTimeout(()=>{
+      loginEl.style.display = 'none';
+      applyRoleRestrictions(user.role);
+      showToast(`✅ Welcome back, ${user.name}!`, 'success');
+      autoLog('System', 'Login', `${user.name} (${user.role}) logged in`);
+    }, 400);
+  }, 500);
+}
+
+function showLoginError(msg){
+  const box = document.getElementById('login-error');
+  if(!box) return;
+  box.textContent = msg;
+  box.style.display = 'block';
+  // Shake animation
+  box.style.animation = 'none';
+  setTimeout(()=> box.style.animation = 'loginShake 0.4s ease', 10);
+}
+
+function toggleLoginPw(){
+  const inp = document.getElementById('login-pass');
+  const eye = document.getElementById('pw-eye');
+  if(!inp) return;
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    if(eye) eye.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    if(eye) eye.textContent = '👁';
+  }
+}
+
+function applyRoleRestrictions(role){
+  // Show user info in topbar
+  const userBadge = document.createElement('div');
+  userBadge.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;font-size:11px';
+  userBadge.innerHTML = `
+    <div style="width:20px;height:20px;border-radius:50%;background:${role==='admin'?'var(--accent2)':'var(--green)'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white">${CURRENT_USER.name[0]}</div>
+    <span style="font-weight:600;color:var(--text)">${CURRENT_USER.name}</span>
+    <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:${role==='admin'?'rgba(37,99,235,0.15)':'rgba(16,185,129,0.15)'};color:${role==='admin'?'var(--accent2)':'var(--green)'};font-weight:700">${role.toUpperCase()}</span>
+    <span onclick="forgeLogout()" style="cursor:pointer;color:var(--text3);font-size:10px;margin-left:2px" title="Logout">⏏</span>
+  `;
+
+  // Insert before add-btn
+  const addBtn = document.getElementById('add-btn');
+  if(addBtn && addBtn.parentNode){
+    addBtn.parentNode.insertBefore(userBadge, addBtn);
+  }
+
+  // VIEWER restrictions — hide edit/add/delete controls
+  if(role === 'viewer'){
+    // Hide Add New button
+    const ab = document.getElementById('add-btn');
+    if(ab) ab.style.display = 'none';
+
+    // Hide Drive sync
+    const driveInd = document.getElementById('drive-indicator');
+    if(driveInd) driveInd.style.display = 'none';
+
+    // Add viewer banner
+    const banner = document.createElement('div');
+    banner.id = 'viewer-banner';
+    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(245,158,11,0.12);border-top:1px solid rgba(245,158,11,0.25);padding:6px 20px;font-size:11px;color:var(--yellow);z-index:100;display:flex;align-items:center;gap:8px';
+    banner.innerHTML = '👁 Viewer mode — You can view all data but cannot make changes. Contact Ahmed for edit access.';
+    document.body.appendChild(banner);
+
+    // Override edit/delete functions for viewer
+    window._editBlocked = function(){
+      showToast('⚠ Viewer access only — contact Ahmed to make changes', 'error');
+    };
+
+    // Override save functions
+    ['saveModal','saveFreightEdit','saveProdInfo','saveLaunchModal',
+     'saveFBAShipModal','saveConfig','advanceLaunch','advanceFBAStage',
+     'delOrder','delAct','deleteLaunch','deleteFBAShip'].forEach(fn => {
+      if(typeof window[fn] === 'function'){
+        window[fn] = window._editBlocked;
+      }
+    });
+  }
+}
+
+function forgeLogout(){
+  if(!confirm('Sign out of FORGE?')) return;
+  sessionStorage.removeItem('forge_session');
+  CURRENT_USER = null;
+  // Reload page = back to login
+  location.reload();
+}
+
+// Check for existing session on load
+function checkForgeSession(){
+  const sess = sessionStorage.getItem('forge_session');
+  if(sess){
+    try{
+      const s = JSON.parse(sess);
+      const user = FORGE_USERS.find(x => x.username === s.username);
+      if(user){
+        CURRENT_USER = user;
+        const loginEl = document.getElementById('forge-login');
+        if(loginEl) loginEl.style.display = 'none';
+        applyRoleRestrictions(user.role);
+        return true;
+      }
+    }catch(e){}
+  }
+  return false;
+}
+
+// Add shake animation CSS
+(function(){
+  const s = document.createElement('style');
+  s.textContent = `
+    @keyframes loginShake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)}
+      60%{transform:translateX(-5px)}
+      80%{transform:translateX(5px)}
+    }
+    #forge-login input:focus{border-color:#2563eb!important;}
+    #viewer-banner{animation:slideUp 0.3s ease;}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  `;
+  document.head.appendChild(s);
+})();
+
+// ══════════════════════════════════════════════════
+// INIT
 nav('dashboard');
 initTheme();
 checkDriveStatus();
 fetchLiveRates();
 setInterval(()=>fetchLiveRates(),600000);
 updateUndoRedoBtns();
+// Check session AFTER init so app is ready
+if(!checkForgeSession()){
+  // Show login — focus username field
+  setTimeout(()=>{
+    const u = document.getElementById('login-user');
+    if(u) u.focus();
+  }, 100);
+}
 document.addEventListener('keydown',e=>{
- if(e.key==='Escape'){closeModal();document.getElementById('drive-overlay').classList.remove('open');document.getElementById('theme-panel').classList.remove('open');document.getElementById('currency-panel').classList.remove('open');}
- if(e.ctrlKey&&e.key==='k'){e.preventDefault();document.getElementById('global-search').focus();}
- if(e.ctrlKey&&e.key==='z'&&!e.shiftKey){e.preventDefault();undoAction();}
- if((e.ctrlKey&&e.key==='y')||(e.ctrlKey&&e.shiftKey&&e.key==='z')){e.preventDefault();redoAction();}
+  if(e.key==='Escape'){closeModal();document.getElementById('drive-overlay').classList.remove('open');document.getElementById('theme-panel').classList.remove('open');document.getElementById('currency-panel').classList.remove('open');}
+  if(e.ctrlKey&&e.key==='k'){e.preventDefault();document.getElementById('global-search').focus();}
+  if(e.ctrlKey&&e.key==='z'&&!e.shiftKey){e.preventDefault();undoAction();}
+  if((e.ctrlKey&&e.key==='y')||(e.ctrlKey&&e.shiftKey&&e.key==='z')){e.preventDefault();redoAction();}
 });
 </script>
 </body>
