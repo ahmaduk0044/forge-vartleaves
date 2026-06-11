@@ -862,9 +862,17 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  </select>
  <select class="filter-select" onchange="CF.fbs_courier=this.value;rp()">
  <option value="">All Couriers</option>
- <option>UPS</option><option>DPD</option><option>Royal Mail</option><option>Other</option>
+ <option>UPS</option><option>UPS Standard</option><option>UPS Express</option>
+ <option>DPD</option><option>DPD Local</option>
+ <option>Royal Mail</option><option>Parcelforce 24</option>
+ <option>Evri</option><option>Evri Business</option>
+ <option>DHL Express</option><option>Yodel</option>
+ <option>Amazon Shipping</option><option>Other</option>
  </select>
  <span class="filter-count" id="fbaship-count"></span>
+ <button class="btn btn-sm" style="margin-left:auto;background:rgba(255,153,0,0.12);color:#ff9900;border:1px solid rgba(255,153,0,0.3);white-space:nowrap" onclick="openAddExistingAmazonShipment()">
+  🟠 Track Existing Amazon Shipment
+ </button>
  </div>
  <div style="padding:14px 16px" id="fbaship-content"></div>
  </div>
@@ -1033,66 +1041,131 @@ function saveDB(){try{localStorage.setItem('forge_v1',JSON.stringify(DB));}catch
 const SEED={
  config:{rmbGbp:0.11,rmbUsd:0.14,gbpUsd:1.27,customs:0.05,margin:0.30,buffer:14,userName:'Ahmed'},
  products:[
- {sku:'WAL-TB-FBA-01',brand:'We Art Leaves',name:'Silicone Toilet Brush FBA 1pk',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,asin:'B0CCPPFZCT',status:'Active',supplierId:'SUP-001',certCost:0},
- {sku:'WAL-TB-FBA-04',brand:'We Art Leaves',name:'Silicone Toilet Brush FBA 4pk',category:'Bathroom',platform:'Amazon UK',costRmb:62.0,asin:'B0CDYH3KJ3',status:'Active',supplierId:'SUP-001',certCost:0},
- {sku:'WAL-TB-BLK-02',brand:'We Art Leaves',name:'Silicone Toilet Brush Black 2pk',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,asin:'B0D33PPM3C',status:'Active',supplierId:'SUP-001',certCost:0},
- {sku:'WAL-TB-GRY-02',brand:'We Art Leaves',name:'Silicone Toilet Brush Grey TB2',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,asin:'B0DT1P77DP',status:'Active',supplierId:'SUP-001',certCost:0},
- {sku:'WAL-TB-FBM-01',brand:'We Art Leaves',name:'Silicone Toilet Brush FBM',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,asin:'B0C6QY4HGJ',status:'Active',supplierId:'SUP-001',certCost:0},
- {sku:'WAL-OIL-RAW-01',brand:'We Art Leaves',name:'Batana Oil Raw',category:'Hair Oil',platform:'Amazon UK',costRmb:45.0,asin:'B0DT4M5KGT',status:'Active',supplierId:'SUP-002',certCost:0},
- {sku:'WAL-OIL-RAW-02',brand:'We Art Leaves',name:'Batana Oil Raw 2pcs',category:'Hair Oil',platform:'Amazon UK',costRmb:85.0,asin:'B0F66SVPF6',status:'Active',supplierId:'SUP-002',certCost:0},
- {sku:'WAL-OIL-3IN1-01',brand:'We Art Leaves',name:'Batana Oil 3-in-1',category:'Hair Oil',platform:'Amazon UK',costRmb:52.0,asin:'B0F6773V6C',status:'Active',supplierId:'SUP-002',certCost:0},
- {sku:'WAL-OIL-PUR-118',brand:'We Art Leaves',name:'Batana Oil Pure 118ml',category:'Hair Oil',platform:'Amazon UK',costRmb:48.0,asin:'B0DT4K328T',status:'Active',supplierId:'SUP-002',certCost:0},
- {sku:'WAL-SRM-60',brand:'We Art Leaves',name:'Batana Serum 60ml',category:'Hair Oil',platform:'Amazon UK',costRmb:38.0,asin:'B0DT4NMH4H',status:'Active',supplierId:'SUP-002',certCost:0},
- {sku:'WAL-CON-HERB-01',brand:'We Art Leaves',name:'Batana Conditioner Herb',category:'Hair Care',platform:'Amazon UK',costRmb:42.0,asin:'B0FBRT8SGH',status:'Active',supplierId:'SUP-002',certCost:0},
- {sku:'WAL-CON-ROSE-01',brand:'We Art Leaves',name:'Batana Conditioner Rose',category:'Hair Care',platform:'Amazon UK',costRmb:42.0,asin:'B0FBRTNPW6',status:'Active',supplierId:'SUP-002',certCost:0},
- {sku:'WAL-SHP-HERB-01',brand:'We Art Leaves',name:'Batana Shampoo Herb',category:'Shampoo',platform:'Amazon UK',costRmb:38.0,asin:'B0FBRQQRJC',status:'Active',supplierId:'SUP-002',certCost:0},
- {sku:'LMN-DHB-1PC',brand:'LaMNooN',name:'Dehumidifier Bag 1pc',category:'Household',platform:'Amazon UK',costRmb:12.0,asin:'B0GHGCKGX4',status:'Active',supplierId:'SUP-003',certCost:0},
- {sku:'LMN-DHB-2PC',brand:'LaMNooN',name:'Dehumidifier Bag 2pcs',category:'Household',platform:'Amazon UK',costRmb:22.0,asin:'B0GHGMKXDQ',status:'Active',supplierId:'SUP-003',certCost:0},
- {sku:'LMN-EWR-01',brand:'LaMNooN',name:'Ear Wax Removal Kit',category:'Health',platform:'Amazon UK',costRmb:28.0,asin:'B0GY1P3XN6',status:'Active',supplierId:'SUP-003',certCost:0},
- {sku:'WAL-WH-WHT-01',brand:'We Art Leaves',name:'Window Handle White 1pc',category:'Hardware',platform:'Amazon UK',costRmb:32.0,asin:'B0FYGDXBR3',status:'Active',supplierId:'SUP-003',certCost:0},
- {sku:'BYM-SOP-TUR-01',brand:'BYMO',name:'Turmeric Soap',category:'Soap',platform:'Amazon UK',costRmb:15.0,asin:'B0FSKV6YKL',status:'Active',supplierId:'SUP-002',certCost:0},
+  // We Art Leaves — Bathroom
+  {sku:'WAL-TB-FBA-01',brand:'We Art Leaves',name:'Silicone Toilet Brush FBA 1pk',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,asin:'B0CCPPFZCT',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'WAL-TB-FBA-04',brand:'We Art Leaves',name:'Silicone Toilet Brush FBA 4pk',category:'Bathroom',platform:'Amazon UK',costRmb:62.0,asin:'B0CDYH3KJ3',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'WAL-TB-BLK-02',brand:'We Art Leaves',name:'Silicone Toilet Brush Black 2pk',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,asin:'B0D33PPM3C',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'WAL-TB-GRY-02',brand:'We Art Leaves',name:'Silicone Toilet Brush Grey TB2',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,asin:'B0DT1P77DP',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'WAL-TB-FBM-01',brand:'We Art Leaves',name:'Silicone Toilet Brush FBM',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,asin:'B0C6QY4HGJ',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'WAL-SHC-BLK-01',brand:'We Art Leaves',name:'Shower Caddy Black',category:'Bathroom',platform:'Amazon UK',costRmb:28.0,asin:'B0TEST00001',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'WAL-HK-SUC-01',brand:'We Art Leaves',name:'Suction Cup Hook 4pk',category:'Bathroom',platform:'TikTok Shop UK',costRmb:12.0,asin:'',status:'Active',supplierId:'SUP-001',certCost:0},
+  // We Art Leaves — Hair
+  {sku:'WAL-OIL-RAW-01',brand:'We Art Leaves',name:'Batana Oil Raw',category:'Hair Oil',platform:'Amazon UK',costRmb:45.0,asin:'B0DT4M5KGT',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-OIL-RAW-02',brand:'We Art Leaves',name:'Batana Oil Raw 2pcs',category:'Hair Oil',platform:'Amazon UK',costRmb:85.0,asin:'B0F66SVPF6',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-OIL-3IN1-01',brand:'We Art Leaves',name:'Batana Oil 3-in-1',category:'Hair Oil',platform:'Amazon UK',costRmb:52.0,asin:'B0F6773V6C',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-OIL-PUR-118',brand:'We Art Leaves',name:'Batana Oil Pure 118ml',category:'Hair Oil',platform:'Amazon UK',costRmb:48.0,asin:'B0DT4K328T',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-SRM-60',brand:'We Art Leaves',name:'Batana Serum 60ml',category:'Hair Oil',platform:'Amazon UK',costRmb:38.0,asin:'B0DT4NMH4H',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-CON-HERB-01',brand:'We Art Leaves',name:'Batana Conditioner Herb',category:'Hair Care',platform:'Amazon UK',costRmb:42.0,asin:'B0FBRT8SGH',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-CON-ROSE-01',brand:'We Art Leaves',name:'Batana Conditioner Rose',category:'Hair Care',platform:'Amazon UK',costRmb:42.0,asin:'B0FBRTNPW6',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-SHP-HERB-01',brand:'We Art Leaves',name:'Batana Shampoo Herb',category:'Shampoo',platform:'Amazon UK',costRmb:38.0,asin:'B0FBRQQRJC',status:'Active',supplierId:'SUP-002',certCost:0},
+  // LaMNooN
+  {sku:'LMN-DHB-1PC',brand:'LaMNooN',name:'Dehumidifier Bag 1pc',category:'Household',platform:'Amazon UK',costRmb:12.0,asin:'B0GHGCKGX4',status:'Active',supplierId:'SUP-003',certCost:0},
+  {sku:'LMN-DHB-2PC',brand:'LaMNooN',name:'Dehumidifier Bag 2pcs',category:'Household',platform:'Amazon UK',costRmb:22.0,asin:'B0GHGMKXDQ',status:'Active',supplierId:'SUP-003',certCost:0},
+  {sku:'LMN-EWR-01',brand:'LaMNooN',name:'Ear Wax Removal Kit',category:'Health',platform:'Amazon UK',costRmb:28.0,asin:'B0GY1P3XN6',status:'Active',supplierId:'SUP-003',certCost:0},
+  {sku:'LMN-FGR-ELC-01',brand:'LaMNooN',name:'Electric Foot Grinder',category:'Health',platform:'Amazon UK',costRmb:35.0,asin:'B0TEST00002',status:'Active',supplierId:'SUP-003',certCost:45},
+  // BYMO
+  {sku:'WAL-WH-WHT-01',brand:'We Art Leaves',name:'Window Handle White 1pc',category:'Hardware',platform:'Amazon UK',costRmb:32.0,asin:'B0FYGDXBR3',status:'Active',supplierId:'SUP-003',certCost:0},
+  {sku:'BYM-SOP-TUR-01',brand:'BYMO',name:'Turmeric Soap',category:'Soap',platform:'Amazon UK',costRmb:15.0,asin:'B0FSKV6YKL',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'BYM-OIL-ROS-50',brand:'BYMO',name:'Rosemary Oil 50ml',category:'Hair Oil',platform:'Amazon UK',costRmb:22.0,asin:'B0TEST00003',status:'Active',supplierId:'SUP-002',certCost:120},
+  {sku:'BYM-OIL-BAT-100',brand:'BYMO',name:'Batana Oil 100ml Premium',category:'Hair Oil',platform:'TikTok Shop UK',costRmb:48.0,asin:'',status:'Active',supplierId:'SUP-002',certCost:120},
+  {sku:'BYM-RSW-SPR-200',brand:'BYMO',name:'Rosemary Rice Water Spray 200ml',category:'Hair Care',platform:'Amazon UK',costRmb:18.0,asin:'',status:'Pipeline',supplierId:'SUP-002',certCost:150},
  ],
  suppliers:[
- {id:'SUP-001',name:'Joy Plastics Co.',type:'Supplier',contact:'Joy Wang',email:'joy@joyplastics.cn',country:'China',payTerms:'30% deposit 70% on shipment',leadDays:45,bank:'Bank of China',currency:'RMB',onTimeRate:92,qualityScore:88,notes:''},
- {id:'SUP-002',name:'Batana Natural Ltd',type:'Supplier',contact:'Chen Li',email:'chen@batananatural.cn',country:'China',payTerms:'50/50',leadDays:30,bank:'ICBC Bank',currency:'RMB',onTimeRate:95,qualityScore:92,notes:''},
- {id:'SUP-003',name:'Guangzhou General Goods',type:'Supplier',contact:'David Chen',email:'david@gggoods.cn',country:'China',payTerms:'30% deposit 70% on shipment',leadDays:35,bank:'CCB Bank',currency:'RMB',onTimeRate:88,qualityScore:85,notes:''},
- {id:'FRT-COL',name:'Colin Freight UK',type:'Freight Forwarder',contact:'Colin Smith',email:'colin@colinfreight.co.uk',country:'UK',payTerms:'Net 30',leadDays:0,bank:'Barclays',currency:'GBP',onTimeRate:90,qualityScore:90,notes:''},
- {id:'FRT-ECO',name:'Eco Shipping Ltd',type:'Freight Forwarder',contact:'Sam Lee',email:'sam@ecoshipping.cn',country:'China',payTerms:'Net 30',leadDays:0,bank:'HSBC HK',currency:'USD',onTimeRate:87,qualityScore:88,notes:''},
- {id:'FRT-POL',name:'Polling Express',type:'Freight Forwarder',contact:'Ali Hassan',email:'ali@pollingexp.com',country:'UK',payTerms:'Net 30',leadDays:0,bank:'HSBC UK',currency:'GBP',onTimeRate:85,qualityScore:86,notes:''},
+  {id:'SUP-001',name:'Joy Plastics Co.',type:'Supplier',contact:'Joy Wang',email:'joy@joyplastics.cn',country:'China',payTerms:'30% deposit 70% on shipment',leadDays:45,bank:'Bank of China',currency:'RMB',onTimeRate:92,qualityScore:88,notes:'Main bathroom accessories supplier. MOQ 200 units.'},
+  {id:'SUP-002',name:'Batana Natural Ltd',type:'Supplier',contact:'Chen Li',email:'chen@batananatural.cn',country:'China',payTerms:'50/50',leadDays:30,bank:'ICBC Bank',currency:'RMB',onTimeRate:95,qualityScore:92,notes:'Hair care and oils specialist. Fast production.'},
+  {id:'SUP-003',name:'Guangzhou General Goods',type:'Supplier',contact:'David Chen',email:'david@gggoods.cn',country:'China',payTerms:'30% deposit 70% on shipment',leadDays:35,bank:'CCB Bank',currency:'RMB',onTimeRate:88,qualityScore:85,notes:'Household and health products.'},
+  {id:'SUP-004',name:'Shenzhen Packaging Co.',type:'Supplier',contact:'Lucy Zhang',email:'lucy@szpack.cn',country:'China',payTerms:'Full upfront',leadDays:20,bank:'Bank of China',currency:'RMB',onTimeRate:96,qualityScore:94,notes:'Packaging and labels only.'},
+  {id:'FRT-COL',name:'Colin Freight UK',type:'Freight Forwarder',contact:'Colin Smith',email:'colin@colinfreight.co.uk',country:'UK',payTerms:'Net 30',leadDays:0,bank:'Barclays',currency:'GBP',onTimeRate:90,qualityScore:90,notes:'Sea LCL specialist China-UK. 40-45 days.'},
+  {id:'FRT-ECO',name:'Eco Shipping Ltd',type:'Freight Forwarder',contact:'Sam Lee',email:'sam@ecoshipping.cn',country:'China',payTerms:'Net 30',leadDays:0,bank:'HSBC HK',currency:'USD',onTimeRate:87,qualityScore:88,notes:'Air and sea options. Good for urgent orders.'},
+  {id:'FRT-POL',name:'Polling Express',type:'Freight Forwarder',contact:'Ali Hassan',email:'ali@pollingexp.com',country:'UK',payTerms:'Net 30',leadDays:0,bank:'HSBC UK',currency:'GBP',onTimeRate:85,qualityScore:86,notes:'Sea FCL specialist. Best for large volumes.'},
  ],
  orders:[
- {poNum:'PO-2026-001',date:'15/04/2026',sku:'WAL-TB-FBA-01',supplierId:'SUP-001',qty:500,payStatus:'Paid',paid:925,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:''},
- {poNum:'PO-2026-002',date:'22/04/2026',sku:'WAL-OIL-RAW-01',supplierId:'SUP-002',qty:200,payStatus:'Paid',paid:990,stage:'Delivered',forwarder:'Eco',rateGbp:0.11,notes:''},
- {poNum:'PO-2026-003',date:'01/05/2026',sku:'WAL-TB-GRY-02',supplierId:'SUP-001',qty:300,payStatus:'Partial',paid:577.5,stage:'In Production',forwarder:'Colin',rateGbp:0.11,notes:''},
- {poNum:'PO-2026-004',date:'10/05/2026',sku:'LMN-DHB-1PC',supplierId:'SUP-003',qty:400,payStatus:'Pending',paid:0,stage:'Order Placed',forwarder:'Polling',rateGbp:0.11,notes:''},
- {poNum:'PO-2026-005',date:'18/05/2026',sku:'BYM-SOP-TUR-01',supplierId:'SUP-002',qty:150,payStatus:'Pending',paid:0,stage:'Order Placed',forwarder:'',rateGbp:0.11,notes:'Sample order'},
+  // Delivered POs
+  {poNum:'PO-2026-001',date:'15/03/2026',sku:'WAL-TB-FBA-01',supplierId:'SUP-001',qty:500,payStatus:'Paid',paid:1017.5,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'Spring restock'},
+  {poNum:'PO-2026-002',date:'22/03/2026',sku:'WAL-OIL-RAW-01',supplierId:'SUP-002',qty:200,payStatus:'Paid',paid:990,stage:'Delivered',forwarder:'Eco',rateGbp:0.11,notes:''},
+  {poNum:'PO-2026-003',date:'01/04/2026',sku:'WAL-TB-GRY-02',supplierId:'SUP-001',qty:300,payStatus:'Paid',paid:1155,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'New colourway launch'},
+  {poNum:'PO-2026-004',date:'10/04/2026',sku:'LMN-DHB-1PC',supplierId:'SUP-003',qty:400,payStatus:'Paid',paid:528,stage:'Delivered',forwarder:'Polling',rateGbp:0.11,notes:''},
+  // In transit / production
+  {poNum:'PO-2026-005',date:'05/05/2026',sku:'WAL-OIL-PUR-118',supplierId:'SUP-002',qty:300,payStatus:'Partial',paid:792,stage:'Shipped',forwarder:'Eco',rateGbp:0.11,notes:'Air express - urgent'},
+  {poNum:'PO-2026-006',date:'12/05/2026',sku:'WAL-TB-FBA-04',supplierId:'SUP-001',qty:250,payStatus:'Partial',paid:852.5,stage:'In Production',forwarder:'Colin',rateGbp:0.11,notes:''},
+  {poNum:'PO-2026-007',date:'20/05/2026',sku:'BYM-OIL-ROS-50',supplierId:'SUP-002',qty:200,payStatus:'Partial',paid:242,stage:'QC Check',forwarder:'Eco',rateGbp:0.11,notes:'New BYMO launch stock'},
+  // Pending / new
+  {poNum:'PO-2026-008',date:'01/06/2026',sku:'LMN-EWR-01',supplierId:'SUP-003',qty:150,payStatus:'Pending',paid:0,stage:'Order Placed',forwarder:'',rateGbp:0.11,notes:'Test order small qty'},
+  {poNum:'PO-2026-009',date:'05/06/2026',sku:'BYM-SOP-TUR-01',supplierId:'SUP-002',qty:300,payStatus:'Pending',paid:0,stage:'Order Placed',forwarder:'',rateGbp:0.11,notes:''},
+  {poNum:'PO-2026-010',date:'08/06/2026',sku:'WAL-SHC-BLK-01',supplierId:'SUP-001',qty:200,payStatus:'Pending',paid:0,stage:'Deposit Paid',forwarder:'Colin',rateGbp:0.11,notes:'New product first order'},
  ],
  freight:[
- {frNum:'FR-2026-001',poNum:'PO-2026-001',sku:'WAL-TB-FBA-01',forwarder:'Colin',mode:'Sea LCL',tracking:'COSU12345678',costGbp:93.5,departure:'25/04/2026',eta:'20/05/2026',customs:'Cleared',arrivalDate:'22/05/2026',deliveredTo:'FBA UK'},
- {frNum:'FR-2026-002',poNum:'PO-2026-002',sku:'WAL-OIL-RAW-01',forwarder:'Eco',mode:'Air Express',tracking:'DHL987654321',costGbp:132.0,departure:'28/04/2026',eta:'05/05/2026',customs:'Cleared',arrivalDate:'06/05/2026',deliveredTo:'Own Warehouse'},
- {frNum:'FR-2026-003',poNum:'PO-2026-003',sku:'WAL-TB-GRY-02',forwarder:'Colin',mode:'Sea LCL',tracking:'COSU87654321',costGbp:85.8,departure:'08/05/2026',eta:'03/06/2026',customs:'Not Filed',arrivalDate:'',deliveredTo:''},
+  // Delivered shipments
+  {frNum:'FR-2026-001',poNum:'PO-2026-001',sku:'WAL-TB-FBA-01',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU12345678',costGbp:93.5,departure:'25/03/2026',eta:'10/04/2026',customs:'Cleared',arrivalDate:'12/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-002',poNum:'PO-2026-002',sku:'WAL-OIL-RAW-01',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL987654321',costGbp:132.0,departure:'25/03/2026',eta:'02/04/2026',customs:'Cleared',arrivalDate:'03/04/2026',deliveredTo:'Own Warehouse',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-003',poNum:'PO-2026-003',sku:'WAL-TB-GRY-02',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU87654321',costGbp:85.8,departure:'12/04/2026',eta:'28/04/2026',customs:'Cleared',arrivalDate:'30/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-004',poNum:'PO-2026-004',sku:'LMN-DHB-1PC',forwarder:'Polling',carrier:'UPS',mode:'Sea FCL',tracking:'MSKU9876543',costGbp:68.0,departure:'20/04/2026',eta:'05/05/2026',customs:'Cleared',arrivalDate:'07/05/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
+  // In transit
+  {frNum:'FR-2026-005',poNum:'PO-2026-005',sku:'WAL-OIL-PUR-118',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL112233445',costGbp:188.0,departure:'08/05/2026',eta:'16/05/2026',customs:'Cleared',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
+  {frNum:'FR-2026-006',poNum:'PO-2026-006',sku:'WAL-TB-FBA-04',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU55566677',costGbp:112.0,departure:'25/05/2026',eta:'12/06/2026',customs:'Filed',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
+  // Booked / dispatched
+  {frNum:'FR-2026-007',poNum:'PO-2026-007',sku:'BYM-OIL-ROS-50',forwarder:'Eco',carrier:'Evri Business',mode:'Air Express',tracking:'EVR778899001',costGbp:95.0,departure:'',eta:'20/06/2026',customs:'Not Filed',arrivalDate:'',deliveredTo:'',shipStage:'Booked'},
  ],
  inventory:[
- {sku:'WAL-TB-FBA-01',fba:145,tpl:0,warehouse:50,reserved:10,velocity:8.5,leadDays:45,location:'FBA UK'},
- {sku:'WAL-OIL-RAW-01',fba:88,tpl:0,warehouse:30,reserved:5,velocity:5.2,leadDays:30,location:'FBA UK'},
- {sku:'WAL-TB-GRY-02',fba:0,tpl:0,warehouse:0,reserved:0,velocity:4.0,leadDays:45,location:'In Transit'},
- {sku:'LMN-DHB-1PC',fba:32,tpl:20,warehouse:0,reserved:0,velocity:2.5,leadDays:40,location:'FBA UK'},
- {sku:'BYM-SOP-TUR-01',fba:0,tpl:0,warehouse:25,reserved:0,velocity:1.2,leadDays:35,location:'Own Warehouse'},
- {sku:'WAL-OIL-PUR-118',fba:55,tpl:0,warehouse:20,reserved:0,velocity:3.8,leadDays:30,location:'FBA UK'},
- {sku:'WAL-TB-FBA-04',fba:38,tpl:0,warehouse:0,reserved:0,velocity:6.2,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-FBA-01',fba:145,tpl:0,warehouse:50,reserved:10,velocity:8.5,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-FBA-04',fba:38,tpl:0,warehouse:0,reserved:0,velocity:6.2,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-BLK-02',fba:72,tpl:0,warehouse:20,reserved:0,velocity:4.8,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-GRY-02',fba:95,tpl:0,warehouse:30,reserved:0,velocity:4.0,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-FBM-01',fba:28,tpl:15,warehouse:0,reserved:0,velocity:2.1,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-OIL-RAW-01',fba:88,tpl:0,warehouse:30,reserved:5,velocity:5.2,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-OIL-RAW-02',fba:42,tpl:0,warehouse:0,reserved:0,velocity:3.1,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-OIL-3IN1-01',fba:35,tpl:0,warehouse:10,reserved:0,velocity:2.8,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-OIL-PUR-118',fba:55,tpl:0,warehouse:20,reserved:0,velocity:3.8,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-SRM-60',fba:22,tpl:0,warehouse:8,reserved:0,velocity:1.9,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-CON-HERB-01',fba:18,tpl:0,warehouse:0,reserved:0,velocity:1.5,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-CON-ROSE-01',fba:15,tpl:0,warehouse:0,reserved:0,velocity:1.3,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-SHP-HERB-01',fba:24,tpl:0,warehouse:10,reserved:0,velocity:2.0,leadDays:30,location:'FBA UK'},
+  {sku:'LMN-DHB-1PC',fba:32,tpl:20,warehouse:0,reserved:0,velocity:2.5,leadDays:40,location:'FBA UK'},
+  {sku:'LMN-DHB-2PC',fba:14,tpl:10,warehouse:0,reserved:0,velocity:1.8,leadDays:40,location:'FBA UK'},
+  {sku:'LMN-EWR-01',fba:8,tpl:0,warehouse:0,reserved:0,velocity:1.2,leadDays:35,location:'FBA UK'},
+  {sku:'BYM-SOP-TUR-01',fba:0,tpl:0,warehouse:25,reserved:0,velocity:1.2,leadDays:35,location:'Own Warehouse'},
+  {sku:'BYM-OIL-ROS-50',fba:0,tpl:0,warehouse:0,reserved:0,velocity:0,leadDays:35,location:'In Transit'},
+  {sku:'WAL-WH-WHT-01',fba:45,tpl:0,warehouse:0,reserved:0,velocity:3.2,leadDays:35,location:'FBA UK'},
+  {sku:'LMN-FGR-ELC-01',fba:0,tpl:0,warehouse:12,reserved:0,velocity:0.8,leadDays:40,location:'Own Warehouse'},
  ],
  profit:[
- {sku:'WAL-TB-FBA-01',platform:'Amazon UK',sellGbp:9.99,referralPct:15,fbaFee:2.85,fbmFee:0,storageFee:0.05,returnRate:2},
- {sku:'WAL-OIL-RAW-01',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
- {sku:'WAL-TB-GRY-02',platform:'TikTok Shop UK',sellGbp:9.99,referralPct:8,fbaFee:0,fbmFee:1.50,storageFee:0,returnRate:3},
- {sku:'LMN-DHB-1PC',platform:'Amazon UK',sellGbp:7.99,referralPct:15,fbaFee:2.65,fbmFee:0,storageFee:0.04,returnRate:2},
- {sku:'BYM-SOP-TUR-01',platform:'Amazon UK',sellGbp:6.99,referralPct:15,fbaFee:2.50,fbmFee:0,storageFee:0.03,returnRate:3},
- {sku:'WAL-OIL-PUR-118',platform:'Amazon UK',sellGbp:18.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-TB-FBA-01',platform:'Amazon UK',sellGbp:9.99,referralPct:15,fbaFee:2.85,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-TB-FBA-04',platform:'Amazon UK',sellGbp:24.99,referralPct:15,fbaFee:4.50,fbmFee:0,storageFee:0.08,returnRate:2},
+  {sku:'WAL-TB-BLK-02',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.31,fbmFee:0,storageFee:0.06,returnRate:2},
+  {sku:'WAL-TB-GRY-02',platform:'TikTok Shop UK',sellGbp:9.99,referralPct:8,fbaFee:0,fbmFee:1.50,storageFee:0,returnRate:3},
+  {sku:'WAL-OIL-RAW-01',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-OIL-PUR-118',platform:'Amazon UK',sellGbp:18.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-OIL-3IN1-01',platform:'Amazon UK',sellGbp:16.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'LMN-DHB-1PC',platform:'Amazon UK',sellGbp:7.99,referralPct:15,fbaFee:2.65,fbmFee:0,storageFee:0.04,returnRate:2},
+  {sku:'LMN-DHB-2PC',platform:'Amazon UK',sellGbp:12.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.06,returnRate:2},
+  {sku:'LMN-EWR-01',platform:'Amazon UK',sellGbp:16.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:3},
+  {sku:'BYM-SOP-TUR-01',platform:'Amazon UK',sellGbp:6.99,referralPct:15,fbaFee:2.50,fbmFee:0,storageFee:0.03,returnRate:3},
+  {sku:'BYM-OIL-ROS-50',platform:'Amazon UK',sellGbp:12.99,referralPct:8,fbaFee:2.95,fbmFee:0,storageFee:0.04,returnRate:2},
+  {sku:'BYM-OIL-BAT-100',platform:'TikTok Shop UK',sellGbp:19.99,referralPct:5,fbaFee:0,fbmFee:2.50,storageFee:0,returnRate:2},
+  {sku:'WAL-WH-WHT-01',platform:'Amazon UK',sellGbp:8.99,referralPct:15,fbaFee:2.73,fbmFee:0,storageFee:0.04,returnRate:1},
+  {sku:'LMN-FGR-ELC-01',platform:'Amazon UK',sellGbp:24.99,referralPct:7,fbaFee:4.50,fbmFee:0,storageFee:0.08,returnRate:5},
  ],
  cashflow:[
- {month:'Jan',year:2026,supplierPaid:0,freight:0,otherCosts:0,revenue:0},
- {month:'Feb',year:2026,supplierPaid:0,freight:0,otherCosts:0,revenue:0},
- {month:'Mar',year:2026,supplierPaid:0,freight:0,otherCosts:0,revenue:0},
+  {month:'Jan',year:2026,supplierPaid:1850,freight:210,otherCosts:320,revenue:4200},
+  {month:'Feb',year:2026,supplierPaid:2200,freight:185,otherCosts:290,revenue:5100},
+  {month:'Mar',year:2026,supplierPaid:3100,freight:420,otherCosts:380,revenue:6800},
+  {month:'Apr',year:2026,supplierPaid:2800,freight:310,otherCosts:410,revenue:7200},
+  {month:'May',year:2026,supplierPaid:3400,freight:520,otherCosts:450,revenue:8100},
+  {month:'Jun',year:2026,supplierPaid:1200,freight:285,otherCosts:320,revenue:3200},
+ ],
+ activity:[
+  {date:'11/06/2026',category:'Product Launch',ref:'BYM-OIL-ROS-50',what:'Rosemary Oil 50ml listing went live on Amazon UK',action:'Monitored BSR and PPC campaign launched',doneBy:'Ahmed',status:'Open'},
+  {date:'10/06/2026',category:'Freight Delay',ref:'FR-2026-006',what:'Colin confirmed ETA pushed by 5 days due to port congestion at Felixstowe',action:'Updated ETA in system. Notified FBA team.',doneBy:'Wajahat',status:'In Progress'},
+  {date:'09/06/2026',category:'Payment',ref:'PO-2026-008',what:'30% deposit paid to Guangzhou General Goods for Ear Wax Kit order',action:'Bank transfer sent. Awaiting confirmation.',doneBy:'Ahmed',status:'Resolved'},
+  {date:'08/06/2026',category:'Stock Alert',ref:'LMN-EWR-01',what:'FBA stock dropped to 8 units. Reorder point is 14.',action:'Created PO-2026-008 immediately.',doneBy:'Ahmed',status:'Resolved'},
+  {date:'07/06/2026',category:'Supplier Issue',ref:'SUP-001',what:'Joy Plastics reported production delay of 7 days on PO-2026-006 due to material shortage',action:'Flagged for monitoring. Requested weekly updates.',doneBy:'Wajahat',status:'In Progress'},
+  {date:'05/06/2026',category:'Payment',ref:'PO-2026-007',what:'30% deposit £242 paid for Rosemary Oil order',action:'Transfer confirmed by bank.',doneBy:'Ahmed',status:'Resolved'},
+  {date:'03/06/2026',category:'General Note',ref:'WAL-OIL-PUR-118',what:'Amazon flagged listing for image compliance review',action:'New hero image uploaded. Case #12345678 raised.',doneBy:'Fatima',status:'In Progress'},
+  {date:'01/06/2026',category:'Product Launch',ref:'PO-2026-010',what:'Shower Caddy Black — first order placed with Joy Plastics',action:'Deposit paid. Production start confirmed for 5 June.',doneBy:'Ahmed',status:'Open'},
+ ],
+ fbaShipments:[],
+ launches:[],
+
  {month:'Apr',year:2026,supplierPaid:1915,freight:225.5,otherCosts:0,revenue:0},
  {month:'May',year:2026,supplierPaid:577.5,freight:85.8,otherCosts:0,revenue:183.81},
  {month:'Jun',year:2026,supplierPaid:0,freight:0,otherCosts:0,revenue:0},
@@ -1971,7 +2044,7 @@ async function syncAllTabs(){
 function getTrackingUrl(courier,tracking){
  if(!tracking||tracking==='—') return '#';
  const c=(courier||'').toLowerCase();
- if(c.includes('dpd')) return 'https://www.dpd.co.uk/apps/tracking/?ref='+tracking;
+ if(c.includes('dpd')) return 'https://www.dpd.co.uk/service/index.jsp?search='+tracking+'&type=parcel;
  if(c.includes('ups')) return 'https://www.ups.com/track?tracknum='+tracking;
  if(c.includes('evri')||c.includes('hermes')) return 'https://www.evri.com/track-a-parcel#/tracking/'+tracking;
  if(c.includes('parcelforce')) return 'https://www.parcelforce.com/track-trace?trackNumber='+tracking;
@@ -3607,7 +3680,7 @@ function renderFBACard(s){
  ${s.trackingNumber?`<div style="margin-top:10px;display:flex;align-items:center;gap:8px;font-size:12px">
  <span style="color:var(--text3)">Tracking:</span>
  <span class="mono" style="color:var(--accent2)">${s.trackingNumber}</span>
-  ${s.courier==='DPD'||s.courier==='DPD Local'?`<a href="https://www.dpd.co.uk/apps/tracking/?ref=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🔵 Track DPD →</a>`:''}
+  ${s.courier==='DPD'||s.courier==='DPD Local'?`<a href="https://www.dpd.co.uk/service/index.jsp?search=${s.trackingNumber}&type=parcel" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🔵 Track DPD →</a>`:''}
   ${s.courier==='UPS'||s.courier==='UPS Standard'||s.courier==='UPS Express'?`<a href="https://www.ups.com/track?tracknum=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟤 Track UPS →</a>`:''}
   ${s.courier==='Evri'||s.courier==='Evri Business'?`<a href="https://www.evri.com/track-a-parcel#/tracking/${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟣 Track Evri →</a>`:''}
   ${s.courier==='Royal Mail'?`<a href="https://www.royalmail.com/track-your-item#/tracking-results/${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🔴 Track Royal Mail →</a>`:''}
@@ -3619,6 +3692,54 @@ function renderFBACard(s){
 
  ${s.notes?`<div style="margin-top:8px;font-size:11.5px;color:var(--text3);padding:7px 10px;background:var(--surface2);border-radius:6px">📝 ${s.notes}</div>`:''}
 
+ <!-- AMAZON FBA TRACKER PANEL -->
+ ${s.shipmentId?`
+ <div style="margin-top:10px;background:rgba(255,153,0,0.06);border:1px solid rgba(255,153,0,0.2);border-radius:8px;overflow:hidden">
+  <div style="padding:9px 13px;border-bottom:1px solid rgba(255,153,0,0.15);display:flex;align-items:center;justify-content:space-between">
+   <div style="display:flex;align-items:center;gap:7px">
+    <span style="font-size:14px">🟠</span>
+    <div>
+     <div style="font-size:11.5px;font-weight:700;color:#ff9900">Amazon FBA Inbound Shipment</div>
+     <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">${s.shipmentId}</div>
+    </div>
+   </div>
+   <div style="display:flex;gap:6px">
+    <a href="https://sellercentral.amazon.co.uk/fba/inboundqueue/index.html?shipmentId=${s.shipmentId}" target="_blank"
+     style="font-size:10.5px;background:rgba(255,153,0,0.15);color:#ff9900;border:1px solid rgba(255,153,0,0.3);border-radius:5px;padding:4px 9px;text-decoration:none;font-weight:600">
+     Open in Seller Central ↗
+    </a>
+    <a href="https://sellercentral.amazon.co.uk/fba/inboundqueue/index.html?shipmentId=${s.shipmentId}&tab=RECEIVING" target="_blank"
+     style="font-size:10.5px;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.25);border-radius:5px;padding:4px 9px;text-decoration:none;font-weight:600">
+     Check Receiving ↗
+    </a>
+   </div>
+  </div>
+  <div style="padding:10px 13px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+   <div style="text-align:center;padding:7px;background:var(--surface2);border-radius:6px">
+    <div style="font-size:9px;color:var(--text3);margin-bottom:3px">STATUS</div>
+    <div style="font-size:12px;font-weight:700;color:${s.status==='Received by Amazon'?'var(--green)':s.status==='In Transit'?'var(--accent2)':'var(--yellow)'}">
+     ${s.status==='Received by Amazon'?'✅ Received':s.status==='In Transit'?'🚢 In Transit':s.status==='Collected'?'📦 Collected':s.status==='Courier Booked'?'🚚 Booked':s.status==='Shipment Created'?'📋 Created':'📝 Draft'}
+    </div>
+   </div>
+   <div style="text-align:center;padding:7px;background:var(--surface2);border-radius:6px">
+    <div style="font-size:9px;color:var(--text3);margin-bottom:3px">UNITS SENT</div>
+    <div style="font-size:14px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace">${totalUnits}</div>
+   </div>
+   <div style="text-align:center;padding:7px;background:var(--surface2);border-radius:6px">
+    <div style="font-size:9px;color:var(--text3);margin-bottom:3px">CARTONS</div>
+    <div style="font-size:14px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace">${totalCartons}</div>
+   </div>
+   <div style="text-align:center;padding:7px;background:var(--surface2);border-radius:6px">
+    <div style="font-size:9px;color:var(--text3);margin-bottom:3px">WEIGHT</div>
+    <div style="font-size:14px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace">${totalWeight.toFixed(1)}kg</div>
+   </div>
+  </div>
+  <div style="padding:0 13px 10px;font-size:11px;color:var(--text3)">
+   ℹ️ Click "Open in Seller Central" to check real-time receiving status, unit counts, and any discrepancies on Amazon's system.
+   <br>Use "Check Receiving" to see if Amazon has started processing your inbound shipment.
+  </div>
+ </div>`:''}
+
  <!-- NEXT STEP BUTTON -->
  ${stageIdx<FBA_STAGES.length-1?`
  <div style="margin-top:10px">
@@ -3628,6 +3749,105 @@ function renderFBACard(s){
  </div>`:''}
  </div>
  </div>`;
+}
+
+// Track existing Amazon shipment (created in Seller Central)
+function openAddExistingAmazonShipment(){
+ document.getElementById('modal-title').textContent='🟠 Track Existing Amazon FBA Shipment';
+ document.getElementById('modal-body').innerHTML=`
+  <div style="background:rgba(255,153,0,0.07);border:1px solid rgba(255,153,0,0.2);border-radius:8px;padding:11px 14px;margin-bottom:16px;font-size:12px;color:#ff9900">
+   Already created a shipment in Amazon Seller Central? Add it here to track it alongside your other shipments.
+  </div>
+  <div class="form-grid">
+   <div class="form-group full">
+    <label class="form-label">Amazon Shipment ID *</label>
+    <input class="form-input" id="eas-amzid" placeholder="e.g. FBA17BXK9YN3" style="font-family:'JetBrains Mono',monospace;font-size:14px" oninput="this.value=this.value.toUpperCase()">
+    <div class="form-hint">Found in Seller Central → Manage FBA Shipments</div>
+   </div>
+   <div class="form-group">
+    <label class="form-label">Shipment Name (optional)</label>
+    <input class="form-input" id="eas-name" placeholder="e.g. Toilet Brush June 2026">
+   </div>
+   <div class="form-group">
+    <label class="form-label">Current Status</label>
+    <select class="form-select" id="eas-status">
+     <option value="Shipment Created">Shipment Created — Labels downloaded</option>
+     <option value="Courier Booked">Courier Booked — Pickup arranged</option>
+     <option value="Collected">Collected — Courier picked up</option>
+     <option value="In Transit">In Transit — On the way to Amazon</option>
+     <option value="Received by Amazon">Received by Amazon — Stock live</option>
+    </select>
+   </div>
+   <div class="form-group">
+    <label class="form-label">Courier Used</label>
+    <select class="form-select" id="eas-courier">
+     <option>UPS</option><option>DPD</option><option>Evri</option>
+     <option>Royal Mail</option><option>Parcelforce 24</option>
+     <option>DHL Express</option><option>Yodel</option><option>Other</option>
+    </select>
+   </div>
+   <div class="form-group">
+    <label class="form-label">Tracking Number</label>
+    <input class="form-input" id="eas-track" placeholder="Courier tracking number">
+   </div>
+   <div class="form-group">
+    <label class="form-label">Total Units Sent</label>
+    <input class="form-input" id="eas-units" type="number" placeholder="e.g. 200">
+   </div>
+   <div class="form-group">
+    <label class="form-label">Total Cartons</label>
+    <input class="form-input" id="eas-cartons" type="number" placeholder="e.g. 5">
+   </div>
+   <div class="form-group">
+    <label class="form-label">Total Weight (kg)</label>
+    <input class="form-input" id="eas-weight" type="number" step="0.1" placeholder="e.g. 18.5">
+   </div>
+   <div class="form-group">
+    <label class="form-label">Linked SKU (main)</label>
+    <select class="form-select" id="eas-sku">
+     <option value="">— Select SKU —</option>
+     ${DB.products.map(p=>`<option value="${p.sku}">${p.sku} — ${p.name}</option>`).join('')}
+    </select>
+   </div>
+   <div class="form-group full">
+    <label class="form-label">Notes</label>
+    <input class="form-input" id="eas-notes" placeholder="Any notes about this shipment...">
+   </div>
+  </div>
+  <div style="margin-top:12px;padding:10px 13px;background:var(--surface2);border-radius:7px;font-size:11.5px;color:var(--text3)">
+   💡 After saving, click <strong>"Open in Seller Central"</strong> on the shipment card to check receiving status, inbound units, and any discrepancies directly on Amazon.
+  </div>`;
+ document.getElementById('modal-save-btn').style.display='flex';
+ document.getElementById('modal-save-btn').onclick=saveExistingAmazonShipment;
+ document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveExistingAmazonShipment(){
+ const amzId=(document.getElementById('eas-amzid')?.value||'').trim().toUpperCase();
+ if(!amzId||amzId.length<5){showToast('Amazon Shipment ID required (e.g. FBA17BXK9YN3)','error');return;}
+ if(FBADB.some(s=>s.shipmentId===amzId)){showToast(`Shipment ${amzId} already exists`,'error');return;}
+ const id='FBA-'+Date.now().toString().slice(-6);
+ const units=parseInt(document.getElementById('eas-units')?.value)||0;
+ const cartons=parseInt(document.getElementById('eas-cartons')?.value)||0;
+ const weight=parseFloat(document.getElementById('eas-weight')?.value)||0;
+ const sku=document.getElementById('eas-sku')?.value||'';
+ pushUndo();
+ FBADB.unshift({
+  id,
+  shipmentId:amzId,
+  name:document.getElementById('eas-name')?.value||'',
+  courier:document.getElementById('eas-courier')?.value||'UPS',
+  trackingNumber:document.getElementById('eas-track')?.value||'',
+  status:document.getElementById('eas-status')?.value||'Shipment Created',
+  notes:document.getElementById('eas-notes')?.value||'',
+  skus:sku?[{sku,cartons,units,unitsPerCarton:cartons>0?Math.ceil(units/cartons):0,grossWeightKg:weight,l:0,w:0,h:0,fromLocation:'warehouse'}]:[],
+  createdAt:todayStr(),updatedAt:todayStr(),
+  inventoryDeducted:false,fbaUpdated:false,
+  existingShipment:true,
+ });
+ saveFBAShipDB(FBADB);
+ showToast(`✅ ${amzId} added — click "Open in Seller Central" to check status`,'success');
+ closeModal();renderFBAShip();
 }
 
 function advanceFBAStage(id){
