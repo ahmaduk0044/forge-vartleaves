@@ -476,12 +476,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
   <div style="margin-top:16px;font-size:10px;color:#1c2840">FORGE v3.1 · Vartleaves Limited · Confidential</div>
 </div>
 
-<!-- FORGE LOGIN SCREEN -->
-
-
-
-<!-- ══════════════════════════════════════════════ -->
-<!-- LOGIN SCREEN -->
+<nav id="forge-nav" style="display:none">
  <div class="logo"><div class="logo-mark">FORGE</div><div class="logo-sub">Vartleaves Limited</div></div>
  <div class="nav-section">
  <div class="nav-label">Overview</div>
@@ -534,7 +529,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  </div>
 </nav>
 
-<div class="main">
+<div class="main" id="forge-app" style="display:none">
  <div class="topbar">
  <div class="topbar-title" id="page-title">Dashboard <span>Overview</span></div>
  <div class="search-box"><span style="color:var(--text3);font-size:12px">⌕</span><input type="text" placeholder="Search SKU, PO, ASIN..." id="global-search" oninput="SQ=this.value.toLowerCase();rp();renderSearchResults(this.value)" autocomplete="off" onblur="setTimeout(()=>{const b=document.getElementById('search-dropdown');if(b)b.style.display='none'},200)"></div><div id="search-dropdown" style="display:none;position:absolute;top:36px;left:0;width:360px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:300;max-height:320px;overflow-y:auto"></div></div>
@@ -4121,6 +4116,9 @@ function deleteUser(idx){
 
 // FORGE LOGIN SYSTEM
 // ═══════════════════════════════════════════════════
+// Clear any stale localStorage sessions from old versions
+try{if(localStorage.getItem('forge_session')){sessionStorage.setItem('forge_session',localStorage.getItem('forge_session'));localStorage.removeItem('forge_session');}}catch(e){}
+
 // Seed users if not already done
 (function initForgeUsers(){
  try{
@@ -4163,7 +4161,8 @@ function forgeLogin(){
  const user=users.find(u=>u.username===username&&u.password===password);
  if(user){
   CURRENT_USER=user;loginAttempts=0;
-  localStorage.setItem('forge_session',JSON.stringify({username:user.username,role:user.role,name:user.name,loginAt:now}));
+  sessionStorage.setItem('forge_session',JSON.stringify({username:user.username,role:user.role,name:user.name,loginAt:now}));
+  localStorage.removeItem('forge_session');
   onLoginSuccess(user);
  } else {
   loginAttempts++;
@@ -4203,6 +4202,11 @@ function onLoginSuccess(user){
   ls.style.transition='opacity 0.3s';
   setTimeout(()=>{ls.style.display='none';},300);
  }
+ // Show app shell
+ const appEl=document.getElementById('forge-app');
+ if(appEl)appEl.style.display='flex';
+ const navEl=document.getElementById('forge-nav');
+ if(navEl)navEl.style.display='flex';
  // Show user badge
  const badge=document.getElementById('user-badge-btn');
  const badgeName=document.getElementById('user-badge-name');
@@ -4213,7 +4217,7 @@ function onLoginSuccess(user){
  if(badgeRole)badgeRole.textContent=user.role==='admin'?'⚡ Admin':'👁 Viewer';
  if(dot)dot.className='user-dot '+user.role;
  if(user.role==='viewer')applyViewerMode();
- // ── Init the app NOW after login ──
+ // Init app
  nav('dashboard');
  checkDriveStatus();
  fetchLiveRates();
@@ -4259,16 +4263,28 @@ function doLogout(){
 
 function checkForgeSession(){
  try{
-  const s=JSON.parse(localStorage.getItem('forge_session')||'null');
-  if(!s)return false;
-  if(Date.now()-s.loginAt>8*60*60*1000){localStorage.removeItem('forge_session');return false;}
+  // Clear any old session format
+  const s=sessionStorage.getItem('forge_session') || localStorage.getItem('forge_session');
+  if(!s) return false;
+  const parsed=JSON.parse(s);
+  if(!parsed||!parsed.username||!parsed.loginAt) return false;
+  // Session expires after 8 hours
+  if(Date.now()-parsed.loginAt>8*60*60*1000){
+   sessionStorage.removeItem('forge_session');
+   localStorage.removeItem('forge_session');
+   return false;
+  }
   const users=getUsersDB();
-  const user=users.find(u=>u.username===s.username);
-  if(!user)return false;
+  const user=users.find(u=>u.username===parsed.username);
+  if(!user) return false;
   CURRENT_USER=user;
   onLoginSuccess(user);
   return true;
- }catch(e){return false;}
+ }catch(e){
+  sessionStorage.removeItem('forge_session');
+  localStorage.removeItem('forge_session');
+  return false;
+ }
 }
 
 // Add shake animation
