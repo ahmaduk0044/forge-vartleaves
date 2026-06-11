@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><!-- FORGE v3.4 build:20260611040742 -->
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>FORGE by Vartleaves</title>
@@ -4121,6 +4121,24 @@ function deleteUser(idx){
 
 // FORGE LOGIN SYSTEM
 // ═══════════════════════════════════════════════════
+// Seed users if not already done
+(function initForgeUsers(){
+ try{
+  const existing=localStorage.getItem('forge_users');
+  if(!existing){
+   const defaults=[
+    {username:'ahmed',    password:'Vartleaves@2026', role:'admin',  name:'Ahmed'},
+    {username:'wajahat',  password:'Forge@Waj2026',   role:'admin',  name:'Wajahat'},
+    {username:'fatima',   password:'View@Fat2026',     role:'viewer', name:'Fatima'},
+    {username:'abdullah', password:'View@Abd2026',     role:'viewer', name:'Abdullah'},
+    {username:'amna',     password:'View@Amna2026',    role:'viewer', name:'Amna'},
+   ];
+   localStorage.setItem('forge_users',JSON.stringify(defaults));
+   console.log('FORGE: users seeded');
+  }
+ }catch(e){console.warn('FORGE: could not seed users',e);}
+})();
+
 const FORGE_USERS=[
  {username:'ahmed',    password:'Vartleaves@2026', role:'admin',  name:'Ahmed'},
  {username:'wajahat',  password:'Forge@Waj2026',   role:'admin',  name:'Wajahat'},
