@@ -3680,14 +3680,16 @@ function renderFBACard(s){
  ${s.trackingNumber?`<div style="margin-top:10px;display:flex;align-items:center;gap:8px;font-size:12px">
  <span style="color:var(--text3)">Tracking:</span>
  <span class="mono" style="color:var(--accent2)">${s.trackingNumber}</span>
-  ${s.courier==='DPD'||s.courier==='DPD Local'?`<a href="https://www.dpd.co.uk/service/index.jsp?search=${s.trackingNumber}&type=parcel" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🔵 Track DPD →</a>`:''}
-  ${s.courier==='UPS'||s.courier==='UPS Standard'||s.courier==='UPS Express'?`<a href="https://www.ups.com/track?tracknum=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟤 Track UPS →</a>`:''}
-  ${s.courier==='Evri'||s.courier==='Evri Business'?`<a href="https://www.evri.com/track-a-parcel#/tracking/${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟣 Track Evri →</a>`:''}
-  ${s.courier==='Royal Mail'?`<a href="https://www.royalmail.com/track-your-item#/tracking-results/${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🔴 Track Royal Mail →</a>`:''}
+  ${s.courier==='DPD'||s.courier==='DPD Local'?`<a href="https://track.dpd.co.uk/parcels/${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🔵 Track DPD →</a>`:''}
+  ${s.courier==='UPS'||s.courier==='UPS Standard'||s.courier==='UPS Express'?`<a href="https://www.ups.com/track?tracknum=${s.trackingNumber}&requester=WT/trackdetails" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟤 Track UPS →</a>`:''}
+  ${s.courier==='Evri'||s.courier==='Evri Business'?`<a href="https://www.evri.com/track-a-parcel?trackingNumber=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟣 Track Evri →</a>`:''}
+  ${s.courier==='Royal Mail'?`<a href="https://www.royalmail.com/track-your-item#/${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🔴 Track Royal Mail →</a>`:''}
   ${s.courier==='Parcelforce 24'||s.courier==='Parcelforce'?`<a href="https://www.parcelforce.com/track-trace?trackNumber=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🔴 Track Parcelforce →</a>`:''}
-  ${s.courier==='DHL Express'||s.courier==='DHL'?`<a href="https://www.dhl.com/gb-en/home/tracking.html?tracking-id=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟡 Track DHL →</a>`:''}
+  ${s.courier==='DHL Express'||s.courier==='DHL'?`<a href="https://www.dhl.com/gb-en/home/tracking/tracking-express.html?submit=1&tracking-id=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟡 Track DHL →</a>`:''}
   ${s.courier==='Yodel'?`<a href="https://www.yodel.co.uk/track/${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟠 Track Yodel →</a>`:''}
-  ${s.courier==='Amazon Shipping'?`<a href="https://www.amazon.co.uk/gp/css/order-history" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟠 Track Amazon →</a>`:''}
+  ${s.courier==='Amazon Shipping'?`<a href="https://t.17track.net/en#nums=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--accent2);text-decoration:none">🟠 Track Amazon Shipping →</a>`:''}
+  ${!s.courier||['Colin','Eco','Polling','Family','Sam'].includes(s.courier)?`<a href="https://www.track-trace.com/container?container=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--teal);text-decoration:none">🚢 Track Container →</a>`:''}
+  <a href="https://t.17track.net/en#nums=${s.trackingNumber}" target="_blank" style="font-size:10.5px;color:var(--text3);text-decoration:none">🌐 Universal Track →</a>
  </div>`:''}
 
  ${s.notes?`<div style="margin-top:8px;font-size:11.5px;color:var(--text3);padding:7px 10px;background:var(--surface2);border-radius:6px">📝 ${s.notes}</div>`:''}
