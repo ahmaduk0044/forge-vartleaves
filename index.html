@@ -2030,19 +2030,20 @@ async function syncAllTabs(){
 
 // TRACKING URL HELPER
 function getTrackingUrl(courier,tracking){
- if(!tracking||tracking==='—') return '#';
+ if(!tracking||tracking==='—'||tracking==='') return '#';
  const c=(courier||'').toLowerCase();
- if(c.includes('dpd')) return 'https://www.dpd.co.uk/service/index.jsp?search='+tracking+'&type=parcel;
- if(c.includes('ups')) return 'https://www.ups.com/track?tracknum='+tracking;
- if(c.includes('evri')||c.includes('hermes')) return 'https://www.evri.com/track-a-parcel#/tracking/'+tracking;
+ if(c.includes('dpd')) return 'https://track.dpd.co.uk/parcels/'+tracking;
+ if(c.includes('ups')) return 'https://www.ups.com/track?tracknum='+tracking+'&requester=WT/trackdetails';
+ if(c.includes('evri')||c.includes('hermes')) return 'https://www.evri.com/track-a-parcel?trackingNumber='+tracking;
  if(c.includes('parcelforce')) return 'https://www.parcelforce.com/track-trace?trackNumber='+tracking;
- if(c.includes('royal mail')) return 'https://www.royalmail.com/track-your-item#/tracking-results/'+tracking;
- if(c.includes('dhl')) return 'https://www.dhl.com/gb-en/home/tracking.html?tracking-id='+tracking;
+ if(c.includes('royal mail')||c.includes('royalmail')) return 'https://www.royalmail.com/track-your-item#/'+tracking;
+ if(c.includes('dhl')) return 'https://www.dhl.com/gb-en/home/tracking/tracking-express.html?submit=1&tracking-id='+tracking;
  if(c.includes('yodel')) return 'https://www.yodel.co.uk/track/'+tracking;
- if(c.includes('amazon')) return 'https://www.amazon.co.uk/gp/css/order-history';
- if(c.includes('colin')||c.includes('eco')||c.includes('polling'))
+ if(c.includes('fedex')) return 'https://www.fedex.com/fedextrack/?trknbr='+tracking;
+ if(c.includes('amazon')) return 'https://t.17track.net/en#nums='+tracking;
+ if(c.includes('colin')||c.includes('eco')||c.includes('polling')||c.includes('family')||c.includes('sea'))
   return 'https://www.track-trace.com/container?container='+tracking;
- return 'https://www.google.com/search?q='+encodeURIComponent(tracking+' tracking');
+ return 'https://t.17track.net/en#nums='+tracking;
 }
 
 function showToast(msg,type='success'){
