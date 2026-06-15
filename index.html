@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.gstatic.com https://www.googleapis.com https://firestore.googleapis.com https://firebase.googleapis.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://open.er-api.com https://firestore.googleapis.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com; img-src 'self' data: https:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -1051,6 +1052,18 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
 
 <div class="toast-container" id="toasts"></div>
 <script>
+
+// SECURITY: HTML sanitizer — use for all user-supplied data in innerHTML
+function sanitizeHTML(str){
+ if(!str) return '';
+ return String(str)
+  .replace(/&/g,'&amp;')
+  .replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;')
+  .replace(/'/g,'&#x27;');
+}
+
 function loadDB(){try{const s=localStorage.getItem('forge_v1');if(s)return JSON.parse(s);}catch(e){}return JSON.parse(JSON.stringify(SEED));}
 function saveDB(){try{localStorage.setItem('forge_v1',JSON.stringify(DB));}catch(e){}markUnsync();}
 const SEED={
@@ -4120,6 +4133,14 @@ function getAdminUsers(){
  return defaults;
 }
 function saveAdminUsers(users){
+ // SECURITY: Only allow save if current user is admin
+ const _adminCheck=getAdminUsers();
+ const _curUname=typeof CURRENT_USER!=='undefined'&&CURRENT_USER?CURRENT_USER.username:'';
+ const _curUser=_adminCheck.find(u=>u.uid===_curUname);
+ if(_curUser&&!['super_admin','admin'].includes(_curUser.role)){
+  if(typeof showToast==='function') showToast('⛔ Admin access required','error');
+  return;
+ }
  localStorage.setItem('forge_admin_users',JSON.stringify(users));
 }
 
@@ -4151,13 +4172,29 @@ const TASK_CATS=['inventory','orders','marketing','support','admin_work'];
 const TASK_STATUSES=['pending','in-progress','completed'];
 
 function renderAdmin(){
- // Check if current FORGE user is admin
+ // SECURITY: Role gate — admin/super_admin only
  const adminEl=document.getElementById('admin-nav-item');
  const box=document.getElementById('admin-content');
  if(!box) return;
 
- // Show/hide nav item (always show for now — lock via tab only)
- if(adminEl) adminEl.style.display='flex';
+ // Check admin access via FORGE user system or local admin users
+ const users=getAdminUsers();
+ const currentUsername=typeof CURRENT_USER!=='undefined'&&CURRENT_USER?CURRENT_USER.username:'';
+ const currentUser=users.find(u=>u.uid===currentUsername);
+ const isAdminUser=currentUser&&['super_admin','admin'].includes(currentUser.role);
+
+ // Show nav item only for admins
+ if(adminEl) adminEl.style.display=isAdminUser?'flex':'none';
+
+ // Block non-admins from rendering the page
+ if(!isAdminUser){
+  box.innerHTML=`<div class="empty-state" style="padding:40px">
+   <div style="font-size:32px">🔒</div>
+   <div style="font-size:14px;font-weight:600;margin-top:8px">Admin Access Required</div>
+   <div style="font-size:12px;color:var(--text3);margin-top:4px">Only admins can access this panel</div>
+  </div>`;
+  return;
+ }
 
  const tabs=['users','roles','tasks','audit','status'];
  const activeTab=window._adminTab||'users';
@@ -4196,8 +4233,8 @@ function _renderAdminUsers(el){
   <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)">
    <div style="width:36px;height:36px;border-radius:50%;background:${roleColors[u.role]||'#9ca3af'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;flex-shrink:0">${(u.name||'?')[0]}</div>
    <div style="flex:1;min-width:0">
-    <div style="font-size:12.5px;font-weight:700;color:var(--text)">${u.name}</div>
-    <div style="font-size:10.5px;color:var(--text3)">${u.email||'—'}</div>
+    <div style="font-size:12.5px;font-weight:700;color:var(--text)">${sanitizeHTML(u.name)}</div>
+    <div style="font-size:10.5px;color:var(--text3)">${sanitizeHTML(u.email||'—')}</div>
    </div>
    <div style="text-align:right;flex-shrink:0">
     <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${roleColors[u.role]}22;color:${roleColors[u.role]}">${u.role}</span>
