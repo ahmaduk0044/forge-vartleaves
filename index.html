@@ -388,6 +388,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <div class="nav-label">System</div>
  <div class="nav-item" onclick="nav('activity')"><span class="nav-icon">📋</span> Activity Log</div>
  <div class="nav-item" onclick="nav('config')"><span class="nav-icon">⚙️</span> Config</div>
+ <div class="nav-item" id="admin-nav-item" onclick="nav('admin')" style="display:none"><span class="nav-icon">🛡️</span> Admin Panel</div>
  </div>
  <div class="sidebar-footer">
  <div class="drive-status" onclick="openDriveModal()">
@@ -939,6 +940,19 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  </div>
  </div>
 
+
+ <!-- ADMIN PANEL PAGE -->
+ <div class="page" id="page-admin">
+  <div class="page-hd">
+   <div>
+    <div class="page-title">🛡️ Admin Panel</div>
+    <div class="page-sub">User Management · Role Management · Task Management · Audit Log · System Status</div>
+   </div>
+  </div>
+  <div style="padding:0 16px 16px" id="admin-content">
+   <!-- Rendered by renderAdmin() -->
+  </div>
+ </div>
  </div><!-- end content -->
 </div><!-- end main -->
 <!-- THEME PANEL -->
@@ -1197,13 +1211,13 @@ function frtStatus(f){
 }
 function getFPU(sku){const r=DB.freight.filter(f=>f.sku===sku&&f.costGbp);if(!r.length)return 0;const po=DB.orders.find(o=>o.sku===sku);const qty=po?po.qty:1;return+(r.reduce((s,f)=>s+f.costGbp,0)/r.length/qty).toFixed(4);}
 function calcP(pr){const p=gp(pr.sku);const cost=cgbp(p);const fpu=getFPU(pr.sku);const cust=+(cost*DB.config.customs).toFixed(3);const landed=+(cost+fpu+cust).toFixed(2);const refFee=+(pr.sellGbp*pr.referralPct/100).toFixed(2);const retCost=+(pr.sellGbp*(pr.returnRate||0)/100).toFixed(2);const fees=+(refFee+(pr.fbaFee||0)+(pr.fbmFee||0)+(pr.storageFee||0)+retCost).toFixed(2);const net=+(pr.sellGbp-landed-fees).toFixed(2);const margin=pr.sellGbp?+(net/pr.sellGbp*100).toFixed(1):0;const roi=landed?+(net/landed*100).toFixed(1):0;return{cost,fpu,cust,landed,refFee,fees,net,margin,roi};}
-function payBadge(s){const m={Paid:'badge-green',Partial:'badge-yellow',Pending:'badge-grey',Overdue:'badge-red'};return`<span class="badge ${m[s]||'badge-grey'}">${s}</span>`;}
+function payBadge(s){const m={Paid:'badge-green',Partial:'badge-yellow',Pending:'badge-grey',Overdue:'badge-red',admin:renderAdmin};return`<span class="badge ${m[s]||'badge-grey'}">${s}</span>`;}
 function stageBadge(s){const d=s==='Delivered',sh=s==='Shipped'||s==='In Transit';return`<span class="badge ${d?'badge-green':sh?'badge-blue':'badge-grey'}">${s}</span>`;}
 function autoLog(cat,ref,what){DB.activity.unshift({date:todayStr(),category:cat,ref,what,action:'Auto-logged',doneBy:DB.config.userName||'Ahmed',status:'Closed'});}
 
 const NTITLES={dashboard:'Dashboard',products:'Products',suppliers:'Suppliers',orders:'Purchase Orders',freight:'Freight',inventory:'Inventory',fbaship:'FBA Shipments',reorder:'Reorder Planner',profit:'Landed Cost',pnl:'P&L Report',cashflow:'Cashflow',prodinfo:'Product Information',feecalc:'Fee Calculator',amazon:'Amazon Reports',icc:'ICC — Inventory Cycle Calculator',launch:'New Launch Pipeline',activity:'Activity Log',config:'Config'};
 const NSUBS={dashboard:'Overview',products:'All SKUs',suppliers:'Contacts & Terms',orders:'Full 8-Stage Workflow',freight:'Shipments',inventory:'Stock Levels',fbaship:'Warehouse → Amazon FBA',reorder:'Restocking Calendar',profit:'Profitability',pnl:'Brand & SKU Breakdown',cashflow:'Financial',prodinfo:'Full Product Specs & Packaging',feecalc:'Amazon FBA + eBay Fee Calculator',amazon:'Import & Analyse',icc:'Smart Restocking Intelligence',launch:'A→Z Launch Intelligence System',activity:'Audit Trail',config:'Settings'};
-const NIDX={dashboard:0,products:1,suppliers:2,orders:3,freight:4,inventory:5,fbaship:6,reorder:7,profit:8,pnl:9,cashflow:10,prodinfo:11,feecalc:12,amazon:13,icc:14,launch:15,activity:16,config:17};
+const NIDX={dashboard:0,products:1,suppliers:2,orders:3,freight:4,inventory:5,fbaship:6,reorder:7,profit:8,pnl:9,cashflow:10,prodinfo:11,feecalc:12,amazon:13,icc:14,launch:15,activity:16,config:17,admin:18};
 const ADDP={products:1,suppliers:1,orders:1,freight:1,inventory:1,fbaship:1,profit:1,activity:1,cashflow:1,prodinfo:1,launch:1};
 
 function nav(name){
@@ -4079,6 +4093,415 @@ function updateFBAStatus(id,status){
  closeModal();
  advanceFBAStage(id); // trigger inventory logic if needed
  renderFBAShip();
+}
+
+
+// ═══════════════════════════════════════════════════
+// ADMIN PANEL — User, Role, Task, Audit, Status
+// Only accessible by admin/super_admin role
+// Uses existing modal + toast system — no new UI
+// ═══════════════════════════════════════════════════
+
+// Admin users DB stored in localStorage forge_admin_users
+function getAdminUsers(){
+ try{
+  const s=localStorage.getItem('forge_admin_users');
+  if(s) return JSON.parse(s);
+ }catch(e){}
+ // Seed defaults from FORGE_USERS if available
+ const defaults=[
+  {uid:'ahmed',name:'Ahmed',email:'ahmed@vartleaves.com',role:'super_admin',lastLogin:'',status:'active'},
+  {uid:'wajahat',name:'Wajahat',email:'wajahat@vartleaves.com',role:'admin',lastLogin:'',status:'active'},
+  {uid:'fatima',name:'Fatima',email:'fatima@vartleaves.com',role:'viewer',lastLogin:'',status:'active'},
+  {uid:'abdullah',name:'Abdullah',email:'abdullah@vartleaves.com',role:'viewer',lastLogin:'',status:'active'},
+  {uid:'amna',name:'Amna',email:'amna@vartleaves.com',role:'viewer',lastLogin:'',status:'active'},
+ ];
+ localStorage.setItem('forge_admin_users',JSON.stringify(defaults));
+ return defaults;
+}
+function saveAdminUsers(users){
+ localStorage.setItem('forge_admin_users',JSON.stringify(users));
+}
+
+// Admin audit log
+function getAdminAuditLog(){
+ try{const s=localStorage.getItem('forge_audit_log');if(s)return JSON.parse(s);}catch(e){}
+ return[];
+}
+function addAdminAuditLog(user,role,action,detail){
+ const logs=getAdminAuditLog();
+ logs.unshift({
+  user:user||'system',role:role||'—',action,detail,
+  ts:new Date().toISOString(),
+  date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+ });
+ if(logs.length>500) logs.splice(500);
+ localStorage.setItem('forge_audit_log',JSON.stringify(logs));
+}
+
+// Admin tasks DB
+function getAdminTasks(){
+ try{const s=localStorage.getItem('forge_admin_tasks');if(s)return JSON.parse(s);}catch(e){}
+ return[];
+}
+function saveAdminTasks(tasks){localStorage.setItem('forge_admin_tasks',JSON.stringify(tasks));}
+
+const ADMIN_ROLES=['super_admin','admin','manager','viewer'];
+const TASK_CATS=['inventory','orders','marketing','support','admin_work'];
+const TASK_STATUSES=['pending','in-progress','completed'];
+
+function renderAdmin(){
+ // Check if current FORGE user is admin
+ const adminEl=document.getElementById('admin-nav-item');
+ const box=document.getElementById('admin-content');
+ if(!box) return;
+
+ // Show/hide nav item (always show for now — lock via tab only)
+ if(adminEl) adminEl.style.display='flex';
+
+ const tabs=['users','roles','tasks','audit','status'];
+ const activeTab=window._adminTab||'users';
+
+ box.innerHTML=`
+ <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
+  ${tabs.map(t=>`
+  <button onclick="window._adminTab='${t}';renderAdmin()" style="padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border2);
+   background:${activeTab===t?'var(--accent)':'var(--surface2)'};color:${activeTab===t?'white':'var(--text2)'}">
+   ${{users:'👥 Users',roles:'🎭 Roles',tasks:'📋 Tasks',audit:'🔍 Audit Log',status:'⚙️ System Status'}[t]}
+  </button>`).join('')}
+ </div>
+ <div id="admin-tab-content"></div>`;
+
+ const tc=document.getElementById('admin-tab-content');
+ if(!tc) return;
+
+ if(activeTab==='users') _renderAdminUsers(tc);
+ else if(activeTab==='roles') _renderAdminRoles(tc);
+ else if(activeTab==='tasks') _renderAdminTasks(tc);
+ else if(activeTab==='audit') _renderAdminAudit(tc);
+ else if(activeTab==='status') _renderAdminStatus(tc);
+}
+
+// ── USERS TAB ──
+function _renderAdminUsers(el){
+ const users=getAdminUsers();
+ const roleColors={super_admin:'#ef4444',admin:'#3b82f6',manager:'#10b981',viewer:'#9ca3af'};
+ el.innerHTML=`
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <div style="font-size:13px;font-weight:700;color:var(--text)">👥 User Management <span style="font-size:11px;color:var(--text3)">(${users.length} users)</span></div>
+  <button class="btn btn-sm" style="background:var(--accent);color:white;border:none" onclick="adminAddUser()">+ Add User</button>
+ </div>
+ <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+  ${users.map((u,i)=>`
+  <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)">
+   <div style="width:36px;height:36px;border-radius:50%;background:${roleColors[u.role]||'#9ca3af'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;flex-shrink:0">${(u.name||'?')[0]}</div>
+   <div style="flex:1;min-width:0">
+    <div style="font-size:12.5px;font-weight:700;color:var(--text)">${u.name}</div>
+    <div style="font-size:10.5px;color:var(--text3)">${u.email||'—'}</div>
+   </div>
+   <div style="text-align:right;flex-shrink:0">
+    <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${roleColors[u.role]}22;color:${roleColors[u.role]}">${u.role}</span>
+    <div style="font-size:9.5px;color:var(--text3);margin-top:2px">${u.status||'active'}</div>
+   </div>
+   <div style="display:flex;gap:5px;flex-shrink:0">
+    <button class="action-btn" onclick="adminEditUser(${i})">Edit</button>
+    <button class="action-btn" style="color:var(--red)" onclick="adminDeleteUser(${i})">Del</button>
+   </div>
+  </div>`).join('')}
+ </div>`;
+}
+
+function adminAddUser(){
+ document.getElementById('modal-title').textContent='Add User';
+ document.getElementById('modal-save-btn').style.display='flex';
+ document.getElementById('modal-body').innerHTML=`
+  <div class="form-grid">
+   <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="au-name" placeholder="e.g. Hina Ahmed"></div>
+   <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="au-email" type="email" placeholder="hina@vartleaves.com"></div>
+   <div class="form-group"><label class="form-label">Username / UID *</label><input class="form-input" id="au-uid" placeholder="e.g. hina" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"></div>
+   <div class="form-group"><label class="form-label">Role</label>
+    <select class="form-select" id="au-role">
+     ${ADMIN_ROLES.map(r=>`<option value="${r}">${r}</option>`).join('')}
+    </select>
+   </div>
+  </div>`;
+ document.getElementById('modal-save-btn').onclick=()=>{
+  const name=document.getElementById('au-name')?.value?.trim();
+  const uid=document.getElementById('au-uid')?.value?.trim();
+  const email=document.getElementById('au-email')?.value?.trim();
+  const role=document.getElementById('au-role')?.value;
+  if(!name||!uid){showToast('Name and username required','error');return;}
+  const users=getAdminUsers();
+  if(users.some(u=>u.uid===uid)){showToast(`Username "${uid}" already exists`,'error');return;}
+  users.push({uid,name,email,role,status:'active',lastLogin:''});
+  saveAdminUsers(users);
+  addAdminAuditLog('Admin','super_admin','USER_CREATED',`Added user ${name} (${uid}) as ${role}`);
+  showToast(`✅ ${name} added as ${role}`,'success');
+  closeModal();renderAdmin();
+ };
+ document.getElementById('modal-overlay').classList.add('open');
+}
+
+function adminEditUser(idx){
+ const users=getAdminUsers();const u=users[idx];if(!u)return;
+ document.getElementById('modal-title').textContent=`Edit — ${u.name}`;
+ document.getElementById('modal-save-btn').style.display='flex';
+ document.getElementById('modal-body').innerHTML=`
+  <div class="form-grid">
+   <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="eu-name" value="${u.name}"></div>
+   <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="eu-email" value="${u.email||''}"></div>
+   <div class="form-group"><label class="form-label">Role</label>
+    <select class="form-select" id="eu-role">
+     ${ADMIN_ROLES.map(r=>`<option value="${r}"${u.role===r?' selected':''}>${r}</option>`).join('')}
+    </select>
+   </div>
+   <div class="form-group"><label class="form-label">Status</label>
+    <select class="form-select" id="eu-status">
+     <option value="active"${u.status==='active'?' selected':''}>Active</option>
+     <option value="suspended"${u.status==='suspended'?' selected':''}>Suspended</option>
+    </select>
+   </div>
+  </div>`;
+ document.getElementById('modal-save-btn').onclick=()=>{
+  const oldRole=u.role;
+  users[idx].name=document.getElementById('eu-name')?.value||u.name;
+  users[idx].email=document.getElementById('eu-email')?.value||u.email;
+  users[idx].role=document.getElementById('eu-role')?.value||u.role;
+  users[idx].status=document.getElementById('eu-status')?.value||u.status;
+  saveAdminUsers(users);
+  if(oldRole!==users[idx].role)
+   addAdminAuditLog('Admin','super_admin','ROLE_CHANGED',`${u.name}: ${oldRole} → ${users[idx].role}`);
+  else
+   addAdminAuditLog('Admin','super_admin','USER_UPDATED',`Updated ${u.name} profile`);
+  showToast(`✅ ${users[idx].name} updated`,'success');
+  closeModal();renderAdmin();
+ };
+ document.getElementById('modal-overlay').classList.add('open');
+}
+
+function adminDeleteUser(idx){
+ const users=getAdminUsers();const u=users[idx];if(!u)return;
+ if(!confirm(`Delete user "${u.name}"? This cannot be undone.`))return;
+ users.splice(idx,1);saveAdminUsers(users);
+ addAdminAuditLog('Admin','super_admin','USER_DELETED',`Deleted user ${u.name} (${u.uid})`);
+ showToast(`${u.name} removed`,'success');renderAdmin();
+}
+
+// ── ROLES TAB ──
+function _renderAdminRoles(el){
+ const roleColors={super_admin:'#ef4444',admin:'#3b82f6',manager:'#10b981',viewer:'#9ca3af'};
+ const rolePerms={
+  super_admin:{read:true,write:true,delete:true,admin:true,tasks:true},
+  admin:{read:true,write:true,delete:true,admin:true,tasks:true},
+  manager:{read:true,write:false,delete:false,admin:false,tasks:true},
+  viewer:{read:true,write:false,delete:false,admin:false,tasks:false},
+ };
+ el.innerHTML=`
+ <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">🎭 Role Permissions</div>
+ <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+  <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr 1fr;background:var(--surface2);padding:9px 14px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">
+   <div>Role</div><div>Read</div><div>Write</div><div>Delete</div><div>Admin</div><div>Tasks</div>
+  </div>
+  ${ADMIN_ROLES.map(r=>`
+  <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr 1fr;padding:11px 14px;border-bottom:1px solid var(--border);align-items:center">
+   <div style="display:flex;align-items:center;gap:8px">
+    <div style="width:8px;height:8px;border-radius:50%;background:${roleColors[r]}"></div>
+    <span style="font-size:12px;font-weight:700;color:var(--text)">${r}</span>
+   </div>
+   ${['read','write','delete','admin','tasks'].map(p=>`
+   <div style="font-size:14px">${rolePerms[r][p]?'✅':'❌'}</div>`).join('')}
+  </div>`).join('')}
+ </div>
+ <div style="margin-top:12px;padding:11px 14px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text3)">
+  ℹ️ Roles are enforced server-side via Firestore Security Rules when Firebase is connected. In local mode, restrictions apply via ForgeBridge layer.
+ </div>`;
+}
+
+// ── TASKS TAB ──
+function _renderAdminTasks(el){
+ const tasks=getAdminTasks();
+ const statusColors={'pending':'#f59e0b','in-progress':'#3b82f6','completed':'#10b981'};
+ el.innerHTML=`
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <div style="font-size:13px;font-weight:700;color:var(--text)">📋 Task Management <span style="font-size:11px;color:var(--text3)">(${tasks.length} tasks)</span></div>
+  <button class="btn btn-sm" style="background:var(--accent);color:white;border:none" onclick="adminAddTask()">+ Add Task</button>
+ </div>
+ ${tasks.length===0?`
+ <div class="empty-state">
+  <div style="font-size:28px">📋</div>
+  <div>No tasks yet</div>
+  <button class="btn btn-sm" style="margin-top:10px" onclick="adminAddTask()">+ Create First Task</button>
+ </div>`:`
+ <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+  ${tasks.map((t,i)=>`
+  <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)">
+   <div style="flex:1;min-width:0">
+    <div style="font-size:12.5px;font-weight:700;color:var(--text)">${t.title}</div>
+    <div style="font-size:10.5px;color:var(--text3)">Category: ${t.category} · Assigned: ${t.assignedRole}</div>
+   </div>
+   <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${statusColors[t.status]||'#9ca3af'}22;color:${statusColors[t.status]||'#9ca3af'};flex-shrink:0">${t.status}</span>
+   <div style="display:flex;gap:5px;flex-shrink:0">
+    <button class="action-btn" onclick="adminEditTask(${i})">Edit</button>
+    <button class="action-btn" style="color:var(--red)" onclick="adminDeleteTask(${i})">Del</button>
+   </div>
+  </div>`).join('')}
+ </div>`}`;
+}
+
+function adminAddTask(){
+ document.getElementById('modal-title').textContent='Add Task';
+ document.getElementById('modal-save-btn').style.display='flex';
+ document.getElementById('modal-body').innerHTML=`
+  <div class="form-grid">
+   <div class="form-group full"><label class="form-label">Title *</label><input class="form-input" id="at-title" placeholder="Task title"></div>
+   <div class="form-group"><label class="form-label">Category</label>
+    <select class="form-select" id="at-cat">${TASK_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+   </div>
+   <div class="form-group"><label class="form-label">Assign to Role</label>
+    <select class="form-select" id="at-role">${ADMIN_ROLES.map(r=>`<option value="${r}">${r}</option>`).join('')}</select>
+   </div>
+   <div class="form-group"><label class="form-label">Status</label>
+    <select class="form-select" id="at-status">${TASK_STATUSES.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+   </div>
+   <div class="form-group full"><label class="form-label">Description</label><input class="form-input" id="at-desc" placeholder="Optional details"></div>
+  </div>`;
+ document.getElementById('modal-save-btn').onclick=()=>{
+  const title=document.getElementById('at-title')?.value?.trim();
+  if(!title){showToast('Title required','error');return;}
+  const tasks=getAdminTasks();
+  const task={
+   id:'TASK-'+Date.now(),title,
+   category:document.getElementById('at-cat')?.value,
+   assignedRole:document.getElementById('at-role')?.value,
+   status:document.getElementById('at-status')?.value||'pending',
+   description:document.getElementById('at-desc')?.value?.trim()||'',
+   createdAt:todayStr(),updatedAt:todayStr(),
+  };
+  tasks.unshift(task);saveAdminTasks(tasks);
+  addAdminAuditLog('Admin','admin','TASK_CREATED',`Created task: "${title}" → ${task.assignedRole}`);
+  showToast(`✅ Task "${title}" created`,'success');closeModal();renderAdmin();
+ };
+ document.getElementById('modal-overlay').classList.add('open');
+}
+
+function adminEditTask(idx){
+ const tasks=getAdminTasks();const t=tasks[idx];if(!t)return;
+ document.getElementById('modal-title').textContent=`Edit Task`;
+ document.getElementById('modal-save-btn').style.display='flex';
+ document.getElementById('modal-body').innerHTML=`
+  <div class="form-grid">
+   <div class="form-group full"><label class="form-label">Title</label><input class="form-input" id="et-title" value="${t.title}"></div>
+   <div class="form-group"><label class="form-label">Category</label>
+    <select class="form-select" id="et-cat">${TASK_CATS.map(c=>`<option value="${c}"${t.category===c?' selected':''}>${c}</option>`).join('')}</select>
+   </div>
+   <div class="form-group"><label class="form-label">Assign to Role</label>
+    <select class="form-select" id="et-role">${ADMIN_ROLES.map(r=>`<option value="${r}"${t.assignedRole===r?' selected':''}>${r}</option>`).join('')}</select>
+   </div>
+   <div class="form-group"><label class="form-label">Status</label>
+    <select class="form-select" id="et-status">${TASK_STATUSES.map(s=>`<option value="${s}"${t.status===s?' selected':''}>${s}</option>`).join('')}</select>
+   </div>
+  </div>`;
+ document.getElementById('modal-save-btn').onclick=()=>{
+  tasks[idx].title=document.getElementById('et-title')?.value?.trim()||t.title;
+  tasks[idx].category=document.getElementById('et-cat')?.value||t.category;
+  tasks[idx].assignedRole=document.getElementById('et-role')?.value||t.assignedRole;
+  tasks[idx].status=document.getElementById('et-status')?.value||t.status;
+  tasks[idx].updatedAt=todayStr();
+  saveAdminTasks(tasks);
+  addAdminAuditLog('Admin','admin','TASK_UPDATED',`Updated task: "${tasks[idx].title}"`);
+  showToast('Task updated','success');closeModal();renderAdmin();
+ };
+ document.getElementById('modal-overlay').classList.add('open');
+}
+
+function adminDeleteTask(idx){
+ const tasks=getAdminTasks();const t=tasks[idx];if(!t)return;
+ if(!confirm(`Delete task "${t.title}"?`))return;
+ tasks.splice(idx,1);saveAdminTasks(tasks);
+ addAdminAuditLog('Admin','admin','TASK_DELETED',`Deleted task: "${t.title}"`);
+ showToast('Task deleted','success');renderAdmin();
+}
+
+// ── AUDIT LOG TAB ──
+function _renderAdminAudit(el){
+ const logs=getAdminAuditLog();
+ const actionColors={
+  USER_CREATED:'#10b981',USER_UPDATED:'#3b82f6',USER_DELETED:'#ef4444',
+  ROLE_CHANGED:'#f59e0b',TASK_CREATED:'#10b981',TASK_UPDATED:'#3b82f6',
+  TASK_DELETED:'#ef4444',SETTINGS_CHANGED:'#8b5cf6',
+ };
+ el.innerHTML=`
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+  <div style="font-size:13px;font-weight:700;color:var(--text)">🔍 Audit Log <span style="font-size:11px;color:var(--text3)">(${logs.length} entries)</span></div>
+  <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.25)" onclick="if(confirm('Clear all audit logs?')){localStorage.removeItem('forge_audit_log');renderAdmin();}">Clear</button>
+ </div>
+ ${logs.length===0?`<div class="empty-state"><div style="font-size:28px">🔍</div><div>No audit entries yet</div></div>`:`
+ <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+  ${logs.slice(0,100).map(l=>`
+  <div style="display:flex;align-items:flex-start;gap:11px;padding:10px 14px;border-bottom:1px solid var(--border)">
+   <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;background:${actionColors[l.action]||'#9ca3af'}"></div>
+   <div style="flex:1;min-width:0">
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+     <span style="font-size:11px;font-weight:700;color:${actionColors[l.action]||'#9ca3af'}">${l.action}</span>
+     <span style="font-size:10px;color:var(--text3)">by ${l.user} (${l.role})</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--text2)">${l.detail}</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px">${l.date}</div>
+   </div>
+  </div>`).join('')}
+ </div>`}`;
+}
+
+// ── SYSTEM STATUS TAB ──
+function _renderAdminStatus(el){
+ const db=typeof DB!=='undefined'?DB:null;
+ const products=db?.products?.length||0;
+ const orders=db?.orders?.length||0;
+ const freight=db?.freight?.length||0;
+ const inventory=db?.inventory?.length||0;
+ const users=getAdminUsers().length;
+ const tasks=getAdminTasks().length;
+ const auditLogs=getAdminAuditLog().length;
+ const fba=typeof FBADB!=='undefined'?FBADB.length:0;
+ const launches=typeof LDB!=='undefined'?LDB.length:0;
+ const lsUsed=JSON.stringify(localStorage).length;
+ const lsKB=(lsUsed/1024).toFixed(1);
+ const lsMax=5120;
+ const lsPct=Math.min(100,Math.round(lsUsed/lsMax*100/10));
+ el.innerHTML=`
+ <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">⚙️ System Status</div>
+ <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px">
+  ${[
+   ['Products',products,'📦','var(--accent2)'],
+   ['Purchase Orders',orders,'🛒','var(--green)'],
+   ['Freight',freight,'🚢','var(--yellow)'],
+   ['Inventory SKUs',inventory,'📊','var(--accent2)'],
+   ['FBA Shipments',fba,'📬','#f97316'],
+   ['Launches',launches,'🚀','#8b5cf6'],
+   ['Admin Users',users,'👥','var(--green)'],
+   ['Tasks',tasks,'📋','var(--accent2)'],
+   ['Audit Entries',auditLogs,'🔍','var(--yellow)'],
+  ].map(([label,val,icon,color])=>`
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:13px 14px">
+   <div style="font-size:18px;margin-bottom:5px">${icon}</div>
+   <div style="font-size:22px;font-weight:800;color:${color};font-family:'JetBrains Mono',monospace">${val}</div>
+   <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${label}</div>
+  </div>`).join('')}
+ </div>
+ <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:14px">
+  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Storage Usage</div>
+  <div style="display:flex;align-items:center;gap:12px">
+   <div style="flex:1;background:var(--border);border-radius:4px;height:6px;overflow:hidden">
+    <div style="height:100%;background:${lsPct>80?'var(--red)':lsPct>60?'var(--yellow)':'var(--green)'};width:${lsPct}%;transition:width 0.3s"></div>
+   </div>
+   <div style="font-size:11px;color:var(--text2);flex-shrink:0;font-family:'JetBrains Mono',monospace">${lsKB} KB / 5 MB</div>
+  </div>
+  <div style="margin-top:10px;font-size:11.5px;color:var(--text3)">
+   Firebase: <span style="color:${typeof firebase!=='undefined'?'var(--green)':'var(--yellow)'}">${typeof firebase!=='undefined'?'✅ Connected':'⚠️ Not configured'}</span>
+   &nbsp;·&nbsp; GitHub Pages: <span style="color:var(--green)">✅ Live</span>
+   &nbsp;·&nbsp; FORGE Version: <span style="color:var(--text2)">v2.9</span>
+  </div>
+ </div>`;
 }
 
 nav('dashboard');
