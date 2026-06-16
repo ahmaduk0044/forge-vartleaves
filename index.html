@@ -4196,7 +4196,7 @@ function renderAdmin(){
   return;
  }
 
- const tabs=['users','roles','tasks','audit','status'];
+ const tabs=['users','roles','permissions','tasks','audit','status'];
  const activeTab=window._adminTab||'users';
 
  box.innerHTML=`
@@ -4204,7 +4204,7 @@ function renderAdmin(){
   ${tabs.map(t=>`
   <button onclick="window._adminTab='${t}';renderAdmin()" style="padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border2);
    background:${activeTab===t?'var(--accent)':'var(--surface2)'};color:${activeTab===t?'white':'var(--text2)'}">
-   ${{users:'👥 Users',roles:'🎭 Roles',tasks:'📋 Tasks',audit:'🔍 Audit Log',status:'⚙️ System Status'}[t]}
+   ${{users:'👥 Users',roles:'🎭 Roles',permissions:'🔐 Permissions',tasks:'📋 Tasks',audit:'🔍 Audit Log',status:'⚙️ System Status'}[t]}
   </button>`).join('')}
  </div>
  <div id="admin-tab-content"></div>`;
@@ -4214,6 +4214,7 @@ function renderAdmin(){
 
  if(activeTab==='users') _renderAdminUsers(tc);
  else if(activeTab==='roles') _renderAdminRoles(tc);
+ else if(activeTab==='permissions') _renderAdminPermissions(tc);
  else if(activeTab==='tasks') _renderAdminTasks(tc);
  else if(activeTab==='audit') _renderAdminAudit(tc);
  else if(activeTab==='status') _renderAdminStatus(tc);
@@ -4812,6 +4813,9 @@ const ForgeFirebaseService = (function() {
         return;
       }
       const ok=await ForgeFirebaseService.init();
+      if(ok && typeof ForgePermissionService!=='undefined'){
+        ForgePermissionService.init(ForgeFirebaseService.getDB());
+      }
       if(!ok){
         console.warn('[FORGE Bridge] Firebase init failed — running in local mode');
         return;
@@ -4838,6 +4842,298 @@ const ForgeFirebaseService = (function() {
       console.log('[FORGE Bridge] ✅ Firebase ready — Auth + Firestore connected');
     });
   })();
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════
+       FORGE Permission Matrix Service — Firestore-backed
+       Additive layer on top of existing role system
+  ═══════════════════════════════════════════════════ -->
+  <script>
+// ═══════════════════════════════════════════════════════
+// FORGE Permission Matrix Service — Firestore-backed
+// Layer: sits ON TOP of existing role system, does not replace it
+// Collection: permissionMatrix/{role}  → { permissions: { permKey: true/false } }
+// ═══════════════════════════════════════════════════════
+
+const ForgePermissionService = (function(){
+  'use strict';
+
+  const COLLECTION = 'permissionMatrix';
+
+  // Master list of all permission keys — fixed catalogue
+  const ALL_PERMISSIONS = [
+    { key:'view_dashboard',   label:'View Dashboard' },
+    { key:'manage_users',     label:'Manage Users' },
+    { key:'view_users',       label:'View Users' },
+    { key:'create_users',     label:'Create Users' },
+    { key:'edit_users',       label:'Edit Users' },
+    { key:'delete_users',     label:'Delete Users' },
+    { key:'view_tasks',       label:'View Tasks' },
+    { key:'create_tasks',     label:'Create Tasks' },
+    { key:'assign_tasks',     label:'Assign Tasks' },
+    { key:'edit_tasks',       label:'Edit Tasks' },
+    { key:'delete_tasks',     label:'Delete Tasks' },
+    { key:'view_reports',     label:'View Reports' },
+    { key:'export_reports',   label:'Export Reports' },
+    { key:'view_audit_logs',  label:'View Audit Logs' },
+    { key:'manage_settings',  label:'Manage Settings' },
+  ];
+
+  // Hard-coded sane defaults — used only the FIRST time a role doc is created
+  // (existing role behavior is preserved exactly as it was before this layer existed)
+  const DEFAULTS = {
+    super_admin: _allTrue(),
+    admin:       _allTrue(),
+    manager: {
+      view_dashboard:true, manage_users:false, view_users:true, create_users:false,
+      edit_users:false, delete_users:false, view_tasks:true, create_tasks:true,
+      assign_tasks:true, edit_tasks:true, delete_tasks:false, view_reports:true,
+      export_reports:false, view_audit_logs:false, manage_settings:false,
+    },
+    viewer: {
+      view_dashboard:true, manage_users:false, view_users:false, create_users:false,
+      edit_users:false, delete_users:false, view_tasks:true, create_tasks:false,
+      assign_tasks:false, edit_tasks:false, delete_tasks:false, view_reports:true,
+      export_reports:false, view_audit_logs:false, manage_settings:false,
+    }
+  };
+
+  function _allTrue(){
+    const o={}; ALL_PERMISSIONS.forEach(p=>o[p.key]=true); return o;
+  }
+
+  let _db=null;
+  let _cache={}; // role -> permissions object, refreshed on demand
+  let _cacheLoaded=false;
+
+  function init(db){ _db=db; }
+
+  // ── Ensure a permissionMatrix doc exists for every role (idempotent, additive only) ──
+  async function ensureDefaults(){
+    if(!_db) return { success:false, error:'Not initialized' };
+    try{
+      for(const role of Object.keys(DEFAULTS)){
+        const ref = _db.collection(COLLECTION).doc(role);
+        const snap = await ref.get();
+        if(!snap.exists){
+          await ref.set({
+            role,
+            permissions: DEFAULTS[role],
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedBy: 'system_default'
+          });
+        }
+      }
+      return { success:true };
+    }catch(err){
+      return { success:false, error:err.message };
+    }
+  }
+
+  // ── Get permission matrix for a single role (cached) ──
+  async function getRolePermissions(role){
+    if(_cache[role]) return _cache[role];
+    if(!_db) return DEFAULTS[role] || {};
+    try{
+      const snap = await _db.collection(COLLECTION).doc(role).get();
+      const perms = snap.exists ? snap.data().permissions : (DEFAULTS[role]||{});
+      _cache[role]=perms;
+      return perms;
+    }catch(err){
+      console.warn('[ForgePermission] getRolePermissions fallback:',err.message);
+      return DEFAULTS[role] || {};
+    }
+  }
+
+  // ── Get ALL roles' matrices at once (for admin UI) ──
+  async function getAllMatrices(){
+    if(!_db) return { success:false, error:'Not initialized', matrices:{} };
+    try{
+      const snap = await _db.collection(COLLECTION).get();
+      const matrices={};
+      snap.forEach(doc=>{ matrices[doc.id]=doc.data().permissions; });
+      // Fill in any missing roles with defaults (defensive — does not overwrite Firestore)
+      Object.keys(DEFAULTS).forEach(role=>{
+        if(!matrices[role]) matrices[role]=DEFAULTS[role];
+      });
+      _cache=matrices;
+      _cacheLoaded=true;
+      return { success:true, matrices };
+    }catch(err){
+      return { success:false, error:err.message, matrices:DEFAULTS };
+    }
+  }
+
+  // ── Update one permission for one role (admin only — enforced by Firestore rules too) ──
+  async function setPermission(role, permKey, value){
+    if(!_db) return { success:false, error:'Not initialized' };
+    if(!ALL_PERMISSIONS.some(p=>p.key===permKey))
+      return { success:false, error:'Unknown permission key: '+permKey };
+    try{
+      const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+      if(!currentUser || !['super_admin','admin'].includes(currentUser.role))
+        return { success:false, error:'Permission denied — admin required' };
+
+      const ref = _db.collection(COLLECTION).doc(role);
+      const field = 'permissions.'+permKey;
+      await ref.set({
+        role,
+        [field]: value,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: currentUser.uid
+      }, { merge:true });
+
+      // Update cache
+      if(!_cache[role]) _cache[role]={};
+      _cache[role][permKey]=value;
+
+      return { success:true };
+    }catch(err){
+      return { success:false, error:err.message };
+    }
+  }
+
+  // ── Check if current signed-in user has a permission ──
+  // Combines: role baseline (existing system) + custom matrix override (new layer)
+  async function userHasPermission(permKey){
+    const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+    if(!currentUser) return false;
+    // super_admin always passes — safety net, cannot be locked out
+    if(currentUser.role==='super_admin') return true;
+    const perms = await getRolePermissions(currentUser.role);
+    return perms[permKey]===true;
+  }
+
+  // ── Sync check using cache only (no async — for render-time gating) ──
+  function userHasPermissionSync(permKey){
+    const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+    if(!currentUser) return false;
+    if(currentUser.role==='super_admin') return true;
+    const perms = _cache[currentUser.role] || DEFAULTS[currentUser.role] || {};
+    return perms[permKey]===true;
+  }
+
+  function clearCache(){ _cache={}; _cacheLoaded=false; }
+
+  return {
+    init,
+    ensureDefaults,
+    getRolePermissions,
+    getAllMatrices,
+    setPermission,
+    userHasPermission,
+    userHasPermissionSync,
+    clearCache,
+    getAllPermissionKeys: () => [...ALL_PERMISSIONS],
+    getDefaults: () => JSON.parse(JSON.stringify(DEFAULTS)),
+  };
+
+})();
+
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════
+       Admin Panel — Permission Matrix Tab (extends existing Admin Panel)
+  ═══════════════════════════════════════════════════ -->
+  <script>
+// ═══════════════════════════════════════════════════════
+// Admin Panel — Permission Matrix Tab
+// Extends existing renderAdmin() tabs array, no replacement
+// ═══════════════════════════════════════════════════════
+
+// ── PERMISSIONS TAB RENDERER ──
+async function _renderAdminPermissions(el){
+ el.innerHTML=`<div class="empty-state"><div style="font-size:24px">⏳</div><div>Loading permission matrix...</div></div>`;
+
+ // Firebase must be ready for this tab — local-mode fallback message
+ if(typeof ForgeFirebaseService==='undefined' || !ForgeFirebaseService.isInitialized()){
+  el.innerHTML=`<div class="empty-state" style="padding:30px">
+   <div style="font-size:28px">⚠️</div>
+   <div style="font-weight:600;margin-top:8px">Firebase Not Connected</div>
+   <div style="font-size:12px;color:var(--text3);margin-top:4px">Permission Matrix requires Firebase + Firestore. Sign in first.</div>
+  </div>`;
+  return;
+ }
+
+ if(typeof ForgePermissionService==='undefined'){
+  el.innerHTML=`<div class="empty-state" style="padding:30px">
+   <div style="font-size:28px">⚠️</div>
+   <div>Permission service not loaded</div>
+  </div>`;
+  return;
+ }
+
+ await ForgePermissionService.ensureDefaults();
+ const result = await ForgePermissionService.getAllMatrices();
+
+ if(!result.success){
+  el.innerHTML=`<div class="empty-state" style="padding:30px">
+   <div style="font-size:28px">❌</div>
+   <div>${sanitizeHTML(result.error||'Failed to load matrix')}</div>
+  </div>`;
+  return;
+ }
+
+ const matrices = result.matrices;
+ const perms = ForgePermissionService.getAllPermissionKeys();
+ const roles = ['super_admin','admin','manager','viewer'];
+ const roleColors={super_admin:'#ef4444',admin:'#3b82f6',manager:'#10b981',viewer:'#9ca3af'};
+
+ el.innerHTML=`
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+  <div style="font-size:13px;font-weight:700;color:var(--text)">🔐 Dynamic Permission Matrix</div>
+  <div style="font-size:10.5px;color:var(--text3)">Stored in Firestore — changes apply instantly, server-enforced</div>
+ </div>
+ <div style="overflow-x:auto;border:1px solid var(--border);border-radius:10px">
+  <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+   <thead>
+    <tr style="background:var(--surface2)">
+     <th style="text-align:left;padding:9px 12px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);position:sticky;left:0;background:var(--surface2)">Permission</th>
+     ${roles.map(r=>`<th style="padding:9px 10px;font-size:10px;color:${roleColors[r]};text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);white-space:nowrap">${r.replace('_',' ')}</th>`).join('')}
+    </tr>
+   </thead>
+   <tbody>
+    ${perms.map(p=>`
+    <tr style="border-bottom:1px solid var(--border)">
+     <td style="padding:8px 12px;color:var(--text2);white-space:nowrap;position:sticky;left:0;background:var(--surface)">${p.label}</td>
+     ${roles.map(r=>{
+       const isSuperAdmin = r==='super_admin';
+       const checked = matrices[r] && matrices[r][p.key]===true;
+       return `<td style="text-align:center;padding:8px 10px">
+        <input type="checkbox" ${checked?'checked':''} ${isSuperAdmin?'disabled':''}
+         onchange="adminTogglePermission('${r}','${p.key}',this.checked)"
+         style="width:15px;height:15px;cursor:${isSuperAdmin?'not-allowed':'pointer'};accent-color:${roleColors[r]};opacity:${isSuperAdmin?0.5:1}">
+       </td>`;
+     }).join('')}
+    </tr>`).join('')}
+   </tbody>
+  </table>
+ </div>
+ <div style="margin-top:12px;padding:10px 13px;background:var(--surface2);border-radius:7px;font-size:11px;color:var(--text3)">
+  ℹ️ super_admin always has full access (cannot be restricted — safety net against lockout).
+  Existing role behavior (read/write/delete from the Roles tab) keeps working exactly as before —
+  this matrix adds finer-grained control on top, it does not replace it.
+ </div>`;
+}
+
+// ── TOGGLE HANDLER ──
+async function adminTogglePermission(role, permKey, value){
+ const result = await ForgePermissionService.setPermission(role, permKey, value);
+ if(result.success){
+  addAdminAuditLog(
+   (ForgeFirebaseService.getCurrentUser()?.name)||'Admin',
+   (ForgeFirebaseService.getCurrentUser()?.role)||'admin',
+   'PERMISSION_CHANGED',
+   `${role}: ${permKey} → ${value?'granted':'revoked'}`
+  );
+  showToast(`✅ ${permKey.replace(/_/g,' ')} ${value?'granted':'revoked'} for ${role}`,'success');
+ }else{
+  showToast(`⛔ ${result.error}`,'error');
+  // Revert checkbox visually on failure
+  renderAdmin();
+ }
+}
+
   </script>
 </body>
 </html>
