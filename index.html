@@ -4180,11 +4180,15 @@ function renderAdmin(){
  const box=document.getElementById('admin-content');
  if(!box) return;
 
- // Check admin access via FORGE user system or local admin users
- const users=getAdminUsers();
- const currentUsername=typeof CURRENT_USER!=='undefined'&&CURRENT_USER?CURRENT_USER.username:'';
- const currentUser=users.find(u=>u.uid===currentUsername);
- const isAdminUser=currentUser&&['super_admin','admin'].includes(currentUser.role);
+ // Check admin access via the real signed-in Firebase user (falls back to local mode if not signed in)
+ let isAdminUser=false;
+ if(typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
+  const fbUser = ForgeFirebaseService.getCurrentUser();
+  if(fbUser && ['super_admin','admin'].includes(fbUser.role)) isAdminUser=true;
+ } else {
+  // Local-mode fallback (no Firebase signed in) — allow access so Admin Panel still works pre-Firebase
+  isAdminUser=true;
+ }
 
  // Show nav item only for admins
  if(adminEl) adminEl.style.display=isAdminUser?'flex':'none';
@@ -4194,7 +4198,7 @@ function renderAdmin(){
   box.innerHTML=`<div class="empty-state" style="padding:40px">
    <div style="font-size:32px">🔒</div>
    <div style="font-size:14px;font-weight:600;margin-top:8px">Admin Access Required</div>
-   <div style="font-size:12px;color:var(--text3);margin-top:4px">Only admins can access this panel</div>
+   <div style="font-size:12px;color:var(--text3);margin-top:4px">Sign in with an admin or super_admin account to access this panel</div>
   </div>`;
   return;
  }
@@ -4224,13 +4228,28 @@ function renderAdmin(){
 }
 
 // ── USERS TAB ──
-function _renderAdminUsers(el){
- const users=getAdminUsers();
+async function _renderAdminUsers(el){
  const roleColors={super_admin:'#ef4444',admin:'#3b82f6',manager:'#10b981',viewer:'#9ca3af'};
+
+ // Try Firestore first (real users who signed in via Google/Email)
+ let users=[];
+ let usingFirestore=false;
+ if(typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
+  const result = await ForgeFirebaseService.getAllUsers();
+  if(result.success){
+   users=result.users;
+   usingFirestore=true;
+  }
+ }
+ // Fallback to local dummy users if Firebase not connected or current user isn't admin yet
+ if(!usingFirestore){
+  users=getAdminUsers();
+ }
+
  el.innerHTML=`
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div style="font-size:13px;font-weight:700;color:var(--text)">👥 User Management <span style="font-size:11px;color:var(--text3)">(${users.length} users)</span></div>
-  <button class="btn btn-sm" style="background:var(--accent);color:white;border:none" onclick="adminAddUser()">+ Add User</button>
+  <div style="font-size:13px;font-weight:700;color:var(--text)">👥 User Management <span style="font-size:11px;color:var(--text3)">(${users.length} users${usingFirestore?' · live from Firestore':' · local mode'})</span></div>
+  ${usingFirestore?'':'<button class="btn btn-sm" style="background:var(--accent);color:white;border:none" onclick="adminAddUser()">+ Add User</button>'}
  </div>
  <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
   ${users.map((u,i)=>`
@@ -4240,6 +4259,10 @@ function _renderAdminUsers(el){
     <div style="font-size:12.5px;font-weight:700;color:var(--text)">${sanitizeHTML(u.name)}</div>
     <div style="font-size:10.5px;color:var(--text3)">${sanitizeHTML(u.email||'—')}</div>
    </div>
+   ${usingFirestore?`
+   <select onchange="adminSetFirestoreRole('${u.uid||u.id}','${sanitizeHTML(u.name)}',this.value)" style="font-size:11px;font-weight:700;padding:4px 8px;border-radius:8px;background:${roleColors[u.role]}22;color:${roleColors[u.role]};border:1px solid ${roleColors[u.role]}44;cursor:pointer">
+    ${['super_admin','admin','manager','viewer'].map(r=>`<option value="${r}"${u.role===r?' selected':''}>${r}</option>`).join('')}
+   </select>`:`
    <div style="text-align:right;flex-shrink:0">
     <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${roleColors[u.role]}22;color:${roleColors[u.role]}">${u.role}</span>
     <div style="font-size:9.5px;color:var(--text3);margin-top:2px">${u.status||'active'}</div>
@@ -4247,10 +4270,29 @@ function _renderAdminUsers(el){
    <div style="display:flex;gap:5px;flex-shrink:0">
     <button class="action-btn" onclick="adminEditUser(${i})">Edit</button>
     <button class="action-btn" style="color:var(--red)" onclick="adminDeleteUser(${i})">Del</button>
-   </div>
+   </div>`}
   </div>`).join('')}
- </div>`;
+ </div>
+ ${usingFirestore?`<div style="margin-top:12px;padding:10px 13px;background:var(--surface2);border-radius:7px;font-size:11.5px;color:var(--text3)">ℹ️ Pick a role from the dropdown to change someone's access instantly — no Firebase Console needed. New users appear here automatically the first time they sign in.</div>`:''}`;
 }
+
+async function adminSetFirestoreRole(uid, userName, newRole){
+ const result = await ForgeFirebaseService.setUserRole(uid, newRole);
+ if(result.success){
+  addAdminAuditLog(
+   (ForgeFirebaseService.getCurrentUser()?.name)||'Admin',
+   (ForgeFirebaseService.getCurrentUser()?.role)||'admin',
+   'ROLE_CHANGED',
+   `${userName}: → ${newRole}`
+  );
+  showToast(`✅ ${userName} is now ${newRole}`,'success');
+  renderAdmin();
+ }else{
+  showToast(`⛔ ${result.error}`,'error');
+  renderAdmin();
+ }
+}
+
 
 function adminAddUser(){
  document.getElementById('modal-title').textContent='Add User';
