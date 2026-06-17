@@ -444,6 +444,10 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <span style="font-size:11px;font-weight:700;color:var(--purple)">⟳ ICC</span>
  </div>
 
+ <div onclick="openNotificationPanel()" style="position:relative;display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);cursor:pointer;flex-shrink:0">
+  <span style="font-size:14px">🔔</span>
+  <span id="notif-badge" style="display:none;position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;border-radius:8px;background:#ef4444;color:white;font-size:9px;font-weight:700;align-items:center;justify-content:center;padding:0 3px">0</span>
+ </div>
  <div id="forge-auth-indicator" onclick="openForgeAuthPanel()" style="display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:7px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap">
   <span id="user-role-dot" class="user-dot" style="width:7px;height:7px;border-radius:50%;background:#6b7280;display:inline-block"></span>
   <span id="forge-auth-label" style="color:#9ca3af">Sign in</span>
@@ -4203,7 +4207,7 @@ function renderAdmin(){
   return;
  }
 
- const tabs=['users','roles','permissions','tasks','audit','status'];
+ const tabs=['users','roles','permissions','tasks','audit','backup','status'];
  const activeTab=window._adminTab||'users';
 
  box.innerHTML=`
@@ -4211,7 +4215,7 @@ function renderAdmin(){
   ${tabs.map(t=>`
   <button onclick="window._adminTab='${t}';renderAdmin()" style="padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border2);
    background:${activeTab===t?'var(--accent)':'var(--surface2)'};color:${activeTab===t?'white':'var(--text2)'}">
-   ${{users:'👥 Users',roles:'🎭 Roles',permissions:'🔐 Permissions',tasks:'📋 Tasks',audit:'🔍 Audit Log',status:'⚙️ System Status'}[t]}
+   ${{users:'👥 Users',roles:'🎭 Roles',permissions:'🔐 Permissions',tasks:'📋 Tasks',audit:'🔍 Audit Log',backup:'💾 Backup',status:'⚙️ System Status'}[t]}
   </button>`).join('')}
  </div>
  <div id="admin-tab-content"></div>`;
@@ -4224,6 +4228,7 @@ function renderAdmin(){
  else if(activeTab==='permissions') _renderAdminPermissions(tc);
  else if(activeTab==='tasks') _renderAdminTasks(tc);
  else if(activeTab==='audit') _renderAdminAudit(tc);
+ else if(activeTab==='backup') _renderAdminBackup(tc);
  else if(activeTab==='status') _renderAdminStatus(tc);
 }
 
@@ -4285,6 +4290,10 @@ async function adminSetFirestoreRole(uid, userName, newRole){
    'ROLE_CHANGED',
    `${userName}: → ${newRole}`
   );
+  // NOTIFICATION: role change
+  if(typeof ForgeNotificationService!=='undefined'){
+   ForgeNotificationService.notify(uid,'role_change','Role Updated',`Your role was changed to ${newRole}`,{newRole});
+  }
   showToast(`✅ ${userName} is now ${newRole}`,'success');
   renderAdmin();
  }else{
@@ -4462,6 +4471,16 @@ function adminAddTask(){
   };
   tasks.unshift(task);saveAdminTasks(tasks);
   addAdminAuditLog('Admin','admin','TASK_CREATED',`Created task: "${title}" → ${task.assignedRole}`);
+  // NOTIFICATION: new task — notify everyone holding the assigned role
+  if(typeof ForgeNotificationService!=='undefined' && typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
+   ForgeFirebaseService.getAllUsers().then(r=>{
+    if(r.success){
+     r.users.filter(u=>u.role===task.assignedRole).forEach(u=>{
+      ForgeNotificationService.notify(u.uid||u.id,'new_task','New Task Assigned',`"${title}" (${task.category})`,{taskId:task.id});
+     });
+    }
+   });
+  }
   showToast(`✅ Task "${title}" created`,'success');closeModal();renderAdmin();
  };
  document.getElementById('modal-overlay').classList.add('open');
@@ -4492,6 +4511,16 @@ function adminEditTask(idx){
   tasks[idx].updatedAt=todayStr();
   saveAdminTasks(tasks);
   addAdminAuditLog('Admin','admin','TASK_UPDATED',`Updated task: "${tasks[idx].title}"`);
+  // NOTIFICATION: task update — notify everyone holding the (possibly new) assigned role
+  if(typeof ForgeNotificationService!=='undefined' && typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
+   ForgeFirebaseService.getAllUsers().then(r=>{
+    if(r.success){
+     r.users.filter(u=>u.role===tasks[idx].assignedRole).forEach(u=>{
+      ForgeNotificationService.notify(u.uid||u.id,'task_update','Task Updated',`"${tasks[idx].title}" → ${tasks[idx].status}`,{taskId:tasks[idx].id});
+     });
+    }
+   });
+  }
   showToast('Task updated','success');closeModal();renderAdmin();
  };
  document.getElementById('modal-overlay').classList.add('open');
@@ -4889,6 +4918,13 @@ const ForgeFirebaseService = (function() {
           const role=document.getElementById('user-badge-role');
           if(name) name.textContent=user.name;
           if(role) role.textContent=user.role.replace('_',' ');
+          // NOTIFICATION: login alert — notify admins someone signed in
+          if(typeof ForgeNotificationService!=='undefined'){
+            ForgeNotificationService.init(ForgeFirebaseService.getDB());
+            ForgeNotificationService.notifyAdmins('login_alert','Login Alert',`${user.name} (${user.role}) signed in`,{email:user.email});
+          }
+          // Start the bell/badge listener for this user
+          if(typeof initForgeNotifications==='function') initForgeNotifications();
         } else {
           console.log('[FORGE Bridge] Not signed in — local mode active');
           const dot=document.getElementById('user-role-dot');
@@ -5276,6 +5312,499 @@ async function adminTogglePermission(role, permKey, value){
   async function forgeSignOut(){
     await ForgeFirebaseService.signOut();
     if(typeof closeModal==='function') closeModal();
+  }
+  </script>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       FORGE Notification Service — Firestore-backed
+       Collection: notifications/{id} — uses existing Firebase project
+       No separate notification service, no new infra
+  ═══════════════════════════════════════════════════ -->
+  <script>
+  const ForgeNotificationService = (function(){
+    'use strict';
+
+    const COLLECTION = 'notifications';
+    let _db=null;
+    let _unsubscribe=null;
+    let _cache=[];
+
+    function init(db){ _db=db; }
+
+    // ── Create a notification for a specific user ──
+    // type: 'new_task' | 'task_update' | 'role_change' | 'login_alert'
+    async function notify(targetUid, type, title, message, meta){
+      if(!_db) return { success:false, error:'Not initialized' };
+      try{
+        await _db.collection(COLLECTION).add({
+          targetUid,
+          type,
+          title,
+          message,
+          meta: meta||{},
+          read:false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        return { success:true };
+      }catch(err){
+        console.warn('[ForgeNotification] notify failed:',err.message);
+        return { success:false, error:err.message };
+      }
+    }
+
+    // ── Notify every admin/super_admin (used for login alerts) ──
+    async function notifyAdmins(type, title, message, meta){
+      if(!_db || typeof ForgeFirebaseService==='undefined') return;
+      const result = await ForgeFirebaseService.getAllUsers();
+      if(!result.success) return;
+      const admins = result.users.filter(u=>['super_admin','admin'].includes(u.role));
+      for(const a of admins){
+        await notify(a.uid||a.id, type, title, message, meta);
+      }
+    }
+
+    // ── Get unread count for current user ──
+    async function getUnreadCount(uid){
+      if(!_db) return 0;
+      try{
+        const snap = await _db.collection(COLLECTION)
+          .where('targetUid','==',uid)
+          .where('read','==',false)
+          .get();
+        return snap.size;
+      }catch(err){ return 0; }
+    }
+
+    // ── Get notifications for current user (most recent first) ──
+    async function getMyNotifications(uid, limit){
+      if(!_db) return [];
+      try{
+        const snap = await _db.collection(COLLECTION)
+          .where('targetUid','==',uid)
+          .orderBy('createdAt','desc')
+          .limit(limit||30)
+          .get();
+        const list=[];
+        snap.forEach(doc=>list.push({id:doc.id,...doc.data()}));
+        _cache=list;
+        return list;
+      }catch(err){
+        console.warn('[ForgeNotification] getMyNotifications failed:',err.message);
+        return [];
+      }
+    }
+
+    // ── Mark one notification as read ──
+    async function markRead(notifId){
+      if(!_db) return;
+      try{
+        await _db.collection(COLLECTION).doc(notifId).update({read:true});
+      }catch(err){}
+    }
+
+    // ── Mark all as read ──
+    async function markAllRead(uid){
+      if(!_db) return;
+      try{
+        const snap = await _db.collection(COLLECTION)
+          .where('targetUid','==',uid)
+          .where('read','==',false)
+          .get();
+        const batch=_db.batch();
+        snap.forEach(doc=>batch.update(doc.ref,{read:true}));
+        await batch.commit();
+      }catch(err){}
+    }
+
+    // ── Live listener — fires callback whenever notifications change ──
+    function listen(uid, callback){
+      if(!_db) return ()=>{};
+      if(_unsubscribe) _unsubscribe();
+      _unsubscribe = _db.collection(COLLECTION)
+        .where('targetUid','==',uid)
+        .orderBy('createdAt','desc')
+        .limit(30)
+        .onSnapshot(snap=>{
+          const list=[];
+          snap.forEach(doc=>list.push({id:doc.id,...doc.data()}));
+          _cache=list;
+          callback(list);
+        }, err=>console.warn('[ForgeNotification] listener error:',err.message));
+      return _unsubscribe;
+    }
+
+    function getCache(){ return _cache; }
+
+    return {
+      init, notify, notifyAdmins, getUnreadCount,
+      getMyNotifications, markRead, markAllRead, listen, getCache,
+    };
+  })();
+  </script>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       Notification Bell UI — uses existing modal system
+  ═══════════════════════════════════════════════════ -->
+  <script>
+  let _notifUnsubscribe=null;
+
+  function initForgeNotifications(){
+    if(typeof ForgeFirebaseService==='undefined' || !ForgeFirebaseService.isInitialized()) return;
+    if(typeof ForgeNotificationService==='undefined') return;
+    const user = ForgeFirebaseService.getCurrentUser();
+    if(!user) return;
+
+    ForgeNotificationService.init(ForgeFirebaseService.getDB());
+
+    if(_notifUnsubscribe) _notifUnsubscribe();
+    _notifUnsubscribe = ForgeNotificationService.listen(user.uid, (list)=>{
+      const unread = list.filter(n=>!n.read).length;
+      const badge = document.getElementById('notif-badge');
+      if(badge){
+        if(unread>0){ badge.textContent=unread>9?'9+':unread; badge.style.display='flex'; }
+        else { badge.style.display='none'; }
+      }
+    });
+  }
+
+  function openNotificationPanel(){
+    if(typeof ForgeFirebaseService==='undefined' || !ForgeFirebaseService.isInitialized()){
+      if(typeof showToast==='function') showToast('Sign in to see notifications','info');
+      return;
+    }
+    const user = ForgeFirebaseService.getCurrentUser();
+    if(!user){ if(typeof showToast==='function') showToast('Sign in to see notifications','info'); return; }
+
+    const modalBody  = document.getElementById('modal-body');
+    const modalTitle = document.getElementById('modal-title');
+    const saveBtn    = document.getElementById('modal-save-btn');
+    if(!modalBody) return;
+
+    modalTitle.textContent='🔔 Notifications';
+    saveBtn.style.display='none';
+    modalBody.innerHTML=`<div style="text-align:center;padding:24px"><div style="font-size:22px">⏳</div></div>`;
+    document.getElementById('modal-overlay').classList.add('open');
+
+    ForgeNotificationService.getMyNotifications(user.uid, 30).then(list=>{
+      const typeIcons={new_task:'📋',task_update:'🔄',role_change:'🎭',login_alert:'🔐'};
+      const typeColors={new_task:'#3b82f6',task_update:'#10b981',role_change:'#f59e0b',login_alert:'#8b5cf6'};
+
+      if(list.length===0){
+        modalBody.innerHTML=`<div class="empty-state" style="padding:30px"><div style="font-size:28px">🔔</div><div>No notifications yet</div></div>`;
+        return;
+      }
+
+      modalBody.innerHTML=`
+       <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+        <span onclick="forgeMarkAllRead()" style="font-size:11px;color:var(--text3);cursor:pointer;text-decoration:underline">Mark all read</span>
+       </div>
+       <div style="max-height:360px;overflow-y:auto">
+        ${list.map(n=>`
+        <div onclick="forgeMarkOneRead('${n.id}')" style="display:flex;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer;opacity:${n.read?'0.55':'1'}">
+         <div style="width:30px;height:30px;border-radius:50%;background:${typeColors[n.type]||'#9ca3af'}22;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${typeIcons[n.type]||'🔔'}</div>
+         <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:var(--text)">${sanitizeHTML(n.title)}</div>
+          <div style="font-size:11.5px;color:var(--text2);margin-top:1px">${sanitizeHTML(n.message)}</div>
+         </div>
+         ${n.read?'':'<div style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px"></div>'}
+        </div>`).join('')}
+       </div>`;
+    });
+  }
+
+  async function forgeMarkOneRead(id){
+    await ForgeNotificationService.markRead(id);
+  }
+  async function forgeMarkAllRead(){
+    const user = ForgeFirebaseService.getCurrentUser();
+    if(user){ await ForgeNotificationService.markAllRead(user.uid); openNotificationPanel(); }
+  }
+  </script>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       FORGE Backup & Recovery Service — Firestore-backed
+       Reads existing collections (users, tasks, permissionMatrix,
+       notifications) WITHOUT modifying any of them.
+       Writes ONLY to a new 'backups' collection for version history.
+  ═══════════════════════════════════════════════════ -->
+  <script>
+  const ForgeBackupService = (function(){
+    'use strict';
+
+    const BACKUP_COLLECTION = 'backups';
+    const SOURCE_COLLECTIONS = ['users','tasks','permissionMatrix'];
+    let _db=null;
+
+    function init(db){ _db=db; }
+
+    // ── EXPORT: read all source collections, return as one JSON object ──
+    async function exportData(){
+      if(!_db) return { success:false, error:'Not initialized' };
+      try{
+        const snapshot={};
+        for(const col of SOURCE_COLLECTIONS){
+          const snap = await _db.collection(col).get();
+          const docs=[];
+          snap.forEach(doc=>docs.push({ _id:doc.id, ...doc.data() }));
+          snapshot[col]=docs;
+        }
+        return {
+          success:true,
+          data:{
+            exportedAt: new Date().toISOString(),
+            project:'forge-vartleaves',
+            version:'1.0',
+            collections: snapshot,
+          }
+        };
+      }catch(err){
+        return { success:false, error:err.message };
+      }
+    }
+
+    // ── Trigger a browser download of the export as a .json file ──
+    function downloadAsFile(exportObj, filename){
+      const blob = new Blob([JSON.stringify(exportObj,null,2)], {type:'application/json'});
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href=url; a.download=filename||('forge-backup-'+Date.now()+'.json');
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Save a snapshot into the 'backups' collection (version history) ──
+    // This does NOT touch users/tasks/permissionMatrix — only adds a new doc here.
+    async function saveSnapshot(label){
+      if(!_db) return { success:false, error:'Not initialized' };
+      const exp = await exportData();
+      if(!exp.success) return exp;
+      try{
+        const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+        if(!currentUser || !['super_admin','admin'].includes(currentUser.role))
+          return { success:false, error:'Permission denied — admin required' };
+
+        const ref = await _db.collection(BACKUP_COLLECTION).add({
+          label: label || ('Backup '+new Date().toLocaleString()),
+          createdBy: currentUser.uid,
+          createdByName: currentUser.name,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          collectionsIncluded: SOURCE_COLLECTIONS,
+          docCounts: Object.fromEntries(SOURCE_COLLECTIONS.map(c=>[c, exp.data.collections[c].length])),
+          // Store the full snapshot as a JSON string (Firestore field, not a separate file)
+          snapshotJSON: JSON.stringify(exp.data),
+        });
+        return { success:true, id:ref.id };
+      }catch(err){
+        return { success:false, error:err.message };
+      }
+    }
+
+    // ── List version history (most recent first) ──
+    async function listSnapshots(limit){
+      if(!_db) return { success:false, error:'Not initialized', snapshots:[] };
+      try{
+        const snap = await _db.collection(BACKUP_COLLECTION)
+          .orderBy('createdAt','desc').limit(limit||20).get();
+        const list=[];
+        snap.forEach(doc=>{
+          const d=doc.data();
+          list.push({
+            id:doc.id, label:d.label, createdByName:d.createdByName,
+            createdAt:d.createdAt, docCounts:d.docCounts,
+            collectionsIncluded:d.collectionsIncluded,
+          }); // NOTE: snapshotJSON intentionally omitted from list view (can be large)
+        });
+        return { success:true, snapshots:list };
+      }catch(err){
+        return { success:false, error:err.message, snapshots:[] };
+      }
+    }
+
+    // ── Get one full snapshot (with data) by id ──
+    async function getSnapshot(id){
+      if(!_db) return null;
+      try{
+        const doc = await _db.collection(BACKUP_COLLECTION).doc(id).get();
+        if(!doc.exists) return null;
+        const d=doc.data();
+        return { id:doc.id, ...d, data: JSON.parse(d.snapshotJSON) };
+      }catch(err){ return null; }
+    }
+
+    // ── IMPORT: restore a snapshot back into the live collections ──
+    // Uses set() with merge:false per document — overwrites matching IDs,
+    // does not touch documents that aren't part of the snapshot.
+    async function restoreSnapshot(id){
+      const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+      if(!currentUser || currentUser.role!=='super_admin')
+        return { success:false, error:'Permission denied — super_admin required to restore' };
+
+      const snap = await getSnapshot(id);
+      if(!snap) return { success:false, error:'Snapshot not found' };
+
+      try{
+        for(const col of Object.keys(snap.data.collections)){
+          const docs = snap.data.collections[col];
+          const batch = _db.batch();
+          docs.forEach(docData=>{
+            const { _id, ...fields } = docData;
+            batch.set(_db.collection(col).doc(_id), fields);
+          });
+          await batch.commit();
+        }
+        return { success:true, restoredCollections:Object.keys(snap.data.collections) };
+      }catch(err){
+        return { success:false, error:err.message };
+      }
+    }
+
+    // ── IMPORT from an uploaded .json file (same shape as exportData output) ──
+    async function importFromFile(jsonText){
+      const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+      if(!currentUser || currentUser.role!=='super_admin')
+        return { success:false, error:'Permission denied — super_admin required to import' };
+      let parsed;
+      try{ parsed = JSON.parse(jsonText); }
+      catch(e){ return { success:false, error:'Invalid JSON file' }; }
+      if(!parsed.collections) return { success:false, error:'File is not a valid FORGE backup export' };
+
+      try{
+        for(const col of Object.keys(parsed.collections)){
+          const docs = parsed.collections[col];
+          const batch = _db.batch();
+          docs.forEach(docData=>{
+            const { _id, ...fields } = docData;
+            batch.set(_db.collection(col).doc(_id), fields);
+          });
+          await batch.commit();
+        }
+        return { success:true, restoredCollections:Object.keys(parsed.collections) };
+      }catch(err){
+        return { success:false, error:err.message };
+      }
+    }
+
+    return {
+      init, exportData, downloadAsFile, saveSnapshot,
+      listSnapshots, getSnapshot, restoreSnapshot, importFromFile,
+      getSourceCollections: () => [...SOURCE_COLLECTIONS],
+    };
+  })();
+  </script>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       Admin Panel — Backup & Recovery Tab
+       Extends existing renderAdmin() tabs, no replacement
+  ═══════════════════════════════════════════════════ -->
+  <script>
+  async function _renderAdminBackup(el){
+   el.innerHTML=`<div class="empty-state"><div style="font-size:24px">⏳</div><div>Loading backup history...</div></div>`;
+
+   if(typeof ForgeFirebaseService==='undefined' || !ForgeFirebaseService.isInitialized()){
+    el.innerHTML=`<div class="empty-state" style="padding:30px"><div style="font-size:28px">⚠️</div><div style="font-weight:600;margin-top:8px">Firebase Not Connected</div><div style="font-size:12px;color:var(--text3);margin-top:4px">Sign in to use backup & recovery.</div></div>`;
+    return;
+   }
+   if(typeof ForgeBackupService==='undefined'){
+    el.innerHTML=`<div class="empty-state" style="padding:30px"><div style="font-size:28px">⚠️</div><div>Backup service not loaded</div></div>`;
+    return;
+   }
+   ForgeBackupService.init(ForgeFirebaseService.getDB());
+
+   const result = await ForgeBackupService.listSnapshots(20);
+   const snapshots = result.success ? result.snapshots : [];
+
+   el.innerHTML=`
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:13px;font-weight:700;color:var(--text)">💾 Backup & Recovery</div>
+    <div style="display:flex;gap:6px">
+     <button class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border2)" onclick="forgeExportNow()">⬇ Export JSON</button>
+     <label class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border2);cursor:pointer">⬆ Import JSON<input type="file" accept=".json" style="display:none" onchange="forgeImportFile(event)"></label>
+     <button class="btn btn-sm" style="background:var(--accent);color:white;border:none" onclick="forgeSaveSnapshot()">+ Save Version</button>
+    </div>
+   </div>
+
+   <div style="margin-bottom:14px;padding:11px 13px;background:var(--surface2);border-radius:8px;font-size:11.5px;color:var(--text3)">
+    ℹ️ "Save Version" stores a point-in-time snapshot of users, tasks and permissions inside Firestore (version history).
+    "Export JSON" downloads the same data as a file to your computer. Neither action changes your live data —
+    only "Restore" or "Import" does that, and both require super_admin.
+   </div>
+
+   ${snapshots.length===0?`
+   <div class="empty-state" style="padding:24px"><div style="font-size:26px">💾</div><div>No saved versions yet</div></div>`:`
+   <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    ${snapshots.map(s=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)">
+     <div style="flex:1;min-width:0">
+      <div style="font-size:12.5px;font-weight:700;color:var(--text)">${sanitizeHTML(s.label)}</div>
+      <div style="font-size:10.5px;color:var(--text3)">by ${sanitizeHTML(s.createdByName||'—')} · ${(s.collectionsIncluded||[]).join(', ')} · ${Object.values(s.docCounts||{}).reduce((a,b)=>a+b,0)} docs</div>
+     </div>
+     <div style="display:flex;gap:5px;flex-shrink:0">
+      <button class="action-btn" onclick="forgeDownloadSnapshot('${s.id}')">Download</button>
+      <button class="action-btn" style="color:var(--yellow)" onclick="forgeRestoreSnapshot('${s.id}','${sanitizeHTML(s.label)}')">Restore</button>
+     </div>
+    </div>`).join('')}
+   </div>`}`;
+  }
+
+  async function forgeExportNow(){
+   const result = await ForgeBackupService.exportData();
+   if(!result.success){ showToast(`⛔ ${result.error}`,'error'); return; }
+   ForgeBackupService.downloadAsFile(result.data, `forge-backup-${Date.now()}.json`);
+   addAdminAuditLog((ForgeFirebaseService.getCurrentUser()?.name)||'Admin',(ForgeFirebaseService.getCurrentUser()?.role)||'admin','BACKUP_EXPORTED','Exported Firestore data to JSON file');
+   showToast('✅ Backup downloaded','success');
+  }
+
+  async function forgeSaveSnapshot(){
+   const label = prompt('Label for this backup version (optional):','');
+   const result = await ForgeBackupService.saveSnapshot(label);
+   if(result.success){
+    addAdminAuditLog((ForgeFirebaseService.getCurrentUser()?.name)||'Admin',(ForgeFirebaseService.getCurrentUser()?.role)||'admin','BACKUP_SAVED',`Saved version: ${label||'unlabeled'}`);
+    showToast('✅ Version saved','success');
+    renderAdmin();
+   }else{
+    showToast(`⛔ ${result.error}`,'error');
+   }
+  }
+
+  async function forgeDownloadSnapshot(id){
+   const snap = await ForgeBackupService.getSnapshot(id);
+   if(!snap){ showToast('Snapshot not found','error'); return; }
+   ForgeBackupService.downloadAsFile(snap.data, `forge-backup-${id}.json`);
+  }
+
+  async function forgeRestoreSnapshot(id,label){
+   if(!confirm(`Restore "${label}"? This will overwrite current users/tasks/permissions with this version's data.`)) return;
+   const result = await ForgeBackupService.restoreSnapshot(id);
+   if(result.success){
+    addAdminAuditLog((ForgeFirebaseService.getCurrentUser()?.name)||'Admin','super_admin','BACKUP_RESTORED',`Restored version: ${label}`);
+    showToast(`✅ Restored: ${result.restoredCollections.join(', ')}`,'success');
+    renderAdmin();
+   }else{
+    showToast(`⛔ ${result.error}`,'error');
+   }
+  }
+
+  function forgeImportFile(event){
+   const file = event.target.files[0];
+   if(!file) return;
+   const reader = new FileReader();
+   reader.onload = async function(e){
+    if(!confirm(`Import "${file.name}"? This will overwrite matching records in your live data.`)) return;
+    const result = await ForgeBackupService.importFromFile(e.target.result);
+    if(result.success){
+     addAdminAuditLog((ForgeFirebaseService.getCurrentUser()?.name)||'Admin','super_admin','BACKUP_IMPORTED',`Imported from file: ${file.name}`);
+     showToast(`✅ Imported: ${result.restoredCollections.join(', ')}`,'success');
+     renderAdmin();
+    }else{
+     showToast(`⛔ ${result.error}`,'error');
+    }
+   };
+   reader.readAsText(file);
   }
   </script>
 
