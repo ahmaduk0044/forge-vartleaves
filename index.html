@@ -4232,32 +4232,73 @@ function renderAdmin(){
  else if(activeTab==='status') _renderAdminStatus(tc);
 }
 
+// ── ADMIN SEARCH & FILTER STATE (No.1 — Global Search & Filters) ──
+// Pure client-side filtering over existing data. No new Firestore collection.
+window._adminFilters = window._adminFilters || {
+ users:{q:'',role:'all',status:'all'},
+ tasks:{q:'',category:'all',status:'all',role:'all'},
+ audit:{q:'',action:'all'}
+};
+function _adminSetFilter(tab,key,val){
+ window._adminFilters[tab][key]=val;
+ renderAdmin();
+}
+function _adminFilterBar(tab,fields){
+ const f=window._adminFilters[tab];
+ return `
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+  <input class="form-input" style="flex:1;min-width:160px;font-size:12px;padding:8px 11px" placeholder="🔎 Search..." value="${sanitizeHTML(f.q||'')}"
+   oninput="_adminSetFilter('${tab}','q',this.value)">
+  ${fields.map(fl=>`
+  <select class="form-select" style="font-size:12px;padding:8px 11px;width:auto" onchange="_adminSetFilter('${tab}','${fl.key}',this.value)">
+   <option value="all"${f[fl.key]==='all'?' selected':''}>All ${fl.label}</option>
+   ${fl.options.map(o=>`<option value="${o}"${f[fl.key]===o?' selected':''}>${o}</option>`).join('')}
+  </select>`).join('')}
+ </div>`;
+}
+
 // ── USERS TAB ──
 async function _renderAdminUsers(el){
  const roleColors={super_admin:'#ef4444',admin:'#3b82f6',manager:'#10b981',viewer:'#9ca3af'};
 
  // Try Firestore first (real users who signed in via Google/Email)
- let users=[];
+ let allUsers=[];
  let usingFirestore=false;
  if(typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
   const result = await ForgeFirebaseService.getAllUsers();
   if(result.success){
-   users=result.users;
+   allUsers=result.users;
    usingFirestore=true;
   }
  }
  // Fallback to local dummy users if Firebase not connected or current user isn't admin yet
  if(!usingFirestore){
-  users=getAdminUsers();
+  allUsers=getAdminUsers();
  }
+
+ // Apply filters (client-side only; allUsers array itself is untouched)
+ const f=window._adminFilters.users;
+ const users=allUsers.filter(u=>{
+  if(f.role!=='all' && u.role!==f.role) return false;
+  if(f.status!=='all' && (u.status||'active')!==f.status) return false;
+  if(f.q && !((u.name||'').toLowerCase().includes(f.q.toLowerCase())||(u.email||'').toLowerCase().includes(f.q.toLowerCase()))) return false;
+  return true;
+ });
+ // Map filtered rows back to their ORIGINAL index in allUsers, so edit/delete buttons stay correct
+ const usersWithOrigIdx=users.map(u=>({u,origIdx:allUsers.indexOf(u)}));
 
  el.innerHTML=`
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div style="font-size:13px;font-weight:700;color:var(--text)">👥 User Management <span style="font-size:11px;color:var(--text3)">(${users.length} users${usingFirestore?' · live from Firestore':' · local mode'})</span></div>
+  <div style="font-size:13px;font-weight:700;color:var(--text)">👥 User Management <span style="font-size:11px;color:var(--text3)">(${users.length} of ${allUsers.length} users${usingFirestore?' · live from Firestore':' · local mode'})</span></div>
   ${usingFirestore?'':'<button class="btn btn-sm" style="background:var(--accent);color:white;border:none" onclick="adminAddUser()">+ Add User</button>'}
  </div>
+ ${_adminFilterBar('users',[
+   {key:'role',label:'Roles',options:['super_admin','admin','manager','viewer']},
+   {key:'status',label:'Status',options:['active','suspended']}
+ ])}
+ ${users.length===0?`<div class="empty-state"><div style="font-size:28px">👥</div><div>No users match your search/filter</div></div>`:`
  <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-  ${users.map((u,i)=>`
+  ${usersWithOrigIdx.map(({u,origIdx:i})=>`
   <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)">
    <div style="width:36px;height:36px;border-radius:50%;background:${roleColors[u.role]||'#9ca3af'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;flex-shrink:0">${(u.name||'?')[0]}</div>
    <div style="flex:1;min-width:0">
@@ -4277,7 +4318,7 @@ async function _renderAdminUsers(el){
     <button class="action-btn" style="color:var(--red)" onclick="adminDeleteUser(${i})">Del</button>
    </div>`}
   </div>`).join('')}
- </div>
+ </div>`}
  ${usingFirestore?`<div style="margin-top:12px;padding:10px 13px;background:var(--surface2);border-radius:7px;font-size:11.5px;color:var(--text3)">ℹ️ Pick a role from the dropdown to change someone's access instantly — no Firebase Console needed. New users appear here automatically the first time they sign in.</div>`:''}`;
 }
 
@@ -4411,21 +4452,37 @@ function _renderAdminRoles(el){
 
 // ── TASKS TAB ──
 function _renderAdminTasks(el){
- const tasks=getAdminTasks();
+ const allTasks=getAdminTasks();
  const statusColors={'pending':'#f59e0b','in-progress':'#3b82f6','completed':'#10b981'};
+
+ const f=window._adminFilters.tasks;
+ const tasks=allTasks.filter(t=>{
+  if(f.category!=='all' && t.category!==f.category) return false;
+  if(f.status!=='all' && t.status!==f.status) return false;
+  if(f.role!=='all' && t.assignedRole!==f.role) return false;
+  if(f.q && !((t.title||'').toLowerCase().includes(f.q.toLowerCase())||(t.description||'').toLowerCase().includes(f.q.toLowerCase()))) return false;
+  return true;
+ });
+ const tasksWithOrigIdx=tasks.map(t=>({t,origIdx:allTasks.indexOf(t)}));
+
  el.innerHTML=`
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div style="font-size:13px;font-weight:700;color:var(--text)">📋 Task Management <span style="font-size:11px;color:var(--text3)">(${tasks.length} tasks)</span></div>
+  <div style="font-size:13px;font-weight:700;color:var(--text)">📋 Task Management <span style="font-size:11px;color:var(--text3)">(${tasks.length} of ${allTasks.length} tasks)</span></div>
   <button class="btn btn-sm" style="background:var(--accent);color:white;border:none" onclick="adminAddTask()">+ Add Task</button>
  </div>
+ ${_adminFilterBar('tasks',[
+   {key:'category',label:'Categories',options:TASK_CATS},
+   {key:'status',label:'Status',options:TASK_STATUSES},
+   {key:'role',label:'Roles',options:ADMIN_ROLES}
+ ])}
  ${tasks.length===0?`
  <div class="empty-state">
   <div style="font-size:28px">📋</div>
-  <div>No tasks yet</div>
-  <button class="btn btn-sm" style="margin-top:10px" onclick="adminAddTask()">+ Create First Task</button>
+  <div>${allTasks.length===0?'No tasks yet':'No tasks match your search/filter'}</div>
+  ${allTasks.length===0?'<button class="btn btn-sm" style="margin-top:10px" onclick="adminAddTask()">+ Create First Task</button>':''}
  </div>`:`
  <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-  ${tasks.map((t,i)=>`
+  ${tasksWithOrigIdx.map(({t,origIdx:i})=>`
   <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)">
    <div style="flex:1;min-width:0">
     <div style="font-size:12.5px;font-weight:700;color:var(--text)">${t.title}</div>
@@ -4536,18 +4593,26 @@ function adminDeleteTask(idx){
 
 // ── AUDIT LOG TAB ──
 function _renderAdminAudit(el){
- const logs=getAdminAuditLog();
+ const allLogs=getAdminAuditLog();
  const actionColors={
   USER_CREATED:'#10b981',USER_UPDATED:'#3b82f6',USER_DELETED:'#ef4444',
   ROLE_CHANGED:'#f59e0b',TASK_CREATED:'#10b981',TASK_UPDATED:'#3b82f6',
   TASK_DELETED:'#ef4444',SETTINGS_CHANGED:'#8b5cf6',
  };
+ const f=window._adminFilters.audit;
+ const knownActions=Array.from(new Set(allLogs.map(l=>l.action)));
+ const logs=allLogs.filter(l=>{
+  if(f.action!=='all' && l.action!==f.action) return false;
+  if(f.q && !((l.user||'').toLowerCase().includes(f.q.toLowerCase())||(l.detail||'').toLowerCase().includes(f.q.toLowerCase())||(l.action||'').toLowerCase().includes(f.q.toLowerCase()))) return false;
+  return true;
+ });
  el.innerHTML=`
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <div style="font-size:13px;font-weight:700;color:var(--text)">🔍 Audit Log <span style="font-size:11px;color:var(--text3)">(${logs.length} entries)</span></div>
+  <div style="font-size:13px;font-weight:700;color:var(--text)">🔍 Audit Log <span style="font-size:11px;color:var(--text3)">(${logs.length} of ${allLogs.length} entries)</span></div>
   <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.25)" onclick="if(confirm('Clear all audit logs?')){localStorage.removeItem('forge_audit_log');renderAdmin();}">Clear</button>
  </div>
- ${logs.length===0?`<div class="empty-state"><div style="font-size:28px">🔍</div><div>No audit entries yet</div></div>`:`
+ ${_adminFilterBar('audit',[{key:'action',label:'Actions',options:knownActions}])}
+ ${logs.length===0?`<div class="empty-state"><div style="font-size:28px">🔍</div><div>${allLogs.length===0?'No audit entries yet':'No entries match your search/filter'}</div></div>`:`
  <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
   ${logs.slice(0,100).map(l=>`
   <div style="display:flex;align-items:flex-start;gap:11px;padding:10px 14px;border-bottom:1px solid var(--border)">
