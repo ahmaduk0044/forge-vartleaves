@@ -4618,9 +4618,15 @@ function _renderAdminReports(el){
  </div>`;
 }
 
-function _reportGetData(key){
+async function _reportGetData(key){
  if(key==='users'){
-  const rows=getAdminUsers();
+  // Match exactly what the Users tab itself shows: Firestore first, local fallback.
+  let rows=[];
+  if(typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
+   const result=await ForgeFirebaseService.getAllUsers();
+   if(result.success) rows=result.users;
+  }
+  if(rows.length===0) rows=getAdminUsers();
   return {title:'Users Report',cols:['name','email','role','status'],rows:rows.map(u=>[u.name||'',u.email||'',u.role||'',u.status||'active'])};
  }
  if(key==='tasks'){
@@ -4645,17 +4651,19 @@ function _csvEscape(v){
  return s;
 }
 
-function _reportExportCSV(key){
- const {title,cols,rows}=_reportGetData(key);
+async function _reportExportCSV(key){
+ if(key==='users' && typeof showToast==='function') showToast('Preparing report...','info');
+ const {title,cols,rows}=await _reportGetData(key);
  const lines=[cols.join(',')].concat(rows.map(r=>r.map(_csvEscape).join(',')));
  const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
  _downloadBlob(blob,`${title.replace(/\s+/g,'_')}_${_reportFileDate()}.csv`);
  if(typeof addAdminAuditLog==='function') addAdminAuditLog('Admin','admin','REPORT_EXPORTED',`Exported ${title} as CSV`);
 }
 
-function _reportExportExcel(key){
+async function _reportExportExcel(key){
  // HTML-table-as-.xls trick — Excel opens HTML tables saved with an .xls extension. No external library needed.
- const {title,cols,rows}=_reportGetData(key);
+ if(key==='users' && typeof showToast==='function') showToast('Preparing report...','info');
+ const {title,cols,rows}=await _reportGetData(key);
  const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
  let html='<table border="1"><thead><tr>'+cols.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody>';
  rows.forEach(r=>{ html+='<tr>'+r.map(v=>`<td>${esc(v)}</td>`).join('')+'</tr>'; });
@@ -4665,12 +4673,14 @@ function _reportExportExcel(key){
  if(typeof addAdminAuditLog==='function') addAdminAuditLog('Admin','admin','REPORT_EXPORTED',`Exported ${title} as Excel`);
 }
 
-function _reportExportPDF(key){
+async function _reportExportPDF(key){
  // Browser print-to-PDF — no external library. Opens a new window with a simple printable table.
- const {title,cols,rows}=_reportGetData(key);
- const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ // Open the popup window SYNCHRONOUSLY (before any await) so browsers don't treat it as a blocked auto-popup.
  const w=window.open('','_blank');
  if(!w){ if(typeof showToast==='function') showToast('Popup blocked — allow popups to export PDF','error'); return; }
+ w.document.write('<p style="font-family:Arial,sans-serif;padding:24px;color:#666">Loading report…</p>');
+ const {title,cols,rows}=await _reportGetData(key);
+ const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
  let html=`<!DOCTYPE html><html><head><title>${esc(title)}</title>
  <style>
   body{font-family:Arial,sans-serif;padding:24px;color:#111}
