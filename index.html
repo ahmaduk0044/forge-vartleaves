@@ -4207,7 +4207,7 @@ function renderAdmin(){
   return;
  }
 
- const tabs=['users','roles','permissions','tasks','audit','backup','status'];
+ const tabs=['users','roles','permissions','tasks','audit','reports','backup','status'];
  const activeTab=window._adminTab||'users';
 
  box.innerHTML=`
@@ -4215,7 +4215,7 @@ function renderAdmin(){
   ${tabs.map(t=>`
   <button onclick="window._adminTab='${t}';renderAdmin()" style="padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border2);
    background:${activeTab===t?'var(--accent)':'var(--surface2)'};color:${activeTab===t?'white':'var(--text2)'}">
-   ${{users:'👥 Users',roles:'🎭 Roles',permissions:'🔐 Permissions',tasks:'📋 Tasks',audit:'🔍 Audit Log',backup:'💾 Backup',status:'⚙️ System Status'}[t]}
+   ${{users:'👥 Users',roles:'🎭 Roles',permissions:'🔐 Permissions',tasks:'📋 Tasks',audit:'🔍 Audit Log',reports:'📊 Reports',backup:'💾 Backup',status:'⚙️ System Status'}[t]}
   </button>`).join('')}
  </div>
  <div id="admin-tab-content"></div>`;
@@ -4228,6 +4228,7 @@ function renderAdmin(){
  else if(activeTab==='permissions') _renderAdminPermissions(tc);
  else if(activeTab==='tasks') _renderAdminTasks(tc);
  else if(activeTab==='audit') _renderAdminAudit(tc);
+ else if(activeTab==='reports') _renderAdminReports(tc);
  else if(activeTab==='backup') _renderAdminBackup(tc);
  else if(activeTab==='status') _renderAdminStatus(tc);
 }
@@ -4589,6 +4590,114 @@ function adminDeleteTask(idx){
  tasks.splice(idx,1);saveAdminTasks(tasks);
  addAdminAuditLog('Admin','admin','TASK_DELETED',`Deleted task: "${t.title}"`);
  showToast('Task deleted','success');renderAdmin();
+}
+
+// ── REPORTS TAB (No.2 — Reports Module) ──
+// Covers Users, Tasks, Activity/Audit. CSV native, Excel via HTML-table-as-.xls trick, PDF via browser print.
+function _renderAdminReports(el){
+ el.innerHTML=`
+ <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">📊 Reports</div>
+ <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+  ${[
+    {key:'users',label:'👥 Users Report',desc:'All users with role and status'},
+    {key:'tasks',label:'📋 Tasks Report',desc:'All tasks with category, role, status'},
+    {key:'audit',label:'🔍 Activity Report',desc:'Full audit log history'},
+  ].map(r=>`
+  <div style="border:1px solid var(--border);border-radius:10px;padding:16px;background:var(--surface)">
+   <div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:4px">${r.label}</div>
+   <div style="font-size:11px;color:var(--text3);margin-bottom:14px">${r.desc}</div>
+   <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <button class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border2)" onclick="_reportExportCSV('${r.key}')">⬇️ CSV</button>
+    <button class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border2)" onclick="_reportExportExcel('${r.key}')">⬇️ Excel</button>
+    <button class="btn btn-sm" style="background:var(--surface2);border:1px solid var(--border2)" onclick="_reportExportPDF('${r.key}')">⬇️ PDF</button>
+   </div>
+  </div>`).join('')}
+ </div>
+ <div style="margin-top:14px;padding:11px 14px;background:var(--surface2);border-radius:8px;font-size:11.5px;color:var(--text3)">
+  ℹ️ CSV and Excel download directly. PDF opens the browser print dialog — choose "Save as PDF".
+ </div>`;
+}
+
+function _reportGetData(key){
+ if(key==='users'){
+  const rows=getAdminUsers();
+  return {title:'Users Report',cols:['name','email','role','status'],rows:rows.map(u=>[u.name||'',u.email||'',u.role||'',u.status||'active'])};
+ }
+ if(key==='tasks'){
+  const rows=getAdminTasks();
+  return {title:'Tasks Report',cols:['title','category','assignedRole','status','createdAt'],rows:rows.map(t=>[t.title||'',t.category||'',t.assignedRole||'',t.status||'',t.createdAt||''])};
+ }
+ if(key==='audit'){
+  const rows=getAdminAuditLog();
+  return {title:'Activity Report',cols:['date','user','role','action','detail'],rows:rows.map(l=>[l.date||'',l.user||'',l.role||'',l.action||'',l.detail||''])};
+ }
+ return {title:'Report',cols:[],rows:[]};
+}
+
+function _reportFileDate(){
+ const d=new Date();
+ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function _csvEscape(v){
+ const s=String(v==null?'':v);
+ if(/[",\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+ return s;
+}
+
+function _reportExportCSV(key){
+ const {title,cols,rows}=_reportGetData(key);
+ const lines=[cols.join(',')].concat(rows.map(r=>r.map(_csvEscape).join(',')));
+ const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+ _downloadBlob(blob,`${title.replace(/\s+/g,'_')}_${_reportFileDate()}.csv`);
+ if(typeof addAdminAuditLog==='function') addAdminAuditLog('Admin','admin','REPORT_EXPORTED',`Exported ${title} as CSV`);
+}
+
+function _reportExportExcel(key){
+ // HTML-table-as-.xls trick — Excel opens HTML tables saved with an .xls extension. No external library needed.
+ const {title,cols,rows}=_reportGetData(key);
+ const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ let html='<table border="1"><thead><tr>'+cols.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody>';
+ rows.forEach(r=>{ html+='<tr>'+r.map(v=>`<td>${esc(v)}</td>`).join('')+'</tr>'; });
+ html+='</tbody></table>';
+ const blob=new Blob(['\ufeff',html],{type:'application/vnd.ms-excel;charset=utf-8;'});
+ _downloadBlob(blob,`${title.replace(/\s+/g,'_')}_${_reportFileDate()}.xls`);
+ if(typeof addAdminAuditLog==='function') addAdminAuditLog('Admin','admin','REPORT_EXPORTED',`Exported ${title} as Excel`);
+}
+
+function _reportExportPDF(key){
+ // Browser print-to-PDF — no external library. Opens a new window with a simple printable table.
+ const {title,cols,rows}=_reportGetData(key);
+ const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ const w=window.open('','_blank');
+ if(!w){ if(typeof showToast==='function') showToast('Popup blocked — allow popups to export PDF','error'); return; }
+ let html=`<!DOCTYPE html><html><head><title>${esc(title)}</title>
+ <style>
+  body{font-family:Arial,sans-serif;padding:24px;color:#111}
+  h1{font-size:18px;margin-bottom:4px}
+  .meta{font-size:11px;color:#666;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}
+  th{background:#f3f3f3;font-weight:700}
+ </style></head><body>
+ <h1>${esc(title)}</h1>
+ <div class="meta">FORGE by Vartleaves — Generated ${esc(todayStr())} — ${rows.length} records</div>
+ <table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>
+ ${rows.map(r=>'<tr>'+r.map(v=>`<td>${esc(v)}</td>`).join('')+'</tr>').join('')}
+ </tbody></table>
+ <script>window.onload=()=>{window.print();}<\/script>
+ </body></html>`;
+ w.document.write(html);
+ w.document.close();
+ if(typeof addAdminAuditLog==='function') addAdminAuditLog('Admin','admin','REPORT_EXPORTED',`Exported ${title} as PDF`);
+}
+
+function _downloadBlob(blob,filename){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url; a.download=filename;
+ document.body.appendChild(a); a.click();
+ setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },100);
 }
 
 // ── AUDIT LOG TAB ──
