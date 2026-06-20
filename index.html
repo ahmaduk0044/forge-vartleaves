@@ -4486,8 +4486,8 @@ function _renderAdminTasks(el){
   ${tasksWithOrigIdx.map(({t,origIdx:i})=>`
   <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)">
    <div style="flex:1;min-width:0">
-    <div style="font-size:12.5px;font-weight:700;color:var(--text)">${t.title}</div>
-    <div style="font-size:10.5px;color:var(--text3)">Category: ${t.category} · Assigned: ${t.assignedRole}</div>
+    <div style="font-size:12.5px;font-weight:700;color:var(--text)">${sanitizeHTML(t.title)}</div>
+    <div style="font-size:10.5px;color:var(--text3)">Category: ${sanitizeHTML(t.category)} · Assigned: ${sanitizeHTML(t.assignedRole)}</div>
    </div>
    <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${statusColors[t.status]||'#9ca3af'}22;color:${statusColors[t.status]||'#9ca3af'};flex-shrink:0">${t.status}</span>
    <div style="display:flex;gap:5px;flex-shrink:0">
@@ -4739,9 +4739,9 @@ function _renderAdminAudit(el){
    <div style="flex:1;min-width:0">
     <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
      <span style="font-size:11px;font-weight:700;color:${actionColors[l.action]||'#9ca3af'}">${l.action}</span>
-     <span style="font-size:10px;color:var(--text3)">by ${l.user} (${l.role})</span>
+     <span style="font-size:10px;color:var(--text3)">by ${sanitizeHTML(l.user)} (${sanitizeHTML(l.role)})</span>
     </div>
-    <div style="font-size:11.5px;color:var(--text2)">${l.detail}</div>
+    <div style="font-size:11.5px;color:var(--text2)">${sanitizeHTML(l.detail)}</div>
     <div style="font-size:10px;color:var(--text3);margin-top:2px">${l.date}</div>
    </div>
   </div>`).join('')}
@@ -5177,12 +5177,40 @@ const ForgeFirebaseService = (function() {
     } catch (err) { return null; }
   }
 
+  // ── SECURITY: re-verify current user's role from Firestore ───────────
+  // Closes a real gap: if an admin's role is changed by someone else mid-session,
+  // their in-memory _currentUser.role would otherwise stay stale until they sign
+  // out/in again. Read-only — does not modify any data, only refreshes the local
+  // cached role to match what's actually in Firestore right now.
+  async function refreshCurrentUserRole() {
+    if (!_currentUser || !_currentUser.uid) return { success:false, error:'Not signed in' };
+    try {
+      const snap = await _db.collection('users').doc(_currentUser.uid).get();
+      if (!snap.exists) return { success:false, error:'User document not found' };
+      const fresh = snap.data();
+      const changed = fresh.role !== _currentUser.role;
+      _currentUser = { ..._currentUser, role: fresh.role };
+      return { success:true, role: fresh.role, changed };
+    } catch (err) {
+      return { success:false, error: err.message };
+    }
+  }
+
   // ── SET USER ROLE ─────────────────────────────────────
   async function setUserRole(targetUid, newRole) {
     if (!ALLOWED_ROLES.includes(newRole))
       return { success: false, error: `Invalid role: ${newRole}` };
     if (!_currentUser || !['super_admin','admin'].includes(_currentUser.role))
       return { success: false, error: 'Permission denied — admin required' };
+    // SECURITY: prevent self-role-change — no one can promote or demote themselves,
+    // even an existing admin. A different super_admin/admin must perform the change.
+    if (targetUid === _currentUser.uid)
+      return { success: false, error: 'You cannot change your own role' };
+    // SECURITY: granting super_admin specifically requires an existing super_admin —
+    // a regular admin cannot create new super_admins (prevents privilege escalation
+    // via a compromised or malicious admin account).
+    if (newRole === 'super_admin' && _currentUser.role !== 'super_admin')
+      return { success: false, error: 'Only a super_admin can grant super_admin access' };
     try {
       await _db.collection('users').doc(targetUid).update({
         role:      newRole,
@@ -5211,8 +5239,12 @@ const ForgeFirebaseService = (function() {
   // ── FRIENDLY ERROR MESSAGES ───────────────────────────
   function _friendlyError(code) {
     const map = {
-      'auth/user-not-found':         'No account found with this email.',
-      'auth/wrong-password':         'Incorrect password.',
+      // SECURITY: user-not-found and wrong-password intentionally return the SAME
+      // message — distinguishing them lets an attacker enumerate which emails have
+      // registered accounts. Never split these back into separate messages.
+      'auth/user-not-found':         'Invalid email or password.',
+      'auth/wrong-password':         'Invalid email or password.',
+      'auth/invalid-credential':     'Invalid email or password.',
       'auth/invalid-email':          'Invalid email address.',
       'auth/email-already-in-use':   'This email is already registered.',
       'auth/weak-password':          'Password must be at least 6 characters.',
@@ -5235,6 +5267,7 @@ const ForgeFirebaseService = (function() {
     getUser,
     getAllUsers,
     setUserRole,
+    refreshCurrentUserRole,
     getCurrentUser:  () => _currentUser,
     getDB:           () => _db,
     getAuth:         () => _auth,
@@ -5244,6 +5277,65 @@ const ForgeFirebaseService = (function() {
 
 })();
 
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════
+       ForgeSessionGuard — Session Security (additive)
+       Two independent background timers, both started on sign-in and
+       cleared on sign-out. Neither modifies the sign-in/sign-out flow
+       itself — they only call the EXISTING signOut()/refreshCurrentUserRole().
+  ═══════════════════════════════════════════════════ -->
+  <script>
+  const ForgeSessionGuard = (function(){
+    'use strict';
+    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;   // 30 minutes idle → auto sign-out
+    const ROLE_RECHECK_MS       = 2  * 60 * 1000;    // re-verify role every 2 minutes
+    const ACTIVITY_EVENTS = ['mousedown','keydown','scroll','touchstart'];
+
+    let _inactivityTimer = null;
+    let _roleCheckInterval = null;
+    let _active = false;
+
+    function _resetInactivityTimer(){
+      if(_inactivityTimer) clearTimeout(_inactivityTimer);
+      _inactivityTimer = setTimeout(_handleInactivityTimeout, INACTIVITY_TIMEOUT_MS);
+    }
+
+    async function _handleInactivityTimeout(){
+      if(!_active) return;
+      console.log('[ForgeSessionGuard] Inactivity timeout — signing out');
+      if(typeof showToast==='function') showToast('Signed out due to inactivity','info');
+      if(typeof ForgeFirebaseService!=='undefined') await ForgeFirebaseService.signOut();
+    }
+
+    async function _handleRoleRecheck(){
+      if(!_active || typeof ForgeFirebaseService==='undefined') return;
+      const result = await ForgeFirebaseService.refreshCurrentUserRole();
+      if(result.success && result.changed){
+        console.log('[ForgeSessionGuard] Role changed mid-session, now:', result.role);
+        if(typeof showToast==='function') showToast(`Your role is now ${result.role}`,'info');
+        if(typeof renderAdmin==='function') renderAdmin();
+      }
+    }
+
+    function start(){
+      if(_active) return; // idempotent — calling twice is a no-op, no duplicate timers
+      _active = true;
+      ACTIVITY_EVENTS.forEach(evt => document.addEventListener(evt, _resetInactivityTimer, {passive:true}));
+      _resetInactivityTimer();
+      _roleCheckInterval = setInterval(_handleRoleRecheck, ROLE_RECHECK_MS);
+    }
+
+    function stop(){
+      if(!_active) return;
+      _active = false;
+      if(_inactivityTimer) clearTimeout(_inactivityTimer);
+      if(_roleCheckInterval) clearInterval(_roleCheckInterval);
+      ACTIVITY_EVENTS.forEach(evt => document.removeEventListener(evt, _resetInactivityTimer));
+    }
+
+    return { start, stop };
+  })();
   </script>
 
   <!-- ═══════════════════════════════════════════════════
@@ -5275,6 +5367,7 @@ const ForgeFirebaseService = (function() {
       ForgeFirebaseService.onAuthStateChanged(function({signedIn, user}){
         if(signedIn){
           console.log('[FORGE Bridge] Signed in as:', user.email, '| Role:', user.role);
+          if(typeof ForgeSessionGuard!=='undefined') ForgeSessionGuard.start();
           // Update bridge indicator if ForgeBridge is loaded
           if(typeof ForgeBridge!=='undefined'&&ForgeBridge._updateBridgeIndicator){
             ForgeBridge._updateBridgeIndicator(user);
@@ -5304,6 +5397,7 @@ const ForgeFirebaseService = (function() {
           if(typeof initForgeNotifications==='function') initForgeNotifications();
         } else {
           console.log('[FORGE Bridge] Not signed in — local mode active');
+          if(typeof ForgeSessionGuard!=='undefined') ForgeSessionGuard.stop();
           const dot=document.getElementById('user-role-dot');
           const lbl=document.getElementById('forge-auth-label');
           if(dot){ dot.style.background='#f59e0b'; dot.style.boxShadow='none'; }
