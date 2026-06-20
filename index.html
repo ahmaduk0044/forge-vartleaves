@@ -5724,6 +5724,8 @@ async function adminTogglePermission(role, permKey, value){
 
     function init(db){ _db=db; }
 
+    const APP_VERSION = 'v1.0-production-stable'; // update manually to match current release tag
+
     // ── EXPORT: read all source collections, return as one JSON object ──
     async function exportData(){
       if(!_db) return { success:false, error:'Not initialized' };
@@ -5741,6 +5743,8 @@ async function adminTogglePermission(role, permKey, value){
             exportedAt: new Date().toISOString(),
             project:'forge-vartleaves',
             version:'1.0',
+            appVersion: APP_VERSION,
+            userAgent: (typeof navigator!=='undefined' && navigator.userAgent) ? navigator.userAgent : 'unknown',
             collections: snapshot,
           }
         };
@@ -5787,6 +5791,36 @@ async function adminTogglePermission(role, permKey, value){
       }
     }
 
+    // ── AUTO-SNAPSHOT: system-triggered safety snapshot, taken automatically ──
+    // before any destructive operation (restore/import), so that operation can
+    // always be undone by restoring this snapshot. Does NOT replace saveSnapshot —
+    // separate function so existing saveSnapshot behavior/shape is untouched.
+    async function autoSnapshot(triggerReason){
+      if(!_db) return { success:false, error:'Not initialized' };
+      const exp = await exportData();
+      if(!exp.success) return exp;
+      try{
+        const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+        if(!currentUser || !['super_admin','admin'].includes(currentUser.role))
+          return { success:false, error:'Permission denied — admin required' };
+
+        const ref = await _db.collection(BACKUP_COLLECTION).add({
+          label: '⚙️ Auto-backup — ' + new Date().toLocaleString(),
+          createdBy: currentUser.uid,
+          createdByName: currentUser.name,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          collectionsIncluded: SOURCE_COLLECTIONS,
+          docCounts: Object.fromEntries(SOURCE_COLLECTIONS.map(c=>[c, exp.data.collections[c].length])),
+          snapshotJSON: JSON.stringify(exp.data),
+          auto: true,
+          triggerReason: triggerReason || 'unspecified',
+        });
+        return { success:true, id:ref.id };
+      }catch(err){
+        return { success:false, error:err.message };
+      }
+    }
+
     // ── List version history (most recent first) ──
     async function listSnapshots(limit){
       if(!_db) return { success:false, error:'Not initialized', snapshots:[] };
@@ -5800,6 +5834,7 @@ async function adminTogglePermission(role, permKey, value){
             id:doc.id, label:d.label, createdByName:d.createdByName,
             createdAt:d.createdAt, docCounts:d.docCounts,
             collectionsIncluded:d.collectionsIncluded,
+            auto: d.auto||false, triggerReason: d.triggerReason||null,
           }); // NOTE: snapshotJSON intentionally omitted from list view (can be large)
         });
         return { success:true, snapshots:list };
@@ -5822,6 +5857,9 @@ async function adminTogglePermission(role, permKey, value){
     // ── IMPORT: restore a snapshot back into the live collections ──
     // Uses set() with merge:false per document — overwrites matching IDs,
     // does not touch documents that aren't part of the snapshot.
+    // REVERSIBILITY: before any data is overwritten, the CURRENT live state is
+    // automatically captured as a new version-history snapshot. If that safety
+    // snapshot can't be created, the restore is aborted — never restore blind.
     async function restoreSnapshot(id){
       const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
       if(!currentUser || currentUser.role!=='super_admin')
@@ -5829,6 +5867,10 @@ async function adminTogglePermission(role, permKey, value){
 
       const snap = await getSnapshot(id);
       if(!snap) return { success:false, error:'Snapshot not found' };
+
+      const safety = await autoSnapshot('pre-restore (restoring: '+(snap.label||id)+')');
+      if(!safety.success)
+        return { success:false, error:'Restore aborted — could not create safety snapshot first: '+safety.error };
 
       try{
         for(const col of Object.keys(snap.data.collections)){
@@ -5840,13 +5882,15 @@ async function adminTogglePermission(role, permKey, value){
           });
           await batch.commit();
         }
-        return { success:true, restoredCollections:Object.keys(snap.data.collections) };
+        return { success:true, restoredCollections:Object.keys(snap.data.collections), safetySnapshotId:safety.id };
       }catch(err){
-        return { success:false, error:err.message };
+        return { success:false, error:err.message, safetySnapshotId:safety.id };
       }
     }
 
     // ── IMPORT from an uploaded .json file (same shape as exportData output) ──
+    // REVERSIBILITY: same as restoreSnapshot — current live state is captured
+    // automatically before any data is overwritten. Import aborts if that fails.
     async function importFromFile(jsonText){
       const currentUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
       if(!currentUser || currentUser.role!=='super_admin')
@@ -5855,6 +5899,10 @@ async function adminTogglePermission(role, permKey, value){
       try{ parsed = JSON.parse(jsonText); }
       catch(e){ return { success:false, error:'Invalid JSON file' }; }
       if(!parsed.collections) return { success:false, error:'File is not a valid FORGE backup export' };
+
+      const safety = await autoSnapshot('pre-import (uploaded file)');
+      if(!safety.success)
+        return { success:false, error:'Import aborted — could not create safety snapshot first: '+safety.error };
 
       try{
         for(const col of Object.keys(parsed.collections)){
@@ -5866,14 +5914,14 @@ async function adminTogglePermission(role, permKey, value){
           });
           await batch.commit();
         }
-        return { success:true, restoredCollections:Object.keys(parsed.collections) };
+        return { success:true, restoredCollections:Object.keys(parsed.collections), safetySnapshotId:safety.id };
       }catch(err){
-        return { success:false, error:err.message };
+        return { success:false, error:err.message, safetySnapshotId:safety.id };
       }
     }
 
     return {
-      init, exportData, downloadAsFile, saveSnapshot,
+      init, exportData, downloadAsFile, saveSnapshot, autoSnapshot,
       listSnapshots, getSnapshot, restoreSnapshot, importFromFile,
       getSourceCollections: () => [...SOURCE_COLLECTIONS],
     };
@@ -5914,18 +5962,24 @@ async function adminTogglePermission(role, permKey, value){
 
    <div style="margin-bottom:14px;padding:11px 13px;background:var(--surface2);border-radius:8px;font-size:11.5px;color:var(--text3)">
     ℹ️ "Save Version" stores a point-in-time snapshot of users, tasks and permissions inside Firestore (version history).
-    "Export JSON" downloads the same data as a file to your computer. Neither action changes your live data —
-    only "Restore" or "Import" does that, and both require super_admin.
+    "Export JSON" downloads the same data as a file to your computer.
+    <strong style="color:var(--text2)">Every Restore or Import is reversible</strong> — an automatic safety snapshot of your
+    current data is taken right before any data is overwritten, so you can always undo by restoring that snapshot.
+    Both actions require super_admin.
    </div>
 
+   <div style="font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:8px">Version History</div>
    ${snapshots.length===0?`
    <div class="empty-state" style="padding:24px"><div style="font-size:26px">💾</div><div>No saved versions yet</div></div>`:`
    <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
     ${snapshots.map(s=>`
     <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--surface)">
      <div style="flex:1;min-width:0">
-      <div style="font-size:12.5px;font-weight:700;color:var(--text)">${sanitizeHTML(s.label)}</div>
-      <div style="font-size:10.5px;color:var(--text3)">by ${sanitizeHTML(s.createdByName||'—')} · ${(s.collectionsIncluded||[]).join(', ')} · ${Object.values(s.docCounts||{}).reduce((a,b)=>a+b,0)} docs</div>
+      <div style="font-size:12.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px">
+       ${sanitizeHTML(s.label)}
+       ${s.auto?`<span style="font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:10px;background:rgba(139,92,246,0.12);color:#8b5cf6">AUTO</span>`:''}
+      </div>
+      <div style="font-size:10.5px;color:var(--text3)">by ${sanitizeHTML(s.createdByName||'—')} · ${(s.collectionsIncluded||[]).join(', ')} · ${Object.values(s.docCounts||{}).reduce((a,b)=>a+b,0)} docs${s.triggerReason?` · ${sanitizeHTML(s.triggerReason)}`:''}</div>
      </div>
      <div style="display:flex;gap:5px;flex-shrink:0">
       <button class="action-btn" onclick="forgeDownloadSnapshot('${s.id}')">Download</button>
@@ -5962,11 +6016,11 @@ async function adminTogglePermission(role, permKey, value){
   }
 
   async function forgeRestoreSnapshot(id,label){
-   if(!confirm(`Restore "${label}"? This will overwrite current users/tasks/permissions with this version's data.`)) return;
+   if(!confirm(`Restore "${label}"?\n\nThis will overwrite current users/tasks/permissions with this version's data.\nA safety snapshot of your CURRENT data will be taken automatically first, so this can be undone afterward by restoring that snapshot.`)) return;
    const result = await ForgeBackupService.restoreSnapshot(id);
    if(result.success){
-    addAdminAuditLog((ForgeFirebaseService.getCurrentUser()?.name)||'Admin','super_admin','BACKUP_RESTORED',`Restored version: ${label}`);
-    showToast(`✅ Restored: ${result.restoredCollections.join(', ')}`,'success');
+    addAdminAuditLog((ForgeFirebaseService.getCurrentUser()?.name)||'Admin','super_admin','BACKUP_RESTORED',`Restored version: ${label} (safety snapshot: ${result.safetySnapshotId})`);
+    showToast(`✅ Restored: ${result.restoredCollections.join(', ')} — previous state saved for undo`,'success');
     renderAdmin();
    }else{
     showToast(`⛔ ${result.error}`,'error');
@@ -5978,11 +6032,11 @@ async function adminTogglePermission(role, permKey, value){
    if(!file) return;
    const reader = new FileReader();
    reader.onload = async function(e){
-    if(!confirm(`Import "${file.name}"? This will overwrite matching records in your live data.`)) return;
+    if(!confirm(`Import "${file.name}"?\n\nThis will overwrite matching records in your live data.\nA safety snapshot of your CURRENT data will be taken automatically first, so this can be undone afterward by restoring that snapshot.`)) return;
     const result = await ForgeBackupService.importFromFile(e.target.result);
     if(result.success){
-     addAdminAuditLog((ForgeFirebaseService.getCurrentUser()?.name)||'Admin','super_admin','BACKUP_IMPORTED',`Imported from file: ${file.name}`);
-     showToast(`✅ Imported: ${result.restoredCollections.join(', ')}`,'success');
+     addAdminAuditLog((ForgeFirebaseService.getCurrentUser()?.name)||'Admin','super_admin','BACKUP_IMPORTED',`Imported from file: ${file.name} (safety snapshot: ${result.safetySnapshotId})`);
+     showToast(`✅ Imported: ${result.restoredCollections.join(', ')} — previous state saved for undo`,'success');
      renderAdmin();
     }else{
      showToast(`⛔ ${result.error}`,'error');
