@@ -4749,7 +4749,200 @@ function _renderAdminAudit(el){
 }
 
 // ── SYSTEM STATUS TAB ──
+// ═══════════════════════════════════════════════════════
+// ForgeHealthMonitor — read-only diagnostic checks.
+// Verifies Firebase, Auth, Firestore, RBAC, Permissions, Tasks,
+// Notifications, Reports. Does not modify any data or business logic —
+// every check is a read-only probe (a tiny .limit(1) query at most).
+// ═══════════════════════════════════════════════════════
+const ForgeHealthMonitor = (function(){
+  'use strict';
+  let _db = null;
+  function init(db){ _db = db; }
+
+  async function checkFirebase(){
+    const ok = typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized();
+    return { key:'firebase', name:'Firebase', status: ok?'pass':'fail', detail: ok?'SDK initialized and connected':'Not initialized' };
+  }
+
+  async function checkAuthentication(){
+    if(typeof ForgeFirebaseService==='undefined' || !ForgeFirebaseService.isInitialized())
+      return { key:'auth', name:'Authentication', status:'fail', detail:'Firebase not initialized' };
+    const user = ForgeFirebaseService.getCurrentUser();
+    if(user && user.uid) return { key:'auth', name:'Authentication', status:'pass', detail:`Signed in as ${user.name||user.email||user.uid} (${user.role})` };
+    return { key:'auth', name:'Authentication', status:'warn', detail:'No user currently signed in' };
+  }
+
+  async function checkFirestore(){
+    if(!_db) return { key:'firestore', name:'Firestore', status:'fail', detail:'No database handle' };
+    const start = Date.now();
+    try{
+      await _db.collection('permissionMatrix').limit(1).get();
+      const ms = Date.now()-start;
+      return { key:'firestore', name:'Firestore', status:'pass', detail:`Live read succeeded (${ms}ms)` };
+    }catch(err){
+      return { key:'firestore', name:'Firestore', status:'fail', detail:`Read failed: ${err.message}` };
+    }
+  }
+
+  async function checkRBAC(){
+    const rolesOk = typeof ALLOWED_ROLES!=='undefined' && ALLOWED_ROLES.length===4;
+    const fnOk = typeof setUserRole==='function';
+    const user = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+    const userRoleValid = user ? ALLOWED_ROLES.includes(user.role) : true; // no user signed in is not an RBAC failure
+    if(rolesOk && fnOk && userRoleValid)
+      return { key:'rbac', name:'RBAC', status:'pass', detail:`${ALLOWED_ROLES.length} roles defined, role gate active` };
+    return { key:'rbac', name:'RBAC', status:'fail', detail:'Role system misconfigured — check ALLOWED_ROLES / setUserRole' };
+  }
+
+  async function checkPermissions(){
+    if(typeof ForgePermissionService==='undefined') return { key:'permissions', name:'Permissions', status:'fail', detail:'Service not loaded' };
+    const result = await ForgePermissionService.getAllMatrices();
+    if(!result.success) return { key:'permissions', name:'Permissions', status:'fail', detail:result.error };
+    const count = Object.keys(result.matrices||{}).length;
+    const expected = (typeof ALLOWED_ROLES!=='undefined')?ALLOWED_ROLES.length:4;
+    if(count>=expected) return { key:'permissions', name:'Permissions', status:'pass', detail:`${count}/${expected} role matrices configured` };
+    return { key:'permissions', name:'Permissions', status:'warn', detail:`${count}/${expected} role matrices configured (rest use hard-coded defaults until first edit)` };
+  }
+
+  async function checkTasks(){
+    try{
+      const tasks = (typeof getAdminTasks==='function') ? getAdminTasks() : [];
+      return { key:'tasks', name:'Tasks', status:'warn', detail:`${tasks.length} task(s) in local browser storage — not yet synced to Firestore` };
+    }catch(err){
+      return { key:'tasks', name:'Tasks', status:'fail', detail:err.message };
+    }
+  }
+
+  async function checkNotifications(){
+    if(typeof ForgeNotificationService==='undefined') return { key:'notifications', name:'Notifications', status:'fail', detail:'Service not loaded' };
+    if(!_db) return { key:'notifications', name:'Notifications', status:'fail', detail:'No database handle' };
+    try{
+      await _db.collection('notifications').limit(1).get();
+      return { key:'notifications', name:'Notifications', status:'pass', detail:'Service loaded, Firestore reachable' };
+    }catch(err){
+      return { key:'notifications', name:'Notifications', status:'fail', detail:err.message };
+    }
+  }
+
+  async function checkReports(){
+    const ok = typeof _reportGetData==='function' && typeof _reportExportCSV==='function' && typeof _renderAdminReports==='function';
+    return { key:'reports', name:'Reports', status: ok?'pass':'fail', detail: ok?'Export functions loaded (CSV/Excel/PDF)':'Reports module missing functions' };
+  }
+
+  // ── Last Backup: reuses existing ForgeBackupService, no new write ──
+  async function getLastBackup(){
+    if(typeof ForgeBackupService==='undefined') return null;
+    try{
+      const result = await ForgeBackupService.listSnapshots(1);
+      if(!result.success || !result.snapshots.length) return null;
+      return result.snapshots[0];
+    }catch(err){ return null; }
+  }
+
+  // ── Last Deploy: live read of GitHub's public commit history (no auth needed) ──
+  async function getLastDeploy(){
+    try{
+      const resp = await fetch('https://api.github.com/repos/ahmaduk0044/forge-vartleaves/commits/main',{headers:{'Accept':'application/vnd.github+json'}});
+      if(!resp.ok) return { error:`GitHub API returned ${resp.status}` };
+      const data = await resp.json();
+      return {
+        sha: data.sha, shortSha: data.sha.substring(0,7),
+        message: (data.commit && data.commit.message ? data.commit.message.split('\n')[0] : ''),
+        date: data.commit && data.commit.committer ? data.commit.committer.date : null,
+        author: data.commit && data.commit.committer ? data.commit.committer.name : null,
+      };
+    }catch(err){
+      return { error: err.message };
+    }
+  }
+
+  // Score: pass=2pts, warn=1pt, fail=0pts, normalized to 100. Formula is shown in the UI, not hidden.
+  function computeScore(checks){
+    const points={pass:2,warn:1,fail:0};
+    const earned=checks.reduce((sum,c)=>sum+(points[c.status]||0),0);
+    const max=checks.length*2;
+    return { score: Math.round((earned/max)*100), earned, max };
+  }
+
+  async function runFullCheck(){
+    const checks = await Promise.all([
+      checkFirebase(), checkAuthentication(), checkFirestore(), checkRBAC(),
+      checkPermissions(), checkTasks(), checkNotifications(), checkReports(),
+    ]);
+    const [lastBackup, lastDeploy] = await Promise.all([getLastBackup(), getLastDeploy()]);
+    const scoring = computeScore(checks);
+    return { checks, lastBackup, lastDeploy, ...scoring };
+  }
+
+  return { init, runFullCheck };
+})();
+
+// ── Render the health monitor section (used by _renderAdminStatus below) ──
+async function _renderHealthMonitorSection(){
+ if(typeof ForgeFirebaseService==='undefined' || !ForgeFirebaseService.isInitialized()){
+  return `
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:18px">
+   <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">🩺 System Health Monitor</div>
+   <div style="font-size:11.5px;color:var(--text3)">⚠️ Sign in to run live health checks (Firebase not yet initialized).</div>
+  </div>`;
+ }
+ ForgeHealthMonitor.init(ForgeFirebaseService.getDB());
+ const result = await ForgeHealthMonitor.runFullCheck();
+ const statusMeta = { pass:{icon:'✅',color:'var(--green)',label:'OK'}, warn:{icon:'⚠️',color:'var(--yellow)',label:'WARN'}, fail:{icon:'❌',color:'var(--red)',label:'FAIL'} };
+ const scoreColor = result.score>=90?'var(--green)':result.score>=70?'var(--yellow)':'var(--red)';
+ const lb = result.lastBackup;
+ const ld = result.lastDeploy;
+ return `
+ <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:18px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+   <div style="font-size:13px;font-weight:700;color:var(--text)">🩺 System Health Monitor</div>
+   <div style="display:flex;align-items:center;gap:8px">
+    <div style="font-size:20px;font-weight:800;color:${scoreColor};font-family:'JetBrains Mono',monospace">${result.score}</div>
+    <div style="font-size:10px;color:var(--text3)">Health Score<br>(${result.earned}/${result.max} pts)</div>
+   </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:14px">
+   ${result.checks.map(c=>{
+     const m=statusMeta[c.status]||statusMeta.fail;
+     return `
+   <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+     <span>${m.icon}</span>
+     <span style="font-size:11.5px;font-weight:700;color:var(--text)">${c.name}</span>
+    </div>
+    <div style="font-size:10px;color:${m.color};font-weight:700;margin-bottom:2px">${m.label}</div>
+    <div style="font-size:10px;color:var(--text3);line-height:1.3">${sanitizeHTML(c.detail)}</div>
+   </div>`;}).join('')}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+   <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 13px">
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">Last Backup</div>
+    ${lb?`
+    <div style="font-size:11.5px;color:var(--text)">${sanitizeHTML(lb.label)}</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px">by ${sanitizeHTML(lb.createdByName||'—')}${lb.auto?' · auto':''}</div>
+    `:`<div style="font-size:11.5px;color:var(--text3)">No backups yet — use Backup tab to create one</div>`}
+   </div>
+   <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 13px">
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">Last Deploy</div>
+    ${ld && !ld.error?`
+    <div style="font-size:11.5px;color:var(--text)">${sanitizeHTML(ld.message||'')}</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace">${ld.shortSha} · ${ld.date?new Date(ld.date).toLocaleString():'—'}</div>
+    `:`<div style="font-size:11.5px;color:var(--text3)">⚠️ Unable to verify (${sanitizeHTML((ld&&ld.error)||'offline')})</div>`}
+   </div>
+  </div>
+ </div>`;
+}
+
 function _renderAdminStatus(el){
+ el.innerHTML = `<div class="empty-state"><div style="font-size:24px">⏳</div><div>Running health checks...</div></div>`;
+ _renderAdminStatusAsync(el);
+}
+
+async function _renderAdminStatusAsync(el){
+ const healthHTML = await _renderHealthMonitorSection();
  const db=typeof DB!=='undefined'?DB:null;
  const products=db?.products?.length||0;
  const orders=db?.orders?.length||0;
@@ -4764,7 +4957,7 @@ function _renderAdminStatus(el){
  const lsKB=(lsUsed/1024).toFixed(1);
  const lsMax=5120;
  const lsPct=Math.min(100,Math.round(lsUsed/lsMax*100/10));
- el.innerHTML=`
+ el.innerHTML=healthHTML+`
  <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">⚙️ System Status</div>
  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px">
   ${[
