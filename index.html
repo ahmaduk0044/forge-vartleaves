@@ -4157,6 +4157,16 @@ function getAdminAuditLog(){
  try{const s=localStorage.getItem('forge_audit_log');if(s)return JSON.parse(s);}catch(e){}
  return[];
 }
+
+// No.5: Settings Module storage. Stored under forge_app_settings.
+const FORGE_SETTINGS_DEFAULTS={companyName:'Vartleaves',logoUrl:'',theme:'dark',sessionTimeoutMinutes:30,defaultUserRole:'viewer'};
+function getForgeSettings(){
+ try{const s=localStorage.getItem('forge_app_settings');if(s)return {...FORGE_SETTINGS_DEFAULTS,...JSON.parse(s)};}catch(e){}
+ return {...FORGE_SETTINGS_DEFAULTS};
+}
+function saveForgeSettings(settings){
+ localStorage.setItem('forge_app_settings',JSON.stringify(settings));
+}
 function addAdminAuditLog(user,role,action,detail){
  const logs=getAdminAuditLog();
  const ts=new Date().toISOString();
@@ -4231,7 +4241,7 @@ function renderAdmin(){
   return;
  }
 
- const tabs=['users','roles','permissions','tasks','audit','reports','backup','status'];
+ const tabs=['users','roles','permissions','tasks','audit','reports','backup','settings','status'];
  const activeTab=window._adminTab||'users';
 
  box.innerHTML=`
@@ -4239,7 +4249,7 @@ function renderAdmin(){
   ${tabs.map(t=>`
   <button onclick="window._adminTab='${t}';renderAdmin()" style="padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border2);
    background:${activeTab===t?'var(--accent)':'var(--surface2)'};color:${activeTab===t?'white':'var(--text2)'}">
-   ${{users:'👥 Users',roles:'🎭 Roles',permissions:'🔐 Permissions',tasks:'📋 Tasks',audit:'🔍 Audit Log',reports:'📊 Reports',backup:'💾 Backup',status:'⚙️ System Status'}[t]}
+   ${{users:'👥 Users',roles:'🎭 Roles',permissions:'🔐 Permissions',tasks:'📋 Tasks',audit:'🔍 Audit Log',reports:'📊 Reports',backup:'💾 Backup',settings:'🛠️ Settings',status:'⚙️ System Status'}[t]}
   </button>`).join('')}
  </div>
  <div id="admin-tab-content"></div>`;
@@ -4254,6 +4264,7 @@ function renderAdmin(){
  else if(activeTab==='audit') _renderAdminAudit(tc);
  else if(activeTab==='reports') _renderAdminReports(tc);
  else if(activeTab==='backup') _renderAdminBackup(tc);
+ else if(activeTab==='settings') _renderAdminSettings(tc);
  else if(activeTab==='status') _renderAdminStatus(tc);
 }
 
@@ -5317,7 +5328,7 @@ const ForgeFirebaseService = (function() {
   <script>
   const ForgeSessionGuard = (function(){
     'use strict';
-    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;   // 30 minutes idle → auto sign-out
+    const INACTIVITY_TIMEOUT_MS_DEFAULT = 30 * 60 * 1000;   // fallback if Settings unavailable
     const ROLE_RECHECK_MS       = 2  * 60 * 1000;    // re-verify role every 2 minutes
     const ACTIVITY_EVENTS = ['mousedown','keydown','scroll','touchstart'];
 
@@ -5325,9 +5336,21 @@ const ForgeFirebaseService = (function() {
     let _roleCheckInterval = null;
     let _active = false;
 
+    function _getTimeoutMs(){
+      // No.5: read from Settings each time so a saved change takes effect
+      // on the next reset, without needing a page reload.
+      try{
+        if(typeof getForgeSettings==='function'){
+          const mins = getForgeSettings().sessionTimeoutMinutes;
+          if(mins && mins>0) return mins*60*1000;
+        }
+      }catch(e){ /* fall through to default */ }
+      return INACTIVITY_TIMEOUT_MS_DEFAULT;
+    }
+
     function _resetInactivityTimer(){
       if(_inactivityTimer) clearTimeout(_inactivityTimer);
-      _inactivityTimer = setTimeout(_handleInactivityTimeout, INACTIVITY_TIMEOUT_MS);
+      _inactivityTimer = setTimeout(_handleInactivityTimeout, _getTimeoutMs());
     }
 
     async function _handleInactivityTimeout(){
@@ -6337,6 +6360,68 @@ async function adminTogglePermission(role, permKey, value){
        Extends existing renderAdmin() tabs, no replacement
   ═══════════════════════════════════════════════════ -->
   <script>
+  // ── SETTINGS TAB (No.5 — Settings Module) ──
+  function _renderAdminSettings(el){
+   const s=getForgeSettings();
+   el.innerHTML=`
+   <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">🛠️ Settings</div>
+   <div style="display:flex;flex-direction:column;gap:14px;max-width:420px">
+    <div>
+     <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px">Company Name</label>
+     <input id="forge-set-company" class="form-input" value="${sanitizeHTML(s.companyName)}" style="width:100%">
+    </div>
+    <div>
+     <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px">Logo URL</label>
+     <input id="forge-set-logo" class="form-input" value="${sanitizeHTML(s.logoUrl)}" placeholder="https://..." style="width:100%">
+     <div style="font-size:10px;color:var(--text3);margin-top:3px">Not yet shown anywhere in the app — stored for future use.</div>
+    </div>
+    <div>
+     <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px">Theme</label>
+     <select id="forge-set-theme" class="form-select" style="width:100%">
+      <option value="dark"${s.theme==='dark'?' selected':''}>Dark</option>
+      <option value="light"${s.theme==='light'?' selected':''}>Light</option>
+     </select>
+     <div style="font-size:10px;color:var(--text3);margin-top:3px">Stored only — use the 🎨 theme switcher in the topbar to actually change it right now.</div>
+    </div>
+    <div>
+     <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px">Session Timeout (minutes)</label>
+     <input id="forge-set-timeout" type="number" min="5" max="240" class="form-input" value="${s.sessionTimeoutMinutes}" style="width:100%">
+     <div style="font-size:10px;color:var(--text3);margin-top:3px">Takes effect on next sign-in or next inactivity reset.</div>
+    </div>
+    <div>
+     <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px">Default Role for New Sign-Ups</label>
+     <input class="form-input" value="viewer" disabled style="width:100%;opacity:0.6;cursor:not-allowed">
+     <div style="font-size:10px;color:var(--yellow);margin-top:3px">🔒 Locked to "viewer" — this is enforced server-side by Firestore Security Rules, not just this app. Changing it here without also updating the deployed rules would break new sign-ups.</div>
+    </div>
+    <button class="btn" style="background:var(--accent);color:white;border:none;align-self:flex-start;margin-top:4px" onclick="_adminSaveSettingsFromForm()">Save Settings</button>
+   </div>`;
+  }
+
+  function _adminSaveSettingsFromForm(){
+   const me=(typeof ForgeFirebaseService!=='undefined')?ForgeFirebaseService.getCurrentUser():null;
+   if(!me || !['super_admin','admin'].includes(me.role)){
+    if(typeof showToast==='function') showToast('⛔ Admin access required','error');
+    return;
+   }
+   const before=getForgeSettings();
+   const after={
+    ...before,
+    companyName: document.getElementById('forge-set-company').value.trim()||FORGE_SETTINGS_DEFAULTS.companyName,
+    logoUrl: document.getElementById('forge-set-logo').value.trim(),
+    theme: document.getElementById('forge-set-theme').value,
+    sessionTimeoutMinutes: (()=>{ const v=parseInt(document.getElementById('forge-set-timeout').value,10); return Math.max(5,Math.min(240, isNaN(v)?FORGE_SETTINGS_DEFAULTS.sessionTimeoutMinutes:v)); })(),
+    defaultUserRole:'viewer', // locked — see note in the form
+   };
+   const changedKeys=Object.keys(after).filter(k=>after[k]!==before[k]);
+   saveForgeSettings(after);
+   if(changedKeys.length>0 && typeof logSettingsChange==='function'){
+    const diffText=changedKeys.map(k=>`${k}: ${before[k]} → ${after[k]}`).join(', ');
+    logSettingsChange(me.name, me.role, diffText);
+   }
+   if(typeof showToast==='function') showToast(changedKeys.length>0?'✅ Settings saved':'No changes','success');
+   renderAdmin();
+  }
+
   async function _renderAdminBackup(el){
    el.innerHTML=`<div class="empty-state"><div style="font-size:24px">⏳</div><div>Loading backup history...</div></div>`;
 
