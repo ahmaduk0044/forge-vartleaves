@@ -5284,9 +5284,37 @@ const ForgeFirebaseService = (function() {
         role:      newRole,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
+      // Maintain a small admin-UID roster (separate, low-sensitivity doc) so
+      // any signed-in user can discover "who are the admins" for notifyAdmins()
+      // without needing broad read access to the full users collection.
+      // arrayUnion/arrayRemove are idempotent, so we don't need to know the
+      // previous role first. Best-effort — never blocks the actual role change.
+      _maintainAdminRoster(targetUid, newRole);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
+    }
+  }
+
+  async function _maintainAdminRoster(uid, role){
+    try{
+      const ref = _db.collection('appConfig').doc('adminRoster');
+      if(['admin','super_admin'].includes(role)){
+        await ref.set({ uids: firebase.firestore.FieldValue.arrayUnion(uid), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+      }else{
+        await ref.set({ uids: firebase.firestore.FieldValue.arrayRemove(uid), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+      }
+    }catch(e){ /* best-effort — roster maintenance must never block a role change */ }
+  }
+
+  // ── GET ADMIN UIDS (any signed-in user — low-sensitivity roster, not full profiles) ──
+  async function getAdminUids() {
+    try {
+      const snap = await _db.collection('appConfig').doc('adminRoster').get();
+      if (!snap.exists) return { success: true, uids: [] };
+      return { success: true, uids: snap.data().uids || [] };
+    } catch (err) {
+      return { success: false, error: err.message, uids: [] };
     }
   }
 
@@ -5298,10 +5326,23 @@ const ForgeFirebaseService = (function() {
       const snap  = await _db.collection('users').orderBy('createdAt','desc').get();
       const users = [];
       snap.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
+      // Self-heal the admin roster every time an admin lists all users —
+      // fire-and-forget, never blocks this function's own return.
+      _rebuildAdminRosterFromUserList(users);
       return { success: true, users };
     } catch (err) {
       return { success: false, error: err.message, users: [] };
     }
+  }
+
+  async function _rebuildAdminRosterFromUserList(users){
+    try{
+      const adminUids = users.filter(u=>['admin','super_admin'].includes(u.role)).map(u=>u.uid||u.id);
+      await _db.collection('appConfig').doc('adminRoster').set({
+        uids: adminUids,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }catch(e){ /* best-effort — roster bootstrap must never throw */ }
   }
 
   // ── FRIENDLY ERROR MESSAGES ───────────────────────────
@@ -5334,6 +5375,7 @@ const ForgeFirebaseService = (function() {
     onAuthStateChanged,
     getUser,
     getAllUsers,
+    getAdminUids,
     setUserRole,
     refreshCurrentUserRole,
     getCurrentUser:  () => _currentUser,
@@ -5994,11 +6036,14 @@ async function adminTogglePermission(role, permKey, value){
     // ── Notify every admin/super_admin (used for login alerts) ──
     async function notifyAdmins(type, title, message, meta){
       if(!_db || typeof ForgeFirebaseService==='undefined') return;
-      const result = await ForgeFirebaseService.getAllUsers();
+      // Uses the roster (readable by any signed-in user), not getAllUsers()
+      // (admin-only) — previously this silently did nothing whenever a
+      // non-admin signed in, since getAllUsers() rejected the caller before
+      // any data came back.
+      const result = await ForgeFirebaseService.getAdminUids();
       if(!result.success) return;
-      const admins = result.users.filter(u=>['super_admin','admin'].includes(u.role));
-      for(const a of admins){
-        await notify(a.uid||a.id, type, title, message, meta);
+      for(const uid of result.uids){
+        await notify(uid, type, title, message, meta);
       }
     }
 
