@@ -4208,6 +4208,31 @@ function getAdminTasks(){
 }
 function saveAdminTasks(tasks){localStorage.setItem('forge_admin_tasks',JSON.stringify(tasks));}
 
+// Tasks/Firestore sync: write-through, fire-and-forget, additive only.
+// Does NOT change getAdminTasks()/saveAdminTasks()'s synchronous contract —
+// every existing caller continues to work exactly as before. This closes
+// the gap between what ForgeBackupService/Firestore Rules already expect
+// (a real 'tasks' collection) and what was actually being written (nothing).
+// NOTE: this does not yet make task READS pull from Firestore — that would
+// touch every task-rendering function and is intentionally left as a
+// separate, larger piece of work rather than rushed in here.
+async function _syncTaskToFirestore(task, deleted){
+ try{
+  if(typeof ForgeFirebaseService==='undefined' || !ForgeFirebaseService.isInitialized()) return;
+  const db=ForgeFirebaseService.getDB();
+  if(!db) return;
+  const me=ForgeFirebaseService.getCurrentUser();
+  if(!me) return;
+  if(deleted){
+   if(!['admin','super_admin'].includes(me.role)) return; // matches Firestore delete rule
+   await db.collection('tasks').doc(task.id).delete();
+  }else{
+   if(!['admin','manager','super_admin'].includes(me.role)) return; // matches Firestore create/update rule
+   await db.collection('tasks').doc(task.id).set(task);
+  }
+ }catch(e){ /* silent — best-effort sync only, never blocks or throws to the caller */ }
+}
+
 const ADMIN_ROLES=['super_admin','admin','manager','viewer'];
 const TASK_CATS=['inventory','orders','marketing','support','admin_work'];
 const TASK_STATUSES=['pending','in-progress','completed'];
@@ -4563,6 +4588,7 @@ function adminAddTask(){
    createdAt:todayStr(),updatedAt:todayStr(),
   };
   tasks.unshift(task);saveAdminTasks(tasks);
+  _syncTaskToFirestore(task,false);
   addAdminAuditLog('Admin','admin','TASK_CREATED',`Created task: "${title}" → ${task.assignedRole}`);
   // NOTIFICATION: new task — notify everyone holding the assigned role
   if(typeof ForgeNotificationService!=='undefined' && typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
@@ -4603,6 +4629,7 @@ function adminEditTask(idx){
   tasks[idx].status=document.getElementById('et-status')?.value||t.status;
   tasks[idx].updatedAt=todayStr();
   saveAdminTasks(tasks);
+  _syncTaskToFirestore(tasks[idx],false);
   addAdminAuditLog('Admin','admin','TASK_UPDATED',`Updated task: "${tasks[idx].title}"`);
   // NOTIFICATION: task update — notify everyone holding the (possibly new) assigned role
   if(typeof ForgeNotificationService!=='undefined' && typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
@@ -4623,6 +4650,7 @@ function adminDeleteTask(idx){
  const tasks=getAdminTasks();const t=tasks[idx];if(!t)return;
  if(!confirm(`Delete task "${t.title}"?`))return;
  tasks.splice(idx,1);saveAdminTasks(tasks);
+ _syncTaskToFirestore(t,true);
  addAdminAuditLog('Admin','admin','TASK_DELETED',`Deleted task: "${t.title}"`);
  showToast('Task deleted','success');renderAdmin();
 }
