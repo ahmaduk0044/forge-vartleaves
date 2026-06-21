@@ -2809,6 +2809,7 @@ async function fetchLiveRates(manual=false){
  ratesLoaded=true;
  if(manual) showToast('✅ Live rates updated','success');
  }catch(e){
+ if(typeof ForgeErrorLogger!=='undefined') ForgeErrorLogger.log('fetchLiveRates', e.message||String(e), null);
  const g=DB.config.gbpUsd||1.27;
  const r=DB.config.rmbGbp||0.11;
  const ru=DB.config.rmbUsd||0.14;
@@ -4818,7 +4819,11 @@ const ForgeHealthMonitor = (function(){
     if(typeof ForgeNotificationService==='undefined') return { key:'notifications', name:'Notifications', status:'fail', detail:'Service not loaded' };
     if(!_db) return { key:'notifications', name:'Notifications', status:'fail', detail:'No database handle' };
     try{
-      await _db.collection('notifications').limit(1).get();
+      const me = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
+      if(!me) return { key:'notifications', name:'Notifications', status:'warn', detail:'No signed-in user to scope the check to' };
+      // Scoped to the current user's own targetUid — an unfiltered query is
+      // correctly rejected by Firestore rules (notifications are private per-user).
+      await _db.collection('notifications').where('targetUid','==',me.uid).limit(1).get();
       return { key:'notifications', name:'Notifications', status:'pass', detail:'Service loaded, Firestore reachable' };
     }catch(err){
       return { key:'notifications', name:'Notifications', status:'fail', detail:err.message };
@@ -5339,6 +5344,77 @@ const ForgeFirebaseService = (function() {
   </script>
 
   <!-- ═══════════════════════════════════════════════════
+       ForgeErrorLogger — Centralized Error Logging (No.7, additive)
+       Collection: errorLogs. Silent by design: never throws, never
+       surfaces anything to the end user. Queues entries if Firestore
+       isn't ready yet and flushes once init() is called.
+  ═══════════════════════════════════════════════════ -->
+  <script>
+  const ForgeErrorLogger = (function(){
+    'use strict';
+    let _db = null;
+    let _queue = [];
+    let _flushing = false;
+    const MAX_QUEUE = 200;
+
+    function init(db){
+      _db = db;
+      _flushQueue();
+    }
+
+    async function _flushQueue(){
+      if(!_db || _flushing || _queue.length===0) return;
+      _flushing = true;
+      const toFlush = _queue.splice(0, _queue.length);
+      for(const entry of toFlush){
+        try{
+          await _db.collection('errorLogs').add(entry);
+        }catch(e){
+          // Silent by design — if logging itself fails, the entry is
+          // simply dropped, never re-queued (avoids an infinite retry loop)
+          // and never thrown back to the caller.
+        }
+      }
+      _flushing = false;
+    }
+
+    function log(source, message, extra){
+      try{
+        const me = (typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.getCurrentUser) ? ForgeFirebaseService.getCurrentUser() : null;
+        const entry = {
+          source: source || 'unknown',
+          message: String(message==null?'':message).slice(0,1000),
+          extra: extra || null,
+          url: (typeof location!=='undefined') ? location.href : null,
+          userAgent: (typeof navigator!=='undefined') ? navigator.userAgent : null,
+          uid: me ? me.uid : null,
+          createdAt: (typeof firebase!=='undefined' && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString(),
+        };
+        _queue.push(entry);
+        if(_queue.length>MAX_QUEUE) _queue.splice(0,_queue.length-MAX_QUEUE);
+        _flushQueue();
+      }catch(e){ /* logging must never throw */ }
+    }
+
+    function _installGlobalHandlers(){
+      window.addEventListener('error', function(event){
+        try{ log('window.error', event.message||'Unknown error', {filename:event.filename,lineno:event.lineno,colno:event.colno}); }
+        catch(e){ /* never throw from inside an error handler */ }
+      });
+      window.addEventListener('unhandledrejection', function(event){
+        try{
+          const reason=event.reason;
+          log('unhandledrejection', (reason&&reason.message)?reason.message:String(reason), null);
+        }catch(e){ /* never throw */ }
+      });
+    }
+    _installGlobalHandlers();
+
+    return { init, log };
+  })();
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════
        FORGE Firebase Bridge — Auto-initializes after page load
   ═══════════════════════════════════════════════════ -->
   <script>
@@ -5358,6 +5434,9 @@ const ForgeFirebaseService = (function() {
       const ok=await ForgeFirebaseService.init();
       if(ok && typeof ForgePermissionService!=='undefined'){
         ForgePermissionService.init(ForgeFirebaseService.getDB());
+      }
+      if(ok && typeof ForgeErrorLogger!=='undefined'){
+        ForgeErrorLogger.init(ForgeFirebaseService.getDB());
       }
       if(!ok){
         console.warn('[FORGE Bridge] Firebase init failed — running in local mode');
@@ -5776,6 +5855,7 @@ async function adminTogglePermission(role, permKey, value){
     const result = await ForgeFirebaseService.signInWithEmail(email,pass);
     if(!result.success){
       if(errEl){ errEl.textContent=result.error; errEl.style.display='block'; }
+      if(typeof ForgeErrorLogger!=='undefined') ForgeErrorLogger.log('auth.signInWithEmail', result.error, {email});
     } else if(typeof closeModal==='function') closeModal();
   }
 
