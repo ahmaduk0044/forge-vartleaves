@@ -4159,14 +4159,37 @@ function getAdminAuditLog(){
 }
 function addAdminAuditLog(user,role,action,detail){
  const logs=getAdminAuditLog();
+ const ts=new Date().toISOString();
  logs.unshift({
   user:user||'system',role:role||'—',action,detail,
-  ts:new Date().toISOString(),
+  ts,
   date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
  });
  if(logs.length>500) logs.splice(500);
  localStorage.setItem('forge_audit_log',JSON.stringify(logs));
+ // No.3: best-effort IP capture — fire-and-forget, never blocks the caller,
+ // never throws. Patches the just-created entry in place if/when it resolves.
+ _captureAuditIP(ts);
 }
+
+async function _captureAuditIP(ts){
+ try{
+  const res=await fetch('https://api.ipify.org?format=json');
+  if(!res.ok) return;
+  const data=await res.json();
+  if(!data.ip) return;
+  const logs=getAdminAuditLog();
+  const idx=logs.findIndex(l=>l.ts===ts);
+  if(idx===-1) return;
+  logs[idx].ip=data.ip;
+  localStorage.setItem('forge_audit_log',JSON.stringify(logs));
+ }catch(e){ /* silent — IP capture is best-effort only, never surfaces an error */ }
+}
+
+// No.3: convenience helpers — same addAdminAuditLog under the hood, just consistent action names
+function logUserLogin(userName,role){ addAdminAuditLog(userName,role,'LOGIN',`${userName} signed in`); }
+function logUserLogout(userName,role){ addAdminAuditLog(userName,role,'LOGOUT',`${userName} signed out`); }
+function logSettingsChange(userName,role,detail){ addAdminAuditLog(userName,role,'SETTINGS_CHANGED',detail); }
 
 // Admin tasks DB
 function getAdminTasks(){
@@ -4718,6 +4741,7 @@ function _renderAdminAudit(el){
   USER_CREATED:'#10b981',USER_UPDATED:'#3b82f6',USER_DELETED:'#ef4444',
   ROLE_CHANGED:'#f59e0b',TASK_CREATED:'#10b981',TASK_UPDATED:'#3b82f6',
   TASK_DELETED:'#ef4444',SETTINGS_CHANGED:'#8b5cf6',
+  LOGIN:'#10b981',LOGOUT:'#9ca3af',
  };
  const f=window._adminFilters.audit;
  const knownActions=Array.from(new Set(allLogs.map(l=>l.action)));
@@ -4743,7 +4767,7 @@ function _renderAdminAudit(el){
      <span style="font-size:10px;color:var(--text3)">by ${sanitizeHTML(l.user)} (${sanitizeHTML(l.role)})</span>
     </div>
     <div style="font-size:11.5px;color:var(--text2)">${sanitizeHTML(l.detail)}</div>
-    <div style="font-size:10px;color:var(--text3);margin-top:2px">${l.date}</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px">${l.date}${l.ip?` · IP: ${sanitizeHTML(l.ip)}`:''}</div>
    </div>
   </div>`).join('')}
  </div>`}`;
@@ -5472,6 +5496,8 @@ const ForgeFirebaseService = (function() {
             ForgeNotificationService.init(ForgeFirebaseService.getDB());
             ForgeNotificationService.notifyAdmins('login_alert','Login Alert',`${user.name} (${user.role}) signed in`,{email:user.email});
           }
+          // No.3: auto-log this sign-in to the audit log
+          if(typeof logUserLogin==='function') logUserLogin(user.name, user.role);
           // Start the bell/badge listener for this user
           if(typeof initForgeNotifications==='function') initForgeNotifications();
           // Show/hide the Admin Panel nav item based on this user's role —
@@ -5868,7 +5894,10 @@ async function adminTogglePermission(role, permKey, value){
   }
 
   async function forgeSignOut(){
+    // No.3: capture who's signing out BEFORE the session is cleared
+    const me = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
     await ForgeFirebaseService.signOut();
+    if(me && typeof logUserLogout==='function') logUserLogout(me.name, me.role);
     if(typeof closeModal==='function') closeModal();
   }
   </script>
