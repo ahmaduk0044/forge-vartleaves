@@ -5395,6 +5395,12 @@ const ForgeFirebaseService = (function() {
           }
           // Start the bell/badge listener for this user
           if(typeof initForgeNotifications==='function') initForgeNotifications();
+          // Show/hide the Admin Panel nav item based on this user's role —
+          // renderAdmin() was previously only called from in-app actions,
+          // never on initial sign-in, so the Admin Panel button stayed
+          // hidden even for legitimate admins until something else
+          // happened to trigger it.
+          if(typeof renderAdmin==='function') renderAdmin();
         } else {
           console.log('[FORGE Bridge] Not signed in — local mode active');
           if(typeof ForgeSessionGuard!=='undefined') ForgeSessionGuard.stop();
@@ -5402,6 +5408,7 @@ const ForgeFirebaseService = (function() {
           const lbl=document.getElementById('forge-auth-label');
           if(dot){ dot.style.background='#f59e0b'; dot.style.boxShadow='none'; }
           if(lbl){ lbl.textContent='Sign in'; lbl.style.color='#f59e0b'; }
+          if(typeof renderAdmin==='function') renderAdmin();
         }
       });
       console.log('[FORGE Bridge] ✅ Firebase ready — Auth + Firestore connected');
