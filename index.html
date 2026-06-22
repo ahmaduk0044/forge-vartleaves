@@ -5966,14 +5966,32 @@ async function adminTogglePermission(role, permKey, value){
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.9 7.2v6h7.9c4.6-4.2 7.2-10.5 7.2-17.2z"/><path fill="#34A853" d="M24 47c6.5 0 11.9-2.1 15.8-5.8l-7.9-6c-2.1 1.4-4.8 2.3-7.9 2.3-6.1 0-11.2-4.1-13-9.6H2.9v6.2C6.8 41.9 14.8 47 24 47z"/><path fill="#FBBC05" d="M11 27.9c-.5-1.4-.7-2.9-.7-4.4s.3-3 .7-4.4v-6.2H2.9C1.1 16.4 0 20.1 0 24s1.1 7.6 2.9 10.7L11 27.9z"/><path fill="#EA4335" d="M24 9.5c3.4 0 6.5 1.2 8.9 3.5l6.7-6.7C35.9 2.5 30.5 0 24 0 14.8 0 6.8 5.1 2.9 12.7l8.1 6.2C12.8 13.6 17.9 9.5 24 9.5z"/></svg>
         Continue with Google
       </button>
-      <div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:12px">or sign in with email</div>
-      <input id="fga-email" type="email" placeholder="Email address" style="width:100%;box-sizing:border-box;padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;outline:none;margin-bottom:9px;font-family:inherit">
-      <input id="fga-pass" type="password" placeholder="Password" style="width:100%;box-sizing:border-box;padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px;font-family:inherit">
-      <div id="fga-error" style="display:none;padding:8px 11px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-size:12px;color:#ef4444;margin-bottom:10px"></div>
-      <button onclick="forgeSignInEmail()" style="width:100%;padding:11px;background:linear-gradient(135deg,#f97316,#ef4444);border:none;border-radius:8px;font-size:13px;font-weight:700;color:white;cursor:pointer;font-family:inherit;margin-bottom:8px">
-        Sign In
-      </button>
-      <div style="text-align:center"><span onclick="forgeForgotPassword()" style="font-size:11.5px;color:var(--text3);cursor:pointer;text-decoration:underline">Forgot password?</span></div>`;
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div style="flex:1;height:1px;background:var(--border2)"></div>
+        <span style="font-size:11px;color:var(--text3)">or continue with email</span>
+        <div style="flex:1;height:1px;background:var(--border2)"></div>
+      </div>
+      <form id="fga-form" autocomplete="on" onsubmit="event.preventDefault();forgeSignInEmail()">
+        <input id="fga-email" name="email" type="email" autocomplete="email" placeholder="Email address"
+          style="width:100%;box-sizing:border-box;padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;outline:none;margin-bottom:9px;font-family:inherit">
+        <div style="position:relative;margin-bottom:8px">
+          <input id="fga-pass" name="password" type="password" autocomplete="current-password" placeholder="Password"
+            style="width:100%;box-sizing:border-box;padding:10px 40px 10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;outline:none;font-family:inherit">
+          <button type="button" onclick="
+            var p=document.getElementById('fga-pass');
+            var b=document.getElementById('fga-eye');
+            if(p.type==='password'){p.type='text';b.textContent='🙈';}
+            else{p.type='password';b.textContent='👁';}
+          " id="fga-eye" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:2px;line-height:1">👁</button>
+        </div>
+        <div style="text-align:right;margin-bottom:10px">
+          <span onclick="forgeForgotPassword()" style="font-size:11.5px;color:var(--accent2,#f97316);cursor:pointer;font-weight:600">Forgot password?</span>
+        </div>
+        <div id="fga-error" style="display:none;padding:8px 11px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-size:12px;color:#ef4444;margin-bottom:10px"></div>
+        <button type="submit" style="width:100%;padding:11px;background:linear-gradient(135deg,#f97316,#ef4444);border:none;border-radius:8px;font-size:13px;font-weight:700;color:white;cursor:pointer;font-family:inherit">
+          Sign In
+        </button>
+      </form>`;
     document.getElementById('modal-overlay').classList.add('open');
   }
 
@@ -5998,11 +6016,56 @@ async function adminTogglePermission(role, permKey, value){
   }
 
   async function forgeForgotPassword(){
-    const email=document.getElementById('fga-email')?.value?.trim();
-    if(!email){ showToast('Enter your email first','error'); return; }
+    // Pre-fill email from the login form if already typed
+    const emailFromLoginForm = document.getElementById('fga-email')?.value?.trim() || '';
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody  = document.getElementById('modal-body');
+    const saveBtn    = document.getElementById('modal-save-btn');
+    if(modalTitle) modalTitle.textContent = 'Reset Password';
+    if(saveBtn) saveBtn.style.display = 'none';
+    if(modalBody) modalBody.innerHTML = `
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:36px;margin-bottom:8px">🔑</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.5">
+          Enter your email address and we will send you a link to reset your password.
+        </div>
+      </div>
+      <form id="fga-reset-form" autocomplete="on" onsubmit="event.preventDefault();forgeDoPasswordReset()">
+        <input id="fga-reset-email" name="email" type="email" autocomplete="email"
+          placeholder="Email address" value="${emailFromLoginForm}"
+          style="width:100%;box-sizing:border-box;padding:10px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px;font-family:inherit">
+        <div id="fga-reset-error" style="display:none;padding:8px 11px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-size:12px;color:#ef4444;margin-bottom:10px"></div>
+        <div id="fga-reset-success" style="display:none;padding:8px 11px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:6px;font-size:12px;color:#10b981;margin-bottom:10px"></div>
+        <button type="submit" style="width:100%;padding:11px;background:linear-gradient(135deg,#f97316,#ef4444);border:none;border-radius:8px;font-size:13px;font-weight:700;color:white;cursor:pointer;font-family:inherit;margin-bottom:12px">
+          Send Reset Link
+        </button>
+      </form>
+      <div style="text-align:center">
+        <span onclick="openSignInModal()" style="font-size:12px;color:var(--accent2,#f97316);cursor:pointer;font-weight:600">← Back to Sign In</span>
+      </div>`;
+    // Focus email field for fast entry
+    setTimeout(()=>{ document.getElementById('fga-reset-email')?.focus(); }, 100);
+  }
+
+  async function forgeDoPasswordReset(){
+    const email = document.getElementById('fga-reset-email')?.value?.trim();
+    const errEl = document.getElementById('fga-reset-error');
+    const sucEl = document.getElementById('fga-reset-success');
+    if(!email){
+      if(errEl){ errEl.textContent='Please enter your email address.'; errEl.style.display='block'; }
+      return;
+    }
+    if(errEl) errEl.style.display='none';
+    if(sucEl) sucEl.style.display='none';
     const result = await ForgeFirebaseService.sendPasswordReset(email);
-    if(result.success) showToast('Password reset email sent','success');
-    else showToast(result.error,'error');
+    if(result.success){
+      if(sucEl){ sucEl.textContent='✅ Reset link sent — check your inbox (and spam folder).'; sucEl.style.display='block'; }
+      // Disable the button so they can't spam-click send again
+      const btn = document.querySelector('#fga-reset-form button[type=submit]');
+      if(btn){ btn.disabled=true; btn.style.opacity='0.5'; btn.textContent='Link Sent'; }
+    }else{
+      if(errEl){ errEl.textContent=result.error||'Could not send reset email. Try again.'; errEl.style.display='block'; }
+    }
   }
 
   async function forgeSignOut(){
