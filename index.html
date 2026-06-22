@@ -4512,7 +4512,26 @@ function _renderAdminRoles(el){
 }
 
 // ── TASKS TAB ──
-function _renderAdminTasks(el){
+async function _renderAdminTasks(el){
+ // Tasks read-side Firestore sync: if reachable, pull live tasks and write
+ // them into the local cache FIRST, so getAdminTasks() below returns the
+ // synced data — keeping the displayed list and idx-based edit/delete
+ // buttons consistent with each other. Falls back to local silently on
+ // any failure (rules not ready, offline, not signed in) — no regression.
+ if(typeof ForgeFirebaseService!=='undefined' && ForgeFirebaseService.isInitialized()){
+  try{
+   const db=ForgeFirebaseService.getDB();
+   const snap=await db.collection('tasks').get();
+   if(!snap.empty){
+    const firestoreTasks=[];
+    snap.forEach(doc=>firestoreTasks.push({...doc.data(),id:doc.id}));
+    saveAdminTasks(firestoreTasks);
+   }
+   // If Firestore has zero tasks (e.g. nothing synced yet), deliberately
+   // keep whatever's in the local cache rather than wiping it to empty.
+  }catch(e){ /* silent — falls back to whatever's already in local cache */ }
+ }
+
  const allTasks=getAdminTasks();
  const statusColors={'pending':'#f59e0b','in-progress':'#3b82f6','completed':'#10b981'};
 
