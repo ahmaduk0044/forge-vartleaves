@@ -1,0 +1,103 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════
+// FORGE by Vartleaves — Production Firestore Security Rules
+// Updated: v2.6-tasks-full-sync
+//
+// CHANGES FROM PREVIOUS VERSION (v1.6-security-hardening):
+// - Added appConfig/adminRoster (readable by any signed-in user,
+//   writable only by admin/super_admin). Required for notifyAdmins()
+//   to work for non-admin sign-ins without exposing full user profiles.
+// - Added tasks/{id} with proper role-gated read/write rules.
+//
+// HOW TO DEPLOY: Firebase Console → forge-vartleaves project
+// → Firestore Database → Rules → replace all → Publish.
+// ═══════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function isAdmin() {
+      return isSignedIn() && myRole() in ['admin','super_admin'];
+    }
+    function isSuperAdmin() {
+      return isSignedIn() && myRole() == 'super_admin';
+    }
+
+    // ── users/{uid} ──────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if isSignedIn()
+                    && request.auth.uid == uid
+                    && request.resource.data.role == 'viewer';
+      allow create: if isSuperAdmin();
+      allow update: if isSignedIn()
+                    && request.auth.uid == uid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','email','updatedAt']);
+      allow update: if isAdmin()
+                    && request.auth.uid != uid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role','updatedAt'])
+                    && (request.resource.data.role != 'super_admin' || isSuperAdmin());
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ── permissionMatrix/{role} ──────────────────────────────
+    match /permissionMatrix/{role} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── notifications/{id} ────────────────────────────────────
+    match /notifications/{id} {
+      allow read: if isSignedIn() && request.auth.uid == resource.data.targetUid;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn()
+                    && request.auth.uid == resource.data.targetUid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if false;
+    }
+
+    // ── backups/{id} ──────────────────────────────────────────
+    match /backups/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ── tasks/{id} ───────────────────────────────────────────
+    match /tasks/{id} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && myRole() in ['admin','manager','super_admin'];
+      allow delete: if isAdmin();
+    }
+
+    // ── appConfig/{doc} ──────────────────────────────────────
+    // Low-sensitivity config documents. adminRoster stores only UIDs
+    // of admin/super_admin users (no names, emails, or other PII).
+    // Readable by any signed-in user so notifyAdmins() works for
+    // non-admin sign-ins without broad users collection access.
+    match /appConfig/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── errorLogs/{id} — PLANNED, NOT YET BUILT ─────────────
+    match /errorLogs/{id} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // ── Default deny ─────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
