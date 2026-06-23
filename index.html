@@ -342,10 +342,206 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
 .launch-insight.block{background:var(--red-bg);border:1px solid rgba(239,68,68,0.2);color:var(--red);}
 .launch-next-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(37,99,235,0.15);color:var(--accent2);border:1px solid rgba(37,99,235,0.3);cursor:pointer;transition:all 0.15s;}
 .launch-next-btn:hover{background:rgba(37,99,235,0.25);}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORGE MOBILE RESPONSIVENESS  — v3.0
+   Breakpoints: 768px (mobile) | 1024px (tablet)
+   Test floor: 375px (iPhone SE)
+   Rule: Desktop layout must not break.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Hamburger button — hidden on desktop ── */
+.hamburger-btn{
+  display:none;
+  flex-direction:column;justify-content:center;align-items:center;
+  width:44px;height:44px;min-width:44px;
+  background:transparent;border:none;cursor:pointer;
+  padding:8px;border-radius:8px;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.hamburger-btn:hover{background:var(--surface3);}
+.ham-line{
+  display:block;width:18px;height:2px;
+  background:var(--text2);border-radius:2px;
+  transition:all 0.25s ease;margin:2px 0;
+}
+.hamburger-btn.open .ham-line:nth-child(1){transform:translateY(6px) rotate(45deg);}
+.hamburger-btn.open .ham-line:nth-child(2){opacity:0;transform:scaleX(0);}
+.hamburger-btn.open .ham-line:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
+
+/* ── Sidebar overlay — hidden on desktop ── */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.6);z-index:149;
+  backdrop-filter:blur(2px);
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ══════════════════════════════════════
+   TABLET  — 1024px and below
+   ══════════════════════════════════════ */
+@media (max-width:1024px){
+  :root{ --nav-w:200px; }
+
+  /* KPI strip: 3 cols on tablet */
+  .kpi-strip{ grid-template-columns:repeat(3,1fr); }
+  .kpi-box:nth-child(3){ border-right:none; }
+  .kpi-box:nth-child(4){ border-top:1px solid var(--border); }
+
+  /* AMZ kpis: 3 cols */
+  .amz-kpis{ grid-template-columns:repeat(3,1fr); }
+
+  /* Launch field grid: 2 cols */
+  .launch-field-grid{ grid-template-columns:1fr 1fr; }
+
+  /* Search box narrower */
+  .search-box{ width:160px; }
+
+  /* Hide some topbar labels on tablet */
+  #drive-ind-text{ display:none; }
+}
+
+/* ══════════════════════════════════════
+   MOBILE  — 768px and below
+   ══════════════════════════════════════ */
+@media (max-width:768px){
+
+  /* ── Body layout ── */
+  body{ overflow:hidden; }
+
+  /* ── Hamburger visible ── */
+  .hamburger-btn{ display:flex; }
+
+  /* ── Sidebar becomes slide-in drawer ── */
+  #forge-sidebar{
+    position:fixed;left:0;top:0;bottom:0;
+    width:260px;max-width:80vw;
+    z-index:150;
+    transform:translateX(-100%);
+    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    height:100dvh;
+  }
+  #forge-sidebar.mobile-open{
+    transform:translateX(0);
+    box-shadow:4px 0 24px rgba(0,0,0,0.4);
+  }
+  .sidebar-overlay.active{ display:block; }
+
+  /* ── Main area takes full width ── */
+  .main{ width:100%; min-width:0; }
+
+  /* ── Topbar ── */
+  .topbar{
+    padding:0 8px;gap:6px;height:52px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  .topbar-title{ font-size:13px; }
+  .topbar-title span{ display:none; }/* hide subtitle on mobile */
+
+  /* Hide topbar items that don't fit */
+  .search-box{ display:none; }
+  #drive-indicator{ display:none; }
+  #undo-btn{ display:none; }
+  #redo-btn{ display:none; }
+
+  /* ── Tap targets: all interactive elements ── */
+  .btn{ min-height:44px;padding:10px 14px; }
+  .btn-sm{ min-height:40px;padding:8px 12px; }
+  .nav-item{ padding:11px 10px;min-height:44px; }
+  .filter-select{ min-height:44px;padding:10px 9px; }
+  .form-input,.form-select,input,select,textarea{
+    min-height:44px;font-size:16px!important;/* prevents iOS zoom */
+  }
+  .modal-close{ width:44px;height:44px;display:flex;align-items:center;justify-content:center; }
+
+  /* ── KPI strip: 2 cols ── */
+  .kpi-strip{ grid-template-columns:repeat(2,1fr); }
+  .kpi-box{ border-right:1px solid var(--border); }
+  .kpi-box:nth-child(2n){ border-right:none; }
+  .kpi-box:nth-child(3){ border-top:1px solid var(--border); }
+  .kpi-value{ font-size:16px; }
+
+  /* ── Dashboard cards: single column ── */
+  .dash-grid{ grid-template-columns:1fr;padding:10px 10px; }
+
+  /* ── Form grids: single column ── */
+  .form-grid{ grid-template-columns:1fr; }
+
+  /* ── AMZ kpis: 2 cols ── */
+  .amz-kpis{ grid-template-columns:repeat(2,1fr); }
+
+  /* ── Launch field grid: single col ── */
+  .launch-field-grid{ grid-template-columns:1fr; }
+
+  /* ── Filter bar: wraps cleanly ── */
+  .filter-bar{ gap:6px;padding:8px 10px; }
+
+  /* ── Tables: horizontally scrollable ── */
+  .table-wrap{ overflow-x:auto;-webkit-overflow-scrolling:touch; }
+  table{ font-size:12px;white-space:nowrap; }
+  th,td{ padding:8px 10px!important; }
+
+  /* ── Modals: full-screen friendly ── */
+  .modal{
+    width:100%!important;max-width:100vw!important;
+    margin:0;border-radius:16px 16px 0 0;
+    position:fixed;bottom:0;left:0;right:0;
+    max-height:92dvh;
+  }
+  .modal-overlay{
+    align-items:flex-end!important;
+  }
+  .modal-body{ padding:14px 15px; }
+  .modal-head{ padding:14px 15px 11px; }
+  .modal-foot{
+    padding:10px 15px 20px;/* extra bottom for home bar */
+    flex-wrap:wrap;gap:8px;
+  }
+  .modal-foot .btn{ flex:1;min-width:120px;justify-content:center; }
+
+  /* ── Content area bottom padding for phones with home bar ── */
+  .content{ padding-bottom:env(safe-area-inset-bottom,0px); }
+
+  /* ── PI grid: single col ── */
+  .pi-grid{ grid-template-columns:1fr; }
+
+  /* ── ICC KPI row ── */
+  .icc-kpi{ padding:10px 12px; }
+  .icc-kpi-val{ font-size:18px; }
+
+  /* ── Sidebar footer ── */
+  .sidebar-footer .drive-status span:last-child{ display:none; }
+
+  /* ── Admin status grid ── */
+  .admin-status-grid,
+  [style*="repeat(auto-fill,minmax(160px"]{
+    grid-template-columns:repeat(2,1fr)!important;
+  }
+
+  /* ── Page padding ── */
+  .page-pad,.page-inner{ padding:10px!important; }
+}
+
+/* ── Hide non-essential topbar items on mobile ── */
+@media (max-width:768px){
+  .mobile-hide{ display:none!important; }
+}
+
+/* ══════════════════════════════════════
+   EXTRA SMALL — 480px and below
+   ══════════════════════════════════════ */
+@media (max-width:480px){
+  .kpi-strip{ grid-template-columns:1fr 1fr; }
+  .kpi-value{ font-size:15px; }
+  .kpi-label{ font-size:8px; }
+  .amz-kpis{ grid-template-columns:1fr 1fr; }
+  .dash-grid{ padding:8px; }
+}
 </style>
 </head>
 <body>
-<nav class="sidebar">
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+<nav class="sidebar" id="forge-sidebar">
  <div class="logo"><div class="logo-mark">FORGE</div><div class="logo-sub">Vartleaves Limited</div></div>
  <div class="nav-section">
  <div class="nav-label">Overview</div>
@@ -401,11 +597,14 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
 
 <div class="main">
  <div class="topbar">
+ <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileSidebar()" aria-label="Menu" aria-expanded="false">
+  <span class="ham-line"></span><span class="ham-line"></span><span class="ham-line"></span>
+ </button>
  <div class="topbar-title" id="page-title">Dashboard <span>Overview</span></div>
  <div class="search-box"><span style="color:var(--text3);font-size:12px">⌕</span><input type="text" placeholder="Search SKU, PO, ASIN..." id="global-search" oninput="SQ=this.value.toLowerCase();rp();renderSearchResults(this.value)" autocomplete="off" onblur="setTimeout(()=>{const b=document.getElementById('search-dropdown');if(b)b.style.display='none'},200)"></div><div id="search-dropdown" style="display:none;position:absolute;top:36px;left:0;width:360px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:300;max-height:320px;overflow-y:auto"></div></div>
 
- <!-- CURRENCY BAR -->
- <div class="currency-bar" onclick="toggleCurrencyPanel()" title="Live Exchange Rates">
+ <!-- CURRENCY BAR (hidden on mobile — tap 💱 in search area instead) -->
+ <div class="currency-bar mobile-hide" onclick="toggleCurrencyPanel()" title="Live Exchange Rates">
  <div class="currency-live-dot"></div>
  <div class="currency-item" id="cur-gbp-usd" style="color:var(--text)">£=$<span style="color:var(--text3)">...</span></div>
  <div class="currency-sep">|</div>
@@ -3675,7 +3874,7 @@ function renderFBACard(s){
  </div>
  </div>
  <div class="fba-stage-track">${stageBar}</div>
- <div style="padding:10px 14px">
+ <div style="padding:10px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch">
  ${s.skus?.length?`
  <table class="fba-carton-table">
  <thead><tr>
@@ -6748,5 +6947,50 @@ async function adminTogglePermission(role, permKey, value){
   }
   </script>
 
+
+<script>
+/* ── FORGE Mobile Sidebar Controls ── */
+(function(){
+  function openMobileSidebar(){
+    const sb=document.getElementById('forge-sidebar');
+    const ov=document.getElementById('sidebar-overlay');
+    const hb=document.getElementById('hamburger-btn');
+    if(!sb) return;
+    sb.classList.add('mobile-open');
+    if(ov) ov.classList.add('active');
+    if(hb){ hb.classList.add('open'); hb.setAttribute('aria-expanded','true'); }
+    document.body.style.overflow='hidden';
+  }
+  function closeMobileSidebar(){
+    const sb=document.getElementById('forge-sidebar');
+    const ov=document.getElementById('sidebar-overlay');
+    const hb=document.getElementById('hamburger-btn');
+    if(!sb) return;
+    sb.classList.remove('mobile-open');
+    if(ov) ov.classList.remove('active');
+    if(hb){ hb.classList.remove('open'); hb.setAttribute('aria-expanded','false'); }
+    document.body.style.overflow='';
+  }
+  function toggleMobileSidebar(){
+    const sb=document.getElementById('forge-sidebar');
+    if(!sb) return;
+    sb.classList.contains('mobile-open') ? closeMobileSidebar() : openMobileSidebar();
+  }
+  // Close sidebar when a nav item is tapped on mobile
+  function _isMobile(){ return window.innerWidth<=768; }
+  document.addEventListener('click',function(e){
+    const ni=e.target.closest('.nav-item');
+    if(ni && _isMobile()) closeMobileSidebar();
+  });
+  // Close on Escape
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') closeMobileSidebar();
+  });
+  // Expose globally
+  window.toggleMobileSidebar=toggleMobileSidebar;
+  window.closeMobileSidebar=closeMobileSidebar;
+  window.openMobileSidebar=openMobileSidebar;
+})();
+</script>
 </body>
 </html>
