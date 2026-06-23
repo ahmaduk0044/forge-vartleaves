@@ -2082,6 +2082,9 @@ function getTrackingUrl(courier,tracking){
 }
 
 function showToast(msg,type='success'){
+ // Respect in-app notification preference — errors always show regardless
+ const _nb=(()=>{try{const s=getForgeSettings();return s.notifBrowser!==false;}catch(e){return true;}})();
+ if(!_nb&&type!=='error') return;
  const t=document.createElement('div');t.className=`toast ${type}`;
  t.innerHTML=`<span>${{success:'✅',error:'❌',info:'ℹ'}[type]||'ℹ'}</span> ${msg}`;
  document.getElementById('toasts').appendChild(t);
@@ -4159,7 +4162,7 @@ function getAdminAuditLog(){
 }
 
 // No.5: Settings Module storage. Stored under forge_app_settings.
-const FORGE_SETTINGS_DEFAULTS={companyName:'Vartleaves',logoUrl:'',theme:'dark',sessionTimeoutMinutes:30,defaultUserRole:'viewer'};
+const FORGE_SETTINGS_DEFAULTS={companyName:'Vartleaves',logoUrl:'',theme:'dark',sessionTimeoutMinutes:30,defaultUserRole:'viewer',notifEmail:true,notifBrowser:true};
 function getForgeSettings(){
  try{const s=localStorage.getItem('forge_app_settings');if(s)return {...FORGE_SETTINGS_DEFAULTS,...JSON.parse(s)};}catch(e){}
  return {...FORGE_SETTINGS_DEFAULTS};
@@ -5077,6 +5080,23 @@ async function _renderAdminStatusAsync(el){
    &nbsp;·&nbsp; GitHub Pages: <span style="color:var(--green)">✅ Live</span>
    &nbsp;·&nbsp; FORGE Version: <span style="color:var(--text2)">v2.9</span>
   </div>
+ </div>
+ <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:14px;margin-top:14px">
+  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🔒 Firestore Security — Required Rules Checklist</div>
+  <div style="font-size:11.5px;color:var(--text2);line-height:1.8">
+   The following Firestore collections are written by FORGE and <strong>must</strong> have matching security rules deployed in the Firebase Console (Firestore → Rules):<br>
+   <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;font-size:11px;font-family:'JetBrains Mono',monospace">
+    <div style="background:var(--bg);border-radius:5px;padding:8px 10px;color:var(--green)">✅ auditLogs — allow read: admins; allow write: authenticated users</div>
+    <div style="background:var(--bg);border-radius:5px;padding:8px 10px;color:var(--green)">✅ notifications — allow read/write: authenticated users (own docs)</div>
+    <div style="background:var(--bg);border-radius:5px;padding:8px 10px;color:var(--yellow)">⚠️ errorLogs — allow write: authenticated; allow read: super_admin only</div>
+    <div style="background:var(--bg);border-radius:5px;padding:8px 10px;color:var(--text3)">   Suggested rule for errorLogs:</div>
+    <div style="background:var(--bg);border-radius:5px;padding:8px 10px;color:var(--accent2);white-space:pre-wrap">match /errorLogs/{doc} {
+  allow write: if request.auth != null;
+  allow read: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin';
+}</div>
+   </div>
+   <div style="margin-top:8px;font-size:10px;color:var(--text3)">Deploy rules from: Firebase Console → Firestore Database → Rules tab. Any collection without a rule will deny all access by default.</div>
+  </div>
  </div>`;
 }
 
@@ -5446,7 +5466,10 @@ const ForgeFirebaseService = (function() {
       if(!_active) return;
       console.log('[ForgeSessionGuard] Inactivity timeout — signing out');
       if(typeof showToast==='function') showToast('Signed out due to inactivity','info');
+      // Capture current user BEFORE session is cleared, then log the auto-logout
+      const _timedOutUser = (typeof ForgeFirebaseService!=='undefined') ? ForgeFirebaseService.getCurrentUser() : null;
       if(typeof ForgeFirebaseService!=='undefined') await ForgeFirebaseService.signOut();
+      if(_timedOutUser && typeof logUserLogout==='function') logUserLogout(_timedOutUser.name+' (inactivity)', _timedOutUser.role);
     }
 
     async function _handleRoleRecheck(){
@@ -5454,8 +5477,18 @@ const ForgeFirebaseService = (function() {
       const result = await ForgeFirebaseService.refreshCurrentUserRole();
       if(result.success && result.changed){
         console.log('[ForgeSessionGuard] Role changed mid-session, now:', result.role);
-        if(typeof showToast==='function') showToast(`Your role is now ${result.role}`,'info');
-        if(typeof renderAdmin==='function') renderAdmin();
+        const _prevRole = result.previousRole || '';
+        const _adminRoles = ['super_admin','admin','manager'];
+        const _demotedFromAdmin = _adminRoles.includes(_prevRole) && !_adminRoles.includes(result.role);
+        if(_demotedFromAdmin){
+          // Role was revoked — force full sign-out for security
+          if(typeof showToast==='function') showToast('Your access level was changed. Please sign in again.','warning');
+          if(typeof addAdminAuditLog==='function') addAdminAuditLog(result.name||'Unknown', result.role,'ROLE_REVOKED_FORCED_LOGOUT',`Role changed to ${result.role} mid-session — forced sign-out`);
+          setTimeout(async()=>{ if(typeof ForgeFirebaseService!=='undefined') await ForgeFirebaseService.signOut(); }, 2000);
+        } else {
+          if(typeof showToast==='function') showToast(`Your role is now ${result.role}`,'info');
+          if(typeof renderAdmin==='function') renderAdmin();
+        }
       }
     }
 
@@ -6536,7 +6569,7 @@ async function adminTogglePermission(role, permKey, value){
       <option value="dark"${s.theme==='dark'?' selected':''}>Dark</option>
       <option value="light"${s.theme==='light'?' selected':''}>Light</option>
      </select>
-     <div style="font-size:10px;color:var(--text3);margin-top:3px">Stored only — use the 🎨 theme switcher in the topbar to actually change it right now.</div>
+     <div style="font-size:10px;color:var(--text3);margin-top:3px">Applies immediately on save and persists across sessions.</div>
     </div>
     <div>
      <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px">Session Timeout (minutes)</label>
@@ -6547,6 +6580,20 @@ async function adminTogglePermission(role, permKey, value){
      <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px">Default Role for New Sign-Ups</label>
      <input class="form-input" value="viewer" disabled style="width:100%;opacity:0.6;cursor:not-allowed">
      <div style="font-size:10px;color:var(--yellow);margin-top:3px">🔒 Locked to "viewer" — this is enforced server-side by Firestore Security Rules, not just this app. Changing it here without also updating the deployed rules would break new sign-ups.</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:14px">
+     <label style="font-size:11.5px;font-weight:600;color:var(--text2);display:block;margin-bottom:9px">Notifications</label>
+     <div style="display:flex;flex-direction:column;gap:9px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12.5px;color:var(--text2)">
+       <input type="checkbox" id="forge-set-notif-email" ${s.notifEmail!==false?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
+       Email notifications (admin alerts, task assignments)
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12.5px;color:var(--text2)">
+       <input type="checkbox" id="forge-set-notif-browser" ${s.notifBrowser!==false?'checked':''} style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
+       In-app notifications (toast alerts, notification badge)
+      </label>
+     </div>
+     <div style="font-size:10px;color:var(--text3);margin-top:6px">Turning off in-app notifications suppresses toast alerts and hides the badge count.</div>
     </div>
     <button class="btn" style="background:var(--accent);color:white;border:none;align-self:flex-start;margin-top:4px" onclick="_adminSaveSettingsFromForm()">Save Settings</button>
    </div>`;
@@ -6567,13 +6614,25 @@ async function adminTogglePermission(role, permKey, value){
     sessionTimeoutMinutes: (()=>{ const v=parseInt(document.getElementById('forge-set-timeout').value,10); return Math.max(5,Math.min(240, isNaN(v)?FORGE_SETTINGS_DEFAULTS.sessionTimeoutMinutes:v)); })(),
     defaultUserRole:'viewer', // locked — see note in the form
    };
+   // Read notification pref checkboxes (safe fallback to true if element missing)
+   const _notifEmailEl = document.getElementById('forge-set-notif-email');
+   const _notifBrowserEl = document.getElementById('forge-set-notif-browser');
+   after.notifEmail   = _notifEmailEl   ? _notifEmailEl.checked   : before.notifEmail;
+   after.notifBrowser = _notifBrowserEl ? _notifBrowserEl.checked : before.notifBrowser;
    const changedKeys=Object.keys(after).filter(k=>after[k]!==before[k]);
    saveForgeSettings(after);
+   // Live-apply theme immediately if it changed — no need to use topbar switcher
+   if(changedKeys.includes('theme') && typeof setTheme==='function') setTheme(after.theme);
+   // If session timeout changed, reset the inactivity guard so new value takes effect now
+   if(changedKeys.includes('sessionTimeoutMinutes') && typeof ForgeSessionGuard!=='undefined'){
+    ForgeSessionGuard.stop();
+    ForgeSessionGuard.start();
+   }
    if(changedKeys.length>0 && typeof logSettingsChange==='function'){
     const diffText=changedKeys.map(k=>`${k}: ${before[k]} → ${after[k]}`).join(', ');
     logSettingsChange(me.name, me.role, diffText);
    }
-   if(typeof showToast==='function') showToast(changedKeys.length>0?'✅ Settings saved':'No changes','success');
+   if(typeof showToast==='function') showToast(changedKeys.length>0?'✅ Settings saved':'No changes to save','success');
    renderAdmin();
   }
 
