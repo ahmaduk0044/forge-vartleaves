@@ -343,264 +343,284 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
 .launch-next-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(37,99,235,0.15);color:var(--accent2);border:1px solid rgba(37,99,235,0.3);cursor:pointer;transition:all 0.15s;}
 .launch-next-btn:hover{background:rgba(37,99,235,0.25);}
 
-/* ═══════════════════════════════════════════════════════════════
-   FORGE MOBILE — v3.1  Native App Feel
-   Philosophy: Mobile is NOT a shrunk desktop.
-   Tables → Cards. Sidebar → Drawer. Modals → Bottom sheets.
-   Touch targets → 48px min. Typography → readable at arm's length.
-   ═══════════════════════════════════════════════════════════════ */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE LAYER  — FORGE v3.2
+   RULE: This block ONLY activates at ≤768px.
+         Desktop CSS above this line is NEVER touched.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-/* ── Hamburger — desktop hidden ── */
+/* ── Hamburger (always hidden on desktop) ── */
 .hamburger-btn{
   display:none;flex-direction:column;justify-content:center;align-items:center;
-  width:48px;height:48px;min-width:48px;background:transparent;border:none;
-  cursor:pointer;padding:10px;border-radius:10px;flex-shrink:0;
-  -webkit-tap-highlight-color:transparent;gap:5px;
+  width:44px;height:44px;min-width:44px;background:transparent;border:none;
+  cursor:pointer;border-radius:8px;flex-shrink:0;gap:5px;
+  -webkit-tap-highlight-color:transparent;
 }
-.hamburger-btn:active{background:var(--surface3);}
-.ham-line{
-  display:block;width:20px;height:2px;background:var(--text2);
-  border-radius:2px;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
-}
+.ham-line{display:block;width:18px;height:2px;background:var(--text2);border-radius:2px;transition:all .25s ease;}
 .hamburger-btn.open .ham-line:nth-child(1){transform:translateY(7px) rotate(45deg);}
 .hamburger-btn.open .ham-line:nth-child(2){opacity:0;transform:scaleX(0);}
 .hamburger-btn.open .ham-line:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
-/* ── Sidebar overlay ── */
-.sidebar-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,0.65);z-index:149;
-  -webkit-tap-highlight-color:transparent;
-}
+/* ── Sidebar drawer overlay ── */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:149;}
 
-/* ── Mobile card layout — rows as cards ── */
-.mobile-card-list{ display:none; }
+/* ── Mobile card list (hidden on desktop) ── */
+.mobile-card-list{display:none;}
 
-/* ══════════════════════════════════
-   TABLET ≤1024px
-   ══════════════════════════════════ */
-@media(max-width:1024px){
-  :root{--nav-w:200px;}
-  .kpi-strip{grid-template-columns:repeat(3,1fr);}
-  .kpi-box:nth-child(3n){border-right:none;}
-  .kpi-box:nth-child(4){border-top:1px solid var(--border);}
-  .amz-kpis{grid-template-columns:repeat(3,1fr);}
-  .launch-field-grid{grid-template-columns:1fr 1fr;}
-  .search-box{width:150px;}
-}
+/* ── Mobile-only injected elements — all hidden by default ── */
+#forge-bottom-bar,#forge-mobile-topbar,#forge-fullscreen-menu{display:none;}
 
-/* ══════════════════════════════════
-   MOBILE ≤768px  — Full Treatment
-   ══════════════════════════════════ */
+/* ━━━━━━━━━━━━━━━━━
+   ≤ 768px MOBILE
+   ━━━━━━━━━━━━━━━━━ */
 @media(max-width:768px){
 
-  /* Body */
-  body{overflow:hidden;}
+  /* Body lock when menu open */
+  body.mobile-menu-open{overflow:hidden;}
 
-  /* Hamburger visible */
-  .hamburger-btn{display:flex;}
+  /* ── Hide desktop sidebar & desktop topbar on mobile ── */
+  #forge-sidebar{display:none!important;}
+  .sidebar-overlay{display:none!important;}
+  .topbar{display:none!important;}
 
-  /* ── Sidebar drawer ── */
-  #forge-sidebar{
-    position:fixed;left:0;top:0;bottom:0;
-    width:280px;max-width:85vw;height:100dvh;
-    z-index:150;
-    transform:translateX(-100%);
-    transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
-    box-shadow:none;
+  /* ── Main area fills full width ── */
+  body{display:block!important;}
+  .main{
+    display:flex;flex-direction:column;
+    width:100vw;min-width:0;
+    height:100dvh;overflow:hidden;
   }
-  #forge-sidebar.mobile-open{
-    transform:translateX(0);
-    box-shadow:6px 0 32px rgba(0,0,0,0.5);
-  }
-  .sidebar-overlay.active{display:block;}
-  .main{width:100%;min-width:0;}
-
-  /* Bigger nav items in sidebar */
-  .nav-item{padding:13px 12px;min-height:52px;font-size:13.5px;gap:10px;}
-  .nav-icon{font-size:15px;width:20px;}
-  .nav-label{font-size:9.5px;padding:2px 10px;}
-  .logo{padding:20px 16px 16px;}
-  .logo-mark{font-size:19px;}
-  .logo-sub{font-size:9px;}
-
-  /* ── Topbar ── */
-  .topbar{
-    height:56px;padding:0 6px 0 4px;gap:4px;
-    overflow:visible;position:relative;
-  }
-  .topbar-title{font-size:14px;font-weight:700;margin-left:2px;}
-  .topbar-title span{display:none;}
-
-  /* Hide topbar items that don't fit on mobile */
-  .search-box{display:none;}
-  #drive-indicator{display:none;}
-  #undo-btn{display:none;}
-  #redo-btn{display:none;}
-  .mobile-hide{display:none!important;}
-
-  /* ── ALL touch targets 48px min ── */
-  .btn{min-height:48px;padding:12px 16px;font-size:13px;border-radius:10px;}
-  .btn-sm{min-height:44px;padding:10px 14px;font-size:12.5px;}
-  .filter-select{min-height:48px;padding:10px 12px;font-size:14px;border-radius:10px;}
-  .action-btn{min-height:40px;padding:8px 14px;font-size:12.5px;}
-  .modal-close{
-    width:48px;height:48px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:20px;border-radius:10px;
+  .content{
+    flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));
   }
 
-  /* ── Inputs — 16px prevents iOS zoom ── */
-  input,select,textarea,.form-input,.form-select{
-    min-height:48px;font-size:16px!important;
-    border-radius:10px!important;padding:12px 14px!important;
-  }
-
-  /* ── KPI strip: 2×3 grid ── */
-  .kpi-strip{
-    grid-template-columns:repeat(2,1fr);
+  /* ── Mobile topbar ── */
+  #forge-mobile-topbar{
+    display:flex!important;
+    align-items:center;justify-content:space-between;
+    height:52px;padding:0 12px;
+    background:var(--surface);
     border-bottom:1px solid var(--border);
+    flex-shrink:0;position:relative;z-index:100;
+    gap:8px;
   }
-  .kpi-box{padding:14px 14px;}
-  .kpi-box:nth-child(2n){border-right:none;}
-  .kpi-box:nth-child(n+3){border-top:1px solid var(--border);}
-  .kpi-label{font-size:9px;letter-spacing:0.5px;}
-  .kpi-value{font-size:20px;}
-  .kpi-delta{font-size:10.5px;margin-top:4px;}
+  #fmt-left{display:flex;align-items:center;gap:8px;}
+  #fmt-logo{font-size:15px;font-weight:800;letter-spacing:1px;color:var(--accent2);}
+  #fmt-page{font-size:12px;color:var(--text3);font-weight:500;}
+  #fmt-right{display:flex;align-items:center;gap:6px;}
+  .fmt-icon-btn{
+    display:flex;align-items:center;justify-content:center;
+    width:36px;height:36px;border-radius:8px;
+    background:var(--surface2);border:none;cursor:pointer;font-size:16px;
+    -webkit-tap-highlight-color:transparent;position:relative;
+    flex-shrink:0;
+  }
+  .fmt-icon-btn:active{background:var(--surface3);}
+  #fmt-notif-badge{
+    display:none;position:absolute;top:-3px;right:-3px;
+    min-width:14px;height:14px;border-radius:7px;
+    background:var(--red);color:#fff;font-size:8px;font-weight:700;
+    align-items:center;justify-content:center;padding:0 3px;
+  }
 
-  /* ── Filter bar ── */
-  .filter-bar{
-    padding:10px 12px;gap:8px;flex-wrap:wrap;
+  /* ── Bottom tab bar ── */
+  #forge-bottom-bar{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;
+    height:calc(56px + env(safe-area-inset-bottom,0px));
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    z-index:120;
   }
-  .filter-bar .btn{flex:1;min-width:0;justify-content:center;}
+  .fbb-tab{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:3px;border:none;background:transparent;
+    cursor:pointer;padding:6px 4px;
+    -webkit-tap-highlight-color:transparent;
+    color:var(--text3);font-size:9.5px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.4px;
+    transition:color .15s;
+  }
+  .fbb-tab:active{background:var(--surface2);}
+  .fbb-tab.active{color:var(--accent2);}
+  .fbb-icon{font-size:20px;line-height:1;}
+  .fbb-tab.active .fbb-icon{transform:translateY(-1px);}
+
+  /* ── Fullscreen overlay menu ── */
+  #forge-fullscreen-menu{
+    display:none;
+    position:fixed;inset:0;
+    background:var(--bg);z-index:200;
+    flex-direction:column;
+    transform:translateY(-100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    overflow-y:auto;
+  }
+  #forge-fullscreen-menu.open{
+    display:flex!important;
+    transform:translateY(0);
+  }
+  #ffm-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 16px 12px;
+    border-bottom:1px solid var(--border);flex-shrink:0;
+  }
+  #ffm-title{font-size:16px;font-weight:800;color:var(--accent2);letter-spacing:1px;}
+  #ffm-close{
+    width:40px;height:40px;border:none;background:var(--surface2);
+    border-radius:8px;font-size:20px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;color:var(--text);
+  }
+  #ffm-body{flex:1;padding:8px 12px 16px;overflow-y:auto;}
+  .ffm-section{margin-bottom:16px;}
+  .ffm-section-title{
+    font-size:9.5px;font-weight:700;color:var(--text3);
+    text-transform:uppercase;letter-spacing:1.2px;
+    padding:8px 6px 6px;
+  }
+  .ffm-item{
+    display:flex;align-items:center;gap:12px;
+    padding:13px 12px;border-radius:10px;
+    background:var(--surface);border:1px solid var(--border);
+    margin-bottom:6px;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .12s;
+  }
+  .ffm-item:active{background:var(--surface3);}
+  .ffm-item-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
+  .ffm-item-label{font-size:14px;font-weight:600;color:var(--text);flex:1;}
+  .ffm-item-badge{background:var(--red);color:#fff;font-size:9px;font-weight:700;
+    padding:2px 6px;border-radius:999px;}
+  .ffm-user-row{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 12px;
+    background:var(--surface2);border-radius:12px;
+    margin-bottom:12px;
+  }
+  .ffm-avatar{
+    width:42px;height:42px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:700;color:#fff;flex-shrink:0;
+  }
+  .ffm-user-info{flex:1;}
+  .ffm-user-name{font-size:14px;font-weight:700;color:var(--text);}
+  .ffm-user-role{font-size:11px;color:var(--text3);margin-top:1px;}
+
+  /* ── KPI strip: 2-col on mobile ── */
+  .kpi-strip{grid-template-columns:repeat(2,1fr)!important;}
+  .kpi-box:nth-child(2n){border-right:none!important;}
+  .kpi-box:nth-child(n+3){border-top:1px solid var(--border)!important;}
+  .kpi-value{font-size:20px!important;}
+  .kpi-label{font-size:9px!important;}
 
   /* ── Dashboard grid: single col ── */
-  .dash-grid{grid-template-columns:1fr;gap:12px;padding:12px;}
-  .dash-card-head{padding:13px 14px;font-size:11px;}
+  .dash-grid{grid-template-columns:1fr!important;gap:10px;padding:10px!important;}
 
   /* ── Form grids: single col ── */
-  .form-grid{grid-template-columns:1fr;gap:14px;}
-  .form-grid label{font-size:12.5px;font-weight:600;}
+  .form-grid{grid-template-columns:1fr!important;}
 
   /* ── AMZ kpis: 2 cols ── */
-  .amz-kpis{grid-template-columns:repeat(2,1fr);gap:10px;}
-  .amz-kpi{padding:13px 14px;}
-  .amz-kpi-val{font-size:20px;}
+  .amz-kpis{grid-template-columns:repeat(2,1fr)!important;}
 
-  /* ── Launch / ICC field grid: single col ── */
-  .launch-field-grid{grid-template-columns:1fr;}
-  .pi-grid{grid-template-columns:1fr;}
+  /* ── Launch/ICC field grid: 1 col ── */
+  .launch-field-grid{grid-template-columns:1fr!important;}
+  .pi-grid{grid-template-columns:1fr!important;}
 
-  /* ── Modals: bottom sheet ── */
-  .modal-overlay{align-items:flex-end!important;}
-  .modal{
-    width:100%!important;max-width:100%!important;
-    border-radius:20px 20px 0 0!important;
-    margin:0!important;
-    position:fixed!important;bottom:0!important;left:0!important;right:0!important;
-    max-height:94dvh!important;
-    transform:translateY(20px)!important;
+  /* ── Filter bar ── */
+  .filter-bar{padding:8px 10px!important;gap:7px!important;flex-wrap:wrap!important;}
+  .filter-select{
+    min-height:44px!important;font-size:15px!important;
+    border-radius:9px!important;padding:9px 11px!important;
   }
-  .modal-overlay.open .modal{transform:translateY(0)!important;}
-  /* Drag handle on modals */
-  .modal-head::before{
-    content:'';display:block;width:40px;height:4px;
-    background:var(--border2);border-radius:2px;
-    margin:0 auto 12px;
-  }
-  .modal-head{padding:8px 16px 13px;flex-direction:column;gap:0;}
-  .modal-head h3{font-size:16px;font-weight:700;text-align:left;width:100%;}
-  .modal-body{padding:16px;overflow-y:auto;}
-  .modal-foot{
-    padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px));
-    gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);
-  }
-  .modal-foot .btn{flex:1;min-width:140px;justify-content:center;font-size:14px;}
 
-  /* ── TABLES → CARD LAYOUT ── */
-  /* Hide desktop tables on mobile */
+  /* ── Tables → hidden, mobile card list shown ── */
   .table-wrap{display:none!important;}
-
-  /* Show mobile card lists */
   .mobile-card-list{
-    display:flex;flex-direction:column;gap:10px;
-    padding:12px;overflow-y:auto;
+    display:flex!important;flex-direction:column;gap:10px;
+    padding:10px 12px;
   }
 
-  /* Each data row becomes a card */
+  /* ── Mobile card styles ── */
   .m-card{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:14px;
-    padding:14px 16px;
-    display:flex;flex-direction:column;gap:8px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;padding:14px 16px;
+    display:flex;flex-direction:column;gap:9px;
   }
-  .m-card-head{
-    display:flex;align-items:center;justify-content:space-between;gap:8px;
-  }
+  .m-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .m-card-title{
     font-size:14px;font-weight:700;color:var(--text);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;
   }
-  .m-card-id{
-    font-size:11px;font-weight:600;color:var(--text3);
-    font-family:'JetBrains Mono',monospace;
-    background:var(--surface3);padding:2px 7px;border-radius:5px;
-    white-space:nowrap;
-  }
-  .m-card-row{
-    display:flex;align-items:center;justify-content:space-between;
-    font-size:12.5px;gap:8px;
-  }
-  .m-card-label{color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
-  .m-card-val{color:var(--text2);text-align:right;font-size:12.5px;}
+  .m-card-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;gap:8px;}
+  .m-card-label{color:var(--text3);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+  .m-card-val{color:var(--text2);text-align:right;font-size:12.5px;word-break:break-word;}
   .m-card-val.mono{font-family:'JetBrains Mono',monospace;color:var(--text);}
   .m-card-val.green{color:var(--green);font-weight:700;}
   .m-card-val.red{color:var(--red);font-weight:700;}
-  .m-card-val.yellow{color:var(--yellow);font-weight:700;}
   .m-card-val.blue{color:var(--accent2);font-weight:700;}
+  .m-card-val.yellow{color:var(--yellow);font-weight:700;}
   .m-card-divider{height:1px;background:var(--border);margin:2px 0;}
-  .m-card-actions{
-    display:flex;gap:8px;margin-top:4px;
-  }
-  .m-card-actions .btn{
-    flex:1;justify-content:center;
-    min-height:44px;font-size:13px;
-  }
-
-  /* ── Content safe area ── */
-  .content{padding-bottom:env(safe-area-inset-bottom,0px);}
-
-  /* ── Section headings inside pages ── */
-  .page-section-title{
-    font-size:18px;font-weight:700;
-    padding:16px 12px 8px;color:var(--text);
+  .m-card-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .m-card-stat{background:var(--surface2);border-radius:9px;padding:10px 12px;text-align:center;}
+  .m-card-stat-val{font-size:18px;font-weight:700;color:var(--text);}
+  .m-card-stat-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+  .m-card-actions{display:flex;gap:8px;margin-top:4px;}
+  .m-card-actions .btn,.m-card-actions button{
+    flex:1;justify-content:center;min-height:44px;
+    font-size:13px;border-radius:10px;
+    display:flex;align-items:center;
   }
 
-  /* ── ICC / Reorder / PnL ── */
-  .icc-kpi{padding:13px 14px;}
-  .icc-kpi-val{font-size:22px;}
-  .timeline-item{padding:13px 14px;border-radius:12px;}
+  /* ── Inputs — 16px prevents iOS zoom ── */
+  input,select,textarea,.form-input,.form-select{
+    font-size:16px!important;min-height:44px!important;
+  }
 
-  /* ── Admin panel ── */
-  [style*="repeat(auto-fill,minmax(160px"]{
-    grid-template-columns:repeat(2,1fr)!important;
+  /* ── Buttons ── */
+  .btn{min-height:44px!important;font-size:13.5px!important;}
+  .btn-sm{min-height:40px!important;}
+
+  /* ── Modals → bottom sheets ── */
+  .modal-overlay{align-items:flex-end!important;}
+  .modal{
+    width:100%!important;max-width:100%!important;
+    border-radius:18px 18px 0 0!important;
+    position:fixed!important;bottom:0!important;left:0!important;right:0!important;
+    max-height:94dvh!important;margin:0!important;
+    transform:translateY(0)!important;
   }
-  #admin-content>div[style*="max-width:420px"]{
-    max-width:100%!important;
+  .modal::before{
+    content:'';display:block;width:36px;height:4px;
+    background:var(--border2);border-radius:2px;
+    margin:10px auto 0;
   }
+  .modal-head{padding:10px 16px 13px!important;}
+  .modal-head h3{font-size:16px!important;}
+  .modal-body{padding:16px!important;}
+  .modal-foot{
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))!important;
+    flex-wrap:wrap!important;gap:8px!important;
+  }
+  .modal-foot .btn{flex:1!important;min-width:130px!important;justify-content:center!important;}
+  .modal-close{width:44px!important;height:44px!important;}
+
+  /* ── Admin/settings panels ── */
+  [style*="repeat(auto-fill,minmax(160px"]{grid-template-columns:repeat(2,1fr)!important;}
+  #admin-content [style*="max-width:420px"]{max-width:100%!important;}
 }
 
-/* ══════════════════════════════════
-   SMALL ≤480px
-   ══════════════════════════════════ */
+/* ━━━━━━━━━━━━━━━━━━
+   ≤ 480px EXTRA SMALL
+   ━━━━━━━━━━━━━━━━━━ */
 @media(max-width:480px){
-  .kpi-strip{grid-template-columns:1fr 1fr;}
-  .kpi-value{font-size:18px;}
-  .amz-kpis{grid-template-columns:1fr 1fr;}
-  .dash-grid{padding:8px;gap:8px;}
-  .topbar{height:52px;}
-  .modal-foot .btn{min-width:100px;}
+  .kpi-value{font-size:17px!important;}
+  .amz-kpis{grid-template-columns:1fr 1fr!important;}
+  .dash-grid{padding:8px!important;gap:8px!important;}
 }
 </style>
 </head>
@@ -7328,47 +7348,279 @@ async function adminTogglePermission(role, permKey, value){
 
 
 <script>
-/* ── FORGE Mobile Sidebar Controls ── */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE LAYER  — FORGE v3.2
+   Principle: Inject mobile UI on detection. Never touch desktop.
+   Desktop: sidebar, topbar, all existing JS — completely untouched.
+   Mobile:  replace with topbar + bottom tabs + fullscreen menu.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 (function(){
-  function openMobileSidebar(){
-    const sb=document.getElementById('forge-sidebar');
-    const ov=document.getElementById('sidebar-overlay');
-    const hb=document.getElementById('hamburger-btn');
-    if(!sb) return;
-    sb.classList.add('mobile-open');
-    if(ov) ov.classList.add('active');
-    if(hb){ hb.classList.add('open'); hb.setAttribute('aria-expanded','true'); }
-    document.body.style.overflow='hidden';
+'use strict';
+
+/* ── 1. Device detection ── */
+function _isMob(){ return window.innerWidth<=768; }
+
+/* ── 2. Nav module definitions (used in fullscreen menu) ── */
+const NAV_GROUPS=[
+  {title:'Operations',items:[
+    {id:'dashboard',icon:'📊',label:'Dashboard'},
+    {id:'products',icon:'📦',label:'Products'},
+    {id:'suppliers',icon:'🏭',label:'Suppliers'},
+    {id:'orders',icon:'📋',label:'Purchase Orders'},
+    {id:'freight',icon:'🚢',label:'Freight'},
+    {id:'inventory',icon:'📈',label:'Inventory'},
+    {id:'reorder',icon:'🔁',label:'Reorder Planner'},
+  ]},
+  {title:'Finance',items:[
+    {id:'profit',icon:'💰',label:'Landed Cost'},
+    {id:'pnl',icon:'📉',label:'P&L Statement'},
+    {id:'cashflow',icon:'💸',label:'Cashflow'},
+  ]},
+  {title:'Tools',items:[
+    {id:'amazon',icon:'🛒',label:'Amazon Central'},
+    {id:'prodinfo',icon:'🔍',label:'Product Info'},
+    {id:'feecalc',icon:'🧮',label:'Fee Calculator'},
+    {id:'fbaship',icon:'📤',label:'FBA Shipments'},
+    {id:'icc',icon:'⟳',label:'ICC Calculator'},
+    {id:'launch',icon:'🚀',label:'Launch Planner'},
+  ]},
+  {title:'System',items:[
+    {id:'activity',icon:'📝',label:'Activity Log'},
+    {id:'config',icon:'⚙️',label:'Config'},
+    {id:'admin',icon:'🛡️',label:'Admin Panel'},
+  ]},
+];
+
+/* ── 3. Inject mobile topbar ── */
+function _injectTopbar(){
+  if(document.getElementById('forge-mobile-topbar')) return;
+  const el=document.createElement('div');
+  el.id='forge-mobile-topbar';
+  el.innerHTML=`
+    <div id="fmt-left">
+      <button class="fmt-icon-btn" id="fmt-ham" onclick="ForgeMobile.openMenu()" aria-label="Menu">
+        <span style="font-size:18px">☰</span>
+      </button>
+      <div>
+        <div id="fmt-logo">FORGE</div>
+        <div id="fmt-page" id="fmt-page-label">Dashboard</div>
+      </div>
+    </div>
+    <div id="fmt-right">
+      <button class="fmt-icon-btn" id="fmt-notif" onclick="openNotificationPanel()" aria-label="Notifications">
+        🔔
+        <span id="fmt-notif-badge">0</span>
+      </button>
+      <button class="fmt-icon-btn" id="fmt-avatar" onclick="openForgeAuthPanel()" aria-label="Account" style="font-size:13px;font-weight:700;color:var(--text)">
+        <span id="fmt-avatar-label">👤</span>
+      </button>
+    </div>`;
+  // Insert before .main
+  const main=document.querySelector('.main');
+  if(main) main.parentNode.insertBefore(el,main);
+}
+
+/* ── 4. Inject bottom tab bar ── */
+function _injectBottomBar(){
+  if(document.getElementById('forge-bottom-bar')) return;
+  const tabs=[
+    {id:'dashboard',icon:'📊',label:'Home'},
+    {id:'inventory',icon:'📈',label:'Inventory'},
+    {id:'orders',icon:'📋',label:'Orders'},
+    {id:'activity',icon:'📝',label:'Activity'},
+  ];
+  const el=document.createElement('div');
+  el.id='forge-bottom-bar';
+  el.innerHTML=tabs.map(t=>`
+    <button class="fbb-tab" data-nav="${t.id}" onclick="ForgeMobile.navTo('${t.id}')" aria-label="${t.label}">
+      <span class="fbb-icon">${t.icon}</span>
+      <span>${t.label}</span>
+    </button>`).join('');
+  document.body.appendChild(el);
+}
+
+/* ── 5. Inject fullscreen overlay menu ── */
+function _injectFullscreenMenu(){
+  if(document.getElementById('forge-fullscreen-menu')) return;
+  const el=document.createElement('div');
+  el.id='forge-fullscreen-menu';
+  // Build user row dynamically at open-time; build nav items now
+  const navHTML=NAV_GROUPS.map(g=>`
+    <div class="ffm-section">
+      <div class="ffm-section-title">${g.title}</div>
+      ${g.items.map(it=>`
+        <div class="ffm-item" onclick="ForgeMobile.navTo('${it.id}');ForgeMobile.closeMenu()">
+          <span class="ffm-item-icon">${it.icon}</span>
+          <span class="ffm-item-label">${it.label}</span>
+        </div>`).join('')}
+    </div>`).join('');
+  el.innerHTML=`
+    <div id="ffm-head">
+      <div id="ffm-title">FORGE ERP</div>
+      <button id="ffm-close" onclick="ForgeMobile.closeMenu()" aria-label="Close">✕</button>
+    </div>
+    <div id="ffm-body">
+      <div class="ffm-user-row" id="ffm-user-row">
+        <div class="ffm-avatar" id="ffm-av">F</div>
+        <div class="ffm-user-info">
+          <div class="ffm-user-name" id="ffm-uname">Not signed in</div>
+          <div class="ffm-user-role" id="ffm-urole">Sign in to continue</div>
+        </div>
+      </div>
+      ${navHTML}
+      <div style="height:24px"></div>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+/* ── 6. Sync notification badge to mobile topbar ── */
+function _syncNotifBadge(){
+  const src=document.getElementById('notif-badge');
+  const dst=document.getElementById('fmt-notif-badge');
+  if(!src||!dst) return;
+  const n=src.textContent||'0';
+  const show=src.style.display!=='none'&&parseInt(n)>0;
+  dst.style.display=show?'flex':'none';
+  dst.textContent=n;
+}
+
+/* ── 7. Update mobile topbar page label ── */
+function _updatePageLabel(pageId){
+  const el=document.getElementById('fmt-page');
+  if(!el) return;
+  for(const g of NAV_GROUPS){
+    const found=g.items.find(i=>i.id===pageId);
+    if(found){el.textContent=found.label;return;}
   }
-  function closeMobileSidebar(){
-    const sb=document.getElementById('forge-sidebar');
-    const ov=document.getElementById('sidebar-overlay');
-    const hb=document.getElementById('hamburger-btn');
-    if(!sb) return;
-    sb.classList.remove('mobile-open');
-    if(ov) ov.classList.remove('active');
-    if(hb){ hb.classList.remove('open'); hb.setAttribute('aria-expanded','false'); }
-    document.body.style.overflow='';
-  }
-  function toggleMobileSidebar(){
-    const sb=document.getElementById('forge-sidebar');
-    if(!sb) return;
-    sb.classList.contains('mobile-open') ? closeMobileSidebar() : openMobileSidebar();
-  }
-  // Close sidebar when a nav item is tapped on mobile
-  function _isMobile(){ return window.innerWidth<=768; }
-  document.addEventListener('click',function(e){
-    const ni=e.target.closest('.nav-item');
-    if(ni && _isMobile()) closeMobileSidebar();
+  el.textContent='';
+}
+
+/* ── 8. Update bottom bar active tab ── */
+function _updateBottomBar(pageId){
+  document.querySelectorAll('.fbb-tab').forEach(t=>{
+    t.classList.toggle('active',t.dataset.nav===pageId);
   });
-  // Close on Escape
-  document.addEventListener('keydown',function(e){
-    if(e.key==='Escape') closeMobileSidebar();
-  });
-  // Expose globally
-  window.toggleMobileSidebar=toggleMobileSidebar;
-  window.closeMobileSidebar=closeMobileSidebar;
-  window.openMobileSidebar=openMobileSidebar;
+}
+
+/* ── 9. Update user info in fullscreen menu ── */
+function _updateMenuUser(){
+  const uname=document.getElementById('ffm-uname');
+  const urole=document.getElementById('ffm-urole');
+  const uav=document.getElementById('ffm-av');
+  if(!uname) return;
+  // Read from existing auth label
+  const authLabel=document.getElementById('forge-auth-label');
+  const roleDot=document.getElementById('user-role-dot');
+  if(authLabel&&authLabel.textContent&&authLabel.textContent!=='Sign in'){
+    uname.textContent=authLabel.textContent;
+    if(uav) uav.textContent=(authLabel.textContent[0]||'F').toUpperCase();
+    if(urole&&typeof ForgeFirebaseService!=='undefined'){
+      const u=ForgeFirebaseService.getCurrentUser();
+      if(u) urole.textContent=u.role||'viewer';
+    }
+    // Update avatar button in topbar
+    const av=document.getElementById('fmt-avatar-label');
+    if(av) av.textContent=(authLabel.textContent[0]||'👤').toUpperCase();
+  }
+}
+
+/* ── 10. Activate mobile layer ── */
+function _activate(){
+  document.body.classList.add('forge-mobile-active');
+  _injectTopbar();
+  _injectBottomBar();
+  _injectFullscreenMenu();
+  // Sync badge periodically
+  setInterval(_syncNotifBadge,2000);
+  // Hook into nav() to update labels and bottom bar
+  const _origNav=window.nav;
+  window.nav=function(page){
+    const r=_origNav?_origNav(page):undefined;
+    _updatePageLabel(page);
+    _updateBottomBar(page);
+    _updateMenuUser();
+    return r;
+  };
+  // Set initial state
+  const curPage=(()=>{
+    const active=document.querySelector('.page.active');
+    return active?active.id.replace('page-',''):'dashboard';
+  })();
+  _updatePageLabel(curPage);
+  _updateBottomBar(curPage);
+  // Sync user after short delay (Firebase auth may not be ready yet)
+  setTimeout(_updateMenuUser,1500);
+  setTimeout(_updateMenuUser,4000);
+}
+
+/* ── 11. Deactivate (on resize back to desktop) ── */
+function _deactivate(){
+  document.body.classList.remove('forge-mobile-active');
+  const ids=['forge-mobile-topbar','forge-bottom-bar','forge-fullscreen-menu'];
+  ids.forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+}
+
+/* ── 12. Public API ── */
+window.ForgeMobile={
+  openMenu:function(){
+    const m=document.getElementById('forge-fullscreen-menu');
+    if(!m) return;
+    _updateMenuUser();
+    m.classList.add('open');
+    document.body.classList.add('mobile-menu-open');
+  },
+  closeMenu:function(){
+    const m=document.getElementById('forge-fullscreen-menu');
+    if(!m) return;
+    m.classList.remove('open');
+    document.body.classList.remove('mobile-menu-open');
+  },
+  navTo:function(page){
+    if(typeof nav==='function') nav(page);
+  },
+};
+
+/* ── 13. Backward-compat: sidebar toggle (no-op on mobile — menu replaces it) ── */
+window.toggleMobileSidebar=function(){
+  if(_isMob()) ForgeMobile.openMenu();
+};
+window.closeMobileSidebar=function(){
+  if(_isMob()) ForgeMobile.closeMenu();
+};
+window.openMobileSidebar=function(){
+  if(_isMob()) ForgeMobile.openMenu();
+};
+
+/* ── 14. Init + resize listener ── */
+let _mobileActive=false;
+function _check(){
+  const shouldBeMobile=_isMob();
+  if(shouldBeMobile&&!_mobileActive){
+    _mobileActive=true;
+    _activate();
+  } else if(!shouldBeMobile&&_mobileActive){
+    _mobileActive=false;
+    _deactivate();
+  }
+}
+// Run on DOM ready
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',_check);
+} else {
+  _check();
+}
+// Run on resize (debounced)
+let _rt;
+window.addEventListener('resize',function(){
+  clearTimeout(_rt);
+  _rt=setTimeout(_check,120);
+});
+
+// Close fullscreen menu on Escape
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') ForgeMobile.closeMenu();
+});
+
 })();
 </script>
 </body>
