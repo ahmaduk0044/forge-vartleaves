@@ -1537,9 +1537,16 @@ function nav(name){
  CP=name;
  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
- document.getElementById('page-'+name).classList.add('active');
- document.getElementById('page-title').innerHTML=`${NTITLES[name]} <span>${NSUBS[name]}</span>`;
- document.getElementById('add-btn').style.display=ADDP[name]?'flex':'none';
+ const pg=document.getElementById('page-'+name);
+ if(pg) pg.classList.add('active');
+ // page-title lives in desktop topbar (hidden on mobile) — null-safe
+ const ptEl=document.getElementById('page-title');
+ if(ptEl) ptEl.innerHTML=`${NTITLES[name]} <span>${NSUBS[name]}</span>`;
+ // add-btn lives in desktop topbar — null-safe + sync mobile add btn
+ const addEl=document.getElementById('add-btn');
+ if(addEl) addEl.style.display=ADDP[name]?'flex':'none';
+ const mAddEl=document.getElementById('fmt-add-btn');
+ if(mAddEl) mAddEl.style.display=ADDP[name]?'flex':'none';
  document.querySelectorAll('.nav-item')[NIDX[name]]?.classList.add('active');
  rp();
 }
@@ -1661,12 +1668,12 @@ function renderProducts(){
    </div>
    <div class="m-card-divider"></div>
    <div class="m-card-row">
-    <span class="m-card-label">Cost RMB</span>
-    <span class="m-card-val mono">¥${p.costRmb}</span>
+    <span class="m-card-label">Sell Price</span>
+    <span class="m-card-val mono green">${p.sellGbp?fmt(p.sellGbp):fmt(cgbp(p))}</span>
    </div>
    <div class="m-card-row">
-    <span class="m-card-label">Cost GBP</span>
-    <span class="m-card-val mono green">${fmt(cgbp(p))}</span>
+    <span class="m-card-label">Cost RMB</span>
+    <span class="m-card-val mono">¥${p.costRmb||'—'}</span>
    </div>
    ${p.asin?`<div class="m-card-row"><span class="m-card-label">ASIN</span><span class="m-card-val mono">${p.asin}</span></div>`:''}
    <div class="m-card-row">
@@ -7417,6 +7424,13 @@ function _injectTopbar(){
     <div id="fmt-right">
       <button class="fmt-icon-btn" id="fmt-undo" onclick="undoAction()" aria-label="Undo" title="Undo" style="opacity:0.35;font-size:15px">↩</button>
       <button class="fmt-icon-btn" id="fmt-redo" onclick="redoAction()" aria-label="Redo" title="Redo" style="opacity:0.35;font-size:15px">↪</button>
+      <button id="fmt-add-btn" onclick="openAddModal()" aria-label="Add New"
+        style="display:none;align-items:center;gap:4px;padding:6px 12px;
+               background:var(--accent);color:white;border:none;border-radius:8px;
+               font-size:12px;font-weight:700;cursor:pointer;min-height:34px;
+               -webkit-tap-highlight-color:transparent;">
+        + Add
+      </button>
       <button class="fmt-icon-btn" id="fmt-notif" onclick="openNotificationPanel()" aria-label="Notifications">
         🔔
         <span id="fmt-notif-badge">0</span>
@@ -7540,17 +7554,22 @@ function _activate(){
   _injectTopbar();
   _injectBottomBar();
   _injectFullscreenMenu();
-  // Sync badge periodically
-  setInterval(_syncNotifBadge,2000);
-  // Hook into nav() to update labels and bottom bar
-  const _origNav=window.nav;
-  window.nav=function(page){
-    const r=_origNav?_origNav(page):undefined;
-    _updatePageLabel(page);
-    _updateBottomBar(page);
-    _updateMenuUser();
-    return r;
-  };
+  // Sync badge periodically (only set up once)
+  if(!window._forgeMobileBadgeTimer){
+    window._forgeMobileBadgeTimer=setInterval(_syncNotifBadge,2000);
+  }
+  // Hook into nav() once only — guard against double-wrap on resize
+  if(!window._forgeMobileNavWrapped){
+    window._forgeMobileNavWrapped=true;
+    const _origNav=window.nav;
+    window.nav=function(page){
+      const r=_origNav?_origNav(page):undefined;
+      _updatePageLabel(page);
+      _updateBottomBar(page);
+      _updateMenuUser();
+      return r;
+    };
+  }
   // Set initial state
   const curPage=(()=>{
     const active=document.querySelector('.page.active');
@@ -7558,6 +7577,13 @@ function _activate(){
   })();
   _updatePageLabel(curPage);
   _updateBottomBar(curPage);
+  // Re-render current page so mobile cards populate
+  if(typeof rp==='function') setTimeout(rp,50);
+  // Also init fmt-add-btn visibility
+  if(typeof ADDP!=='undefined'&&typeof CP!=='undefined'){
+    const mab=document.getElementById('fmt-add-btn');
+    if(mab) mab.style.display=ADDP[CP]?'flex':'none';
+  }
   // Sync user after short delay (Firebase auth may not be ready yet)
   setTimeout(_updateMenuUser,1500);
   setTimeout(_updateMenuUser,4000);
