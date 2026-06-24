@@ -622,6 +622,95 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
   .amz-kpis{grid-template-columns:1fr 1fr!important;}
   .dash-grid{padding:8px!important;gap:8px!important;}
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE WORKSPACE STYLES
+   ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media(max-width:768px){
+  /* ── KPI scroll strip ── */
+  .mws-kpi-scroll{
+    display:flex;gap:10px;overflow-x:auto;
+    padding:12px 12px 4px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .mws-kpi-scroll::-webkit-scrollbar{display:none;}
+  .mws-kpi-card{
+    flex-shrink:0;background:var(--surface);
+    border:1px solid var(--border);border-radius:12px;
+    padding:12px 16px;min-width:110px;text-align:center;
+  }
+  .mws-kpi-val{font-size:20px;font-weight:800;color:var(--text);line-height:1.1;margin-bottom:3px;}
+  .mws-kpi-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+  .mws-kpi-sub{font-size:10px;color:var(--green);margin-top:2px;}
+
+  /* ── Section header ── */
+  .mws-section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 12px 6px;
+  }
+  .mws-section-title{font-size:13px;font-weight:700;color:var(--text);}
+  .mws-section-link{font-size:11.5px;color:var(--accent2);font-weight:600;cursor:pointer;background:none;border:none;padding:0;}
+
+  /* ── Data rows in workspace ── */
+  .mws-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:11px 12px;border-bottom:1px solid var(--border);
+    gap:10px;
+  }
+  .mws-row:last-child{border-bottom:none;}
+  .mws-row-left{flex:1;min-width:0;}
+  .mws-row-title{font-size:13px;font-weight:600;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mws-row-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+  .mws-row-right{text-align:right;flex-shrink:0;}
+  .mws-row-val{font-size:13px;font-weight:700;color:var(--text);}
+  .mws-row-sub2{font-size:10.5px;color:var(--text3);margin-top:1px;}
+
+  /* ── Alert card ── */
+  .mws-alert{
+    margin:0 12px 8px;padding:11px 13px;
+    border-radius:10px;border-left:3px solid var(--yellow);
+    background:rgba(234,179,8,.08);
+    display:flex;align-items:center;gap:10px;
+  }
+  .mws-alert.red{border-color:var(--red);background:rgba(239,68,68,.08);}
+  .mws-alert.green{border-color:var(--green);background:rgba(16,185,129,.08);}
+  .mws-alert-icon{font-size:18px;flex-shrink:0;}
+  .mws-alert-text{font-size:12px;color:var(--text2);line-height:1.4;}
+
+  /* ── Quick action grid ── */
+  .mws-qa-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:8px;padding:8px 12px 12px;
+  }
+  .mws-qa-btn{
+    display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:12px 6px;background:var(--surface);border:1px solid var(--border);
+    border-radius:11px;cursor:pointer;min-height:66px;
+    -webkit-tap-highlight-color:transparent;
+    font-size:10.5px;font-weight:600;color:var(--text2);
+    text-align:center;line-height:1.3;
+  }
+  .mws-qa-btn:active{background:var(--surface3);}
+  .mws-qa-icon{font-size:22px;}
+
+  /* ── Workspace container ── */
+  .mws-workspace{display:none;flex-direction:column;overflow-y:auto;flex:1;}
+  .mws-workspace.active{display:flex;}
+  .mws-surface{background:var(--surface);border-radius:12px;margin:0 12px 10px;overflow:hidden;border:1px solid var(--border);}
+  .mws-empty{text-align:center;padding:32px 16px;color:var(--text3);}
+  .mws-empty-icon{font-size:36px;margin-bottom:8px;}
+  .mws-cta-btn{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    margin:0 12px 12px;padding:13px;
+    background:var(--accent);color:#fff;border:none;
+    border-radius:11px;font-size:14px;font-weight:700;
+    cursor:pointer;min-height:48px;
+    -webkit-tap-highlight-color:transparent;width:calc(100% - 24px);
+  }
+  .mws-cta-btn:active{opacity:.85;}
+}
 </style>
 </head>
 <body>
@@ -6788,6 +6877,8 @@ async function adminTogglePermission(role, permKey, value){
     }
 
     // ── Get notifications for current user (most recent first) ──
+    // NOTE: .where+.orderBy requires a Firestore composite index.
+    // Fallback: if that fails (no index), fetch without orderBy and sort client-side.
     async function getMyNotifications(uid, limit){
       if(!_db) return [];
       try{
@@ -6801,9 +6892,27 @@ async function adminTogglePermission(role, permKey, value){
         _cache=list;
         return list;
       }catch(err){
-        console.warn('[ForgeNotification] getMyNotifications failed:',err.message);
-        return [];
-      }
+        // Composite index missing — fallback: fetch all for this user, sort client-side
+        console.warn('[ForgeNotification] orderBy query failed (likely missing index), using fallback:',err.message);
+        try{
+          const snap2 = await _db.collection(COLLECTION)
+            .where('targetUid','==',uid)
+            .limit(limit||30)
+            .get();
+          const list2=[];
+          snap2.forEach(doc=>list2.push({id:doc.id,...doc.data()}));
+          // Sort client-side by createdAt descending
+          list2.sort((a,b)=>{
+            const ta=a.createdAt?.toMillis?a.createdAt.toMillis():0;
+            const tb=b.createdAt?.toMillis?b.createdAt.toMillis():0;
+            return tb-ta;
+          });
+          _cache=list2;
+          return list2;
+        }catch(err2){
+          console.warn('[ForgeNotification] fallback also failed:',err2.message);
+          return [];
+        }
     }
 
     // ── Mark one notification as read ──
@@ -6829,9 +6938,11 @@ async function adminTogglePermission(role, permKey, value){
     }
 
     // ── Live listener — fires callback whenever notifications change ──
+    // Falls back to no-orderBy listener if composite index is missing
     function listen(uid, callback){
       if(!_db) return ()=>{};
       if(_unsubscribe) _unsubscribe();
+      // Try with orderBy first
       _unsubscribe = _db.collection(COLLECTION)
         .where('targetUid','==',uid)
         .orderBy('createdAt','desc')
@@ -6841,8 +6952,26 @@ async function adminTogglePermission(role, permKey, value){
           snap.forEach(doc=>list.push({id:doc.id,...doc.data()}));
           _cache=list;
           callback(list);
-        }, err=>console.warn('[ForgeNotification] listener error:',err.message));
-      return _unsubscribe;
+        }, err=>{
+          console.warn('[ForgeNotification] ordered listener failed, falling back:',err.message);
+          // Fallback: listen without orderBy, sort client-side
+          if(_unsubscribe) _unsubscribe();
+          _unsubscribe = _db.collection(COLLECTION)
+            .where('targetUid','==',uid)
+            .limit(30)
+            .onSnapshot(snap=>{
+              const list=[];
+              snap.forEach(doc=>list.push({id:doc.id,...doc.data()}));
+              list.sort((a,b)=>{
+                const ta=a.createdAt?.toMillis?a.createdAt.toMillis():0;
+                const tb=b.createdAt?.toMillis?b.createdAt.toMillis():0;
+                return tb-ta;
+              });
+              _cache=list;
+              callback(list);
+            }, err2=>console.warn('[ForgeNotification] fallback listener error:',err2.message));
+        });
+      return ()=>{ if(_unsubscribe) _unsubscribe(); };
     }
 
     function getCache(){ return _cache; }
@@ -7449,14 +7578,17 @@ function _injectBottomBar(){
   if(document.getElementById('forge-bottom-bar')) return;
   const tabs=[
     {id:'dashboard',icon:'📊',label:'Home'},
-    {id:'inventory',icon:'📈',label:'Inventory'},
     {id:'orders',icon:'📋',label:'Orders'},
+    {id:'inventory',icon:'📈',label:'Inventory'},
     {id:'activity',icon:'📝',label:'Activity'},
+    {id:'__more__',icon:'⋯',label:'More'},
   ];
   const el=document.createElement('div');
   el.id='forge-bottom-bar';
   el.innerHTML=tabs.map(t=>`
-    <button class="fbb-tab" data-nav="${t.id}" onclick="ForgeMobile.navTo('${t.id}')" aria-label="${t.label}">
+    <button class="fbb-tab" data-nav="${t.id}"
+      onclick="${t.id==='__more__'?'ForgeMobile.openMorePanel()':'ForgeMobile.navTo(\"'+t.id+'\")'}"
+      aria-label="${t.label}">
       <span class="fbb-icon">${t.icon}</span>
       <span>${t.label}</span>
     </button>`).join('');
@@ -7554,6 +7686,7 @@ function _activate(){
   _injectTopbar();
   _injectBottomBar();
   _injectFullscreenMenu();
+  _injectMorePanel();
   // Sync badge periodically (only set up once)
   if(!window._forgeMobileBadgeTimer){
     window._forgeMobileBadgeTimer=setInterval(_syncNotifBadge,2000);
@@ -7563,10 +7696,15 @@ function _activate(){
     window._forgeMobileNavWrapped=true;
     const _origNav=window.nav;
     window.nav=function(page){
+      // Restore any mobile-hidden desktop pages before switching
+      const prev=document.getElementById('page-'+(typeof CP!=='undefined'?CP:''));
+      if(prev&&prev._mobileHidden){ prev.style.display=''; prev._mobileHidden=false; }
       const r=_origNav?_origNav(page):undefined;
       _updatePageLabel(page);
       _updateBottomBar(page);
       _updateMenuUser();
+      // Show workspace overlay for primary tabs
+      if(_isMob()) _showWorkspace(page);
       return r;
     };
   }
@@ -7579,6 +7717,9 @@ function _activate(){
   _updateBottomBar(curPage);
   // Re-render current page so mobile cards populate
   if(typeof rp==='function') setTimeout(rp,50);
+  // Inject workspace container + show initial workspace
+  _injectWorkspaceContainer();
+  setTimeout(()=>_showWorkspace(typeof CP!=='undefined'?CP:'dashboard'),80);
   // Also init fmt-add-btn visibility
   if(typeof ADDP!=='undefined'&&typeof CP!=='undefined'){
     const mab=document.getElementById('fmt-add-btn');
@@ -7592,8 +7733,47 @@ function _activate(){
 /* ── 11. Deactivate (on resize back to desktop) ── */
 function _deactivate(){
   document.body.classList.remove('forge-mobile-active');
-  const ids=['forge-mobile-topbar','forge-bottom-bar','forge-fullscreen-menu'];
+  const ids=['forge-mobile-topbar','forge-bottom-bar','forge-fullscreen-menu','forge-more-panel'];
   ids.forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+}
+
+/* ── 11b. More Panel inject ── */
+function _injectMorePanel(){
+  if(document.getElementById('forge-more-panel')) return;
+  const items=[
+    {icon:'🧮',label:'FBA Calculator',id:'feecalc'},
+    {icon:'🚢',label:'Freight Calc',id:'freight'},
+    {icon:'📉',label:'P&L',id:'pnl'},
+    {icon:'💸',label:'Cashflow',id:'cashflow'},
+    {icon:'🏭',label:'Suppliers',id:'suppliers'},
+    {icon:'🔍',label:'Product Info',id:'prodinfo'},
+    {icon:'🚀',label:'Launch Planner',id:'launch'},
+    {icon:'📤',label:'FBA Ships',id:'fbaship'},
+    {icon:'⟳',label:'ICC Calc',id:'icc'},
+    {icon:'🛒',label:'Amazon',id:'amazon'},
+    {icon:'💰',label:'Landed Cost',id:'profit'},
+    {icon:'⚙️',label:'Config',id:'config'},
+    {icon:'🛡️',label:'Admin',id:'admin'},
+  ];
+  const el=document.createElement('div');
+  el.id='forge-more-panel';
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)">
+      <div style="font-size:16px;font-weight:800;color:var(--accent2)">More</div>
+      <button onclick="ForgeMobile.closeMorePanel()" style="width:40px;height:40px;border:none;background:var(--surface2);border-radius:8px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:80px">
+      ${items.map(it=>`
+        <button onclick="ForgeMobile.navTo('${it.id}');ForgeMobile.closeMorePanel()"
+          style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+                 padding:16px 8px;background:var(--surface);border:1px solid var(--border);
+                 border-radius:12px;cursor:pointer;min-height:78px;
+                 -webkit-tap-highlight-color:transparent;transition:background .1s">
+          <span style="font-size:26px">${it.icon}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--text2);text-align:center;line-height:1.3">${it.label}</span>
+        </button>`).join('')}
+    </div>`;
+  document.body.appendChild(el);
 }
 
 /* ── 12. Public API ── */
@@ -7611,10 +7791,307 @@ window.ForgeMobile={
     m.classList.remove('open');
     document.body.classList.remove('mobile-menu-open');
   },
+  openMorePanel:function(){
+    _injectMorePanel();
+    const mp=document.getElementById('forge-more-panel');
+    if(!mp) return;
+    mp.style.display='flex';
+    mp.style.flexDirection='column';
+    mp.style.position='fixed';
+    mp.style.inset='0';
+    mp.style.background='var(--bg)';
+    mp.style.zIndex='201';
+    mp.style.overflowY='auto';
+    // Mark More tab as active
+    document.querySelectorAll('.fbb-tab').forEach(t=>{
+      t.classList.toggle('active',t.dataset.nav==='__more__');
+    });
+    document.body.classList.add('mobile-menu-open');
+  },
+  closeMorePanel:function(){
+    const mp=document.getElementById('forge-more-panel');
+    if(mp) mp.style.display='none';
+    document.body.classList.remove('mobile-menu-open');
+    // Restore active tab
+    if(typeof CP!=='undefined'){
+      document.querySelectorAll('.fbb-tab').forEach(t=>{
+        t.classList.toggle('active',t.dataset.nav===CP);
+      });
+    }
+  },
   navTo:function(page){
     if(typeof nav==='function') nav(page);
   },
 };
+
+/* ── 12b. Mobile Workspace Renderers ── */
+
+function _renderMobileHome(){
+  // Read live data from DB
+  const totalOrders = DB.orders ? DB.orders.length : 0;
+  const pendingOrders = DB.orders ? DB.orders.filter(o=>o.stage!=='Delivered').length : 0;
+  const totalInv = DB.inventory ? DB.inventory.reduce((s,i)=>{
+    const avail=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
+    return s+avail;
+  },0) : 0;
+  const lowStock = DB.inventory ? DB.inventory.filter(i=>{
+    const avail=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
+    return avail>0&&avail<=(i.reorderPoint||20);
+  }).length : 0;
+  const outStock = DB.inventory ? DB.inventory.filter(i=>{
+    return (i.fba||0)+(i.tpl||0)+(i.warehouse||0)===0;
+  }).length : 0;
+  const recentOrders = DB.orders ? [...DB.orders].sort((a,b)=>b.date>a.date?1:-1).slice(0,3) : [];
+  const alerts = [];
+  if(outStock>0) alerts.push({type:'red',icon:'🔴',text:`${outStock} SKU${outStock>1?'s':''} out of stock`});
+  if(lowStock>0) alerts.push({type:'yellow',icon:'⚠️',text:`${lowStock} SKU${lowStock>1?'s':''} low stock — reorder soon`});
+  const pendingPayment = DB.orders ? DB.orders.filter(o=>o.payStatus==='Unpaid'||o.payStatus==='Partial').length : 0;
+  if(pendingPayment>0) alerts.push({type:'yellow',icon:'💳',text:`${pendingPayment} order${pendingPayment>1?'s':''} with payment pending`});
+
+  return `
+    <div class="mws-kpi-scroll">
+      <div class="mws-kpi-card">
+        <div class="mws-kpi-val">${totalOrders}</div>
+        <div class="mws-kpi-label">Total Orders</div>
+      </div>
+      <div class="mws-kpi-card">
+        <div class="mws-kpi-val" style="color:var(--yellow)">${pendingOrders}</div>
+        <div class="mws-kpi-label">Pending</div>
+      </div>
+      <div class="mws-kpi-card">
+        <div class="mws-kpi-val">${totalInv}</div>
+        <div class="mws-kpi-label">Total Stock</div>
+      </div>
+      <div class="mws-kpi-card">
+        <div class="mws-kpi-val" style="color:${outStock>0?'var(--red)':'var(--green)'}">${outStock}</div>
+        <div class="mws-kpi-label">Out of Stock</div>
+      </div>
+      <div class="mws-kpi-card">
+        <div class="mws-kpi-val" style="color:var(--text2)">${DB.products?DB.products.length:0}</div>
+        <div class="mws-kpi-label">Products</div>
+      </div>
+    </div>
+    ${alerts.length?alerts.map(a=>`<div class="mws-alert ${a.type}"><span class="mws-alert-icon">${a.icon}</span><span class="mws-alert-text">${a.text}</span></div>`).join(''):''}
+    <div class="mws-section-head">
+      <span class="mws-section-title">Quick Actions</span>
+    </div>
+    <div class="mws-qa-grid">
+      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('orders')"><span class="mws-qa-icon">➕</span>New Order</button>
+      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('inventory')"><span class="mws-qa-icon">📦</span>Add Stock</button>
+      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('feecalc')"><span class="mws-qa-icon">🧮</span>FBA Calc</button>
+      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('freight')"><span class="mws-qa-icon">🚢</span>Freight</button>
+      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('pnl')"><span class="mws-qa-icon">📉</span>P&L</button>
+      <button class="mws-qa-btn" onclick="ForgeMobile.openMorePanel()"><span class="mws-qa-icon">⋯</span>More</button>
+    </div>
+    ${recentOrders.length?`
+    <div class="mws-section-head">
+      <span class="mws-section-title">Recent Orders</span>
+      <button class="mws-section-link" onclick="ForgeMobile.navTo('orders')">See all</button>
+    </div>
+    <div class="mws-surface">
+      ${recentOrders.map(o=>{
+        const p=typeof gp==='function'?gp(o.sku):{name:o.sku};
+        return `<div class="mws-row">
+          <div class="mws-row-left">
+            <div class="mws-row-title">${o.poNum}</div>
+            <div class="mws-row-sub">${p.name||o.sku} · ${o.date}</div>
+          </div>
+          <div class="mws-row-right">
+            <div class="mws-row-val">${typeof fmt==='function'?fmt(o.paid):'—'}</div>
+            <div class="mws-row-sub2">${o.stage}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:''}`;
+}
+
+function _renderMobileOrders(){
+  const orders = DB.orders||[];
+  const total   = orders.length;
+  const pending = orders.filter(o=>['Placed','Confirmed','Production'].includes(o.stage)).length;
+  const transit = orders.filter(o=>['Ready to Ship','Shipped'].includes(o.stage)).length;
+  const delivered= orders.filter(o=>o.stage==='Delivered').length;
+  const recent  = [...orders].sort((a,b)=>b.date>a.date?1:-1).slice(0,8);
+  return `
+    <div class="mws-kpi-scroll">
+      <div class="mws-kpi-card"><div class="mws-kpi-val">${total}</div><div class="mws-kpi-label">Total</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--yellow)">${pending}</div><div class="mws-kpi-label">Pending</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--accent2)">${transit}</div><div class="mws-kpi-label">In Transit</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--green)">${delivered}</div><div class="mws-kpi-label">Delivered</div></div>
+    </div>
+    <button class="mws-cta-btn" onclick="if(typeof openAddModal==='function')openAddModal()">➕ Create New Order</button>
+    <div class="mws-section-head">
+      <span class="mws-section-title">Recent Orders</span>
+      <button class="mws-section-link" onclick="ForgeMobile.navTo('orders')">Full View</button>
+    </div>
+    <div class="mws-surface">
+      ${recent.length?recent.map(o=>{
+        const p=typeof gp==='function'?gp(o.sku):{name:o.sku};
+        const stageColors={'Delivered':'var(--green)','Shipped':'var(--accent2)','Ready to Ship':'var(--accent2)','Placed':'var(--yellow)','Confirmed':'var(--yellow)','Production':'var(--text3)'};
+        return `<div class="mws-row">
+          <div class="mws-row-left">
+            <div class="mws-row-title">${o.poNum}</div>
+            <div class="mws-row-sub">${p.name||o.sku} · ${o.qty} units</div>
+          </div>
+          <div class="mws-row-right">
+            <div class="mws-row-val" style="color:${stageColors[o.stage]||'var(--text)'}">${o.stage}</div>
+            <div class="mws-row-sub2">${o.date}</div>
+          </div>
+        </div>`;
+      }).join(''):'<div class="mws-empty"><div class="mws-empty-icon">📋</div><div>No orders yet</div></div>'}
+    </div>`;
+}
+
+function _renderMobileInventory(){
+  const inv = DB.inventory||[];
+  const avail  = inv.reduce((s,i)=>{const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);return s+a;},0);
+  const low    = inv.filter(i=>{const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);return a>0&&a<=(i.reorderPoint||20);});
+  const out    = inv.filter(i=>(i.fba||0)+(i.tpl||0)+(i.warehouse||0)===0);
+  const inTrans= inv.reduce((s,i)=>{const t=typeof getInTransit==='function'?getInTransit(i.sku):0;return s+t;},0);
+  const value  = inv.reduce((s,i)=>{
+    const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
+    const p=typeof gp==='function'?gp(i.sku):{};
+    const cost=typeof cgbp==='function'?cgbp(p):0;
+    return s+(a*cost);
+  },0);
+  const sorted = [...inv].sort((a,b)=>{
+    const aa=(a.fba||0)+(a.tpl||0)+(a.warehouse||0);
+    const ba=(b.fba||0)+(b.tpl||0)+(b.warehouse||0);
+    return aa-ba;
+  }).slice(0,8);
+  return `
+    <div class="mws-kpi-scroll">
+      <div class="mws-kpi-card"><div class="mws-kpi-val">${avail}</div><div class="mws-kpi-label">Available</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--yellow)">${low.length}</div><div class="mws-kpi-label">Low Stock</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--red)">${out.length}</div><div class="mws-kpi-label">Out of Stock</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--accent2)">${inTrans}</div><div class="mws-kpi-label">Incoming</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="font-size:14px">${typeof fmt==='function'?fmt(value):'—'}</div><div class="mws-kpi-label">Value</div></div>
+    </div>
+    ${out.length>0?`<div class="mws-alert red"><span class="mws-alert-icon">🔴</span><span class="mws-alert-text">${out.length} SKU${out.length>1?'s':''} out of stock: ${out.slice(0,2).map(i=>i.sku).join(', ')}${out.length>2?'…':''}</span></div>`:''}
+    ${low.length>0?`<div class="mws-alert"><span class="mws-alert-icon">⚠️</span><span class="mws-alert-text">${low.length} SKU${low.length>1?'s':''} below reorder point</span></div>`:''}
+    <button class="mws-cta-btn" onclick="if(typeof openAddModal==='function')openAddModal()">➕ Add Inventory</button>
+    <div class="mws-section-head">
+      <span class="mws-section-title">Stock Levels</span>
+      <button class="mws-section-link" onclick="ForgeMobile.navTo('inventory')">Full View</button>
+    </div>
+    <div class="mws-surface">
+      ${sorted.length?sorted.map(i=>{
+        const p=typeof gp==='function'?gp(i.sku):{name:i.sku};
+        const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
+        const alert=typeof getAlert==='function'?getAlert(i):{cls:'badge-grey',label:'—'};
+        return `<div class="mws-row">
+          <div class="mws-row-left">
+            <div class="mws-row-title">${p.name||i.sku}</div>
+            <div class="mws-row-sub">${i.sku}</div>
+          </div>
+          <div class="mws-row-right">
+            <div class="mws-row-val">${a} units</div>
+            <div class="mws-row-sub2"><span class="badge ${alert.cls}" style="font-size:9px">${alert.label}</span></div>
+          </div>
+        </div>`;
+      }).join(''):'<div class="mws-empty"><div class="mws-empty-icon">📦</div><div>No inventory yet</div></div>'}
+    </div>`;
+}
+
+function _renderMobileActivity(){
+  // Read audit log from localStorage
+  let auditLog=[];
+  try{
+    const raw=localStorage.getItem('forge_audit_log');
+    if(raw) auditLog=JSON.parse(raw);
+  }catch(e){}
+  const recent=auditLog.slice(0,15);
+
+  // Also check ForgeNotificationService cache for notifications
+  let notifs=[];
+  try{
+    if(typeof ForgeNotificationService!=='undefined'){
+      const cached=ForgeNotificationService.getCache();
+      notifs=(Array.isArray(cached)?cached:[]).slice(0,5);
+    }
+  }catch(e){}
+
+  // Task counts
+  const tasks=DB.tasks||[];
+  const myTasks=tasks.filter(t=>t.status!=='Done');
+
+  return `
+    <div class="mws-kpi-scroll">
+      <div class="mws-kpi-card"><div class="mws-kpi-val">${recent.length}</div><div class="mws-kpi-label">Audit Events</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--accent2)">${myTasks.length}</div><div class="mws-kpi-label">Open Tasks</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val">${notifs.filter(n=>!n.read).length}</div><div class="mws-kpi-label">Unread Notifs</div></div>
+    </div>
+    ${notifs.length?`
+    <div class="mws-section-head">
+      <span class="mws-section-title">Notifications</span>
+      <button class="mws-section-link" onclick="if(typeof openNotificationPanel==='function')openNotificationPanel()">See all</button>
+    </div>
+    <div class="mws-surface">
+      ${notifs.map(n=>`<div class="mws-row">
+        <div class="mws-row-left">
+          <div class="mws-row-title">${n.title||'Notification'}</div>
+          <div class="mws-row-sub">${n.message||''}</div>
+        </div>
+        <div class="mws-row-right">
+          <div class="mws-row-sub2">${n.read?'Read':'<span style="color:var(--accent2);font-weight:700">Unread</span>'}</div>
+        </div>
+      </div>`).join('')}
+    </div>`:''}
+    <div class="mws-section-head">
+      <span class="mws-section-title">Recent Activity</span>
+      <button class="mws-section-link" onclick="ForgeMobile.navTo('activity')">Full Log</button>
+    </div>
+    <div class="mws-surface">
+      ${recent.length?recent.map(e=>`<div class="mws-row">
+        <div class="mws-row-left">
+          <div class="mws-row-title">${e.action||e.type||'Event'}</div>
+          <div class="mws-row-sub">${e.user||e.userName||''} · ${e.details||''}</div>
+        </div>
+        <div class="mws-row-right">
+          <div class="mws-row-sub2">${e.time||e.timestamp||''}</div>
+        </div>
+      </div>`).join(''):'<div class="mws-empty"><div class="mws-empty-icon">📝</div><div>No activity yet</div></div>'}
+    </div>`;
+}
+
+/* ── 12c. Mobile Workspace Container (injected into .content) ── */
+function _injectWorkspaceContainer(){
+  if(document.getElementById('forge-mobile-ws')) return;
+  const ws=document.createElement('div');
+  ws.id='forge-mobile-ws';
+  ws.style.cssText='display:none;flex-direction:column;height:100%;overflow-y:auto;';
+  document.querySelector('.content')?.appendChild(ws);
+}
+
+/* ── 12d. Show workspace for a tab ── */
+function _showWorkspace(page){
+  const ws=document.getElementById('forge-mobile-ws');
+  if(!ws) return;
+  const WS_PAGES=['dashboard','orders','inventory','activity'];
+  if(!WS_PAGES.includes(page)){
+    ws.style.display='none';
+    return;
+  }
+  let html='';
+  try{
+    if(page==='dashboard')  html=_renderMobileHome();
+    else if(page==='orders')     html=_renderMobileOrders();
+    else if(page==='inventory')  html=_renderMobileInventory();
+    else if(page==='activity')   html=_renderMobileActivity();
+  }catch(e){
+    html=`<div class="mws-empty"><div class="mws-empty-icon">⚠️</div><div>Could not load workspace</div></div>`;
+    console.warn('[FORGE Mobile WS]',e);
+  }
+  ws.innerHTML=html;
+  ws.style.display='flex';
+  ws.style.flexDirection='column';
+  // Hide the desktop page content on mobile for these pages
+  const pg=document.getElementById('page-'+page);
+  if(pg){
+    pg._mobileHidden=true;
+    pg.style.display='none';
+  }
+}
 
 /* ── 13. Backward-compat: sidebar toggle (no-op on mobile — menu replaces it) ── */
 window.toggleMobileSidebar=function(){
