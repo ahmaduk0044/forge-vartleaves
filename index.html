@@ -3477,6 +3477,11 @@ function updateUndoRedoBtns(){
  const rb=document.getElementById('redo-btn');
  if(ub) ub.style.opacity=undoStack.length?'1':'0.35';
  if(rb) rb.style.opacity=redoStack.length?'1':'0.35';
+ // Sync mobile topbar undo/redo opacity
+ const mub=document.getElementById('fmt-undo');
+ const mrb=document.getElementById('fmt-redo');
+ if(mub) mub.style.opacity=undoStack.length?'1':'0.35';
+ if(mrb) mrb.style.opacity=redoStack.length?'1':'0.35';
 }
 
 function saveDBWithUndo(){
@@ -7407,6 +7412,8 @@ function _injectTopbar(){
       </div>
     </div>
     <div id="fmt-right">
+      <button class="fmt-icon-btn" id="fmt-undo" onclick="undoAction()" aria-label="Undo" title="Undo" style="opacity:0.35;font-size:15px">↩</button>
+      <button class="fmt-icon-btn" id="fmt-redo" onclick="redoAction()" aria-label="Redo" title="Redo" style="opacity:0.35;font-size:15px">↪</button>
       <button class="fmt-icon-btn" id="fmt-notif" onclick="openNotificationPanel()" aria-label="Notifications">
         🔔
         <span id="fmt-notif-badge">0</span>
