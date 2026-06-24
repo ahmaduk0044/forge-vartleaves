@@ -1366,34 +1366,37 @@ function saveDB(){try{localStorage.setItem('forge_v1',JSON.stringify(DB));}catch
 const SEED={
  config:{rmbGbp:0.11,rmbUsd:0.14,gbpUsd:1.27,customs:0.05,margin:0.30,buffer:14,userName:'Ahmed'},
  products:[
-  // We Art Leaves — Bathroom
-  {sku:'WAL-TB-FBA-01',brand:'We Art Leaves',name:'Silicone Toilet Brush FBA 1pk',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,asin:'B0CCPPFZCT',status:'Active',supplierId:'SUP-001',certCost:0},
-  {sku:'WAL-TB-FBA-04',brand:'We Art Leaves',name:'Silicone Toilet Brush FBA 4pk',category:'Bathroom',platform:'Amazon UK',costRmb:62.0,asin:'B0CDYH3KJ3',status:'Active',supplierId:'SUP-001',certCost:0},
-  {sku:'WAL-TB-BLK-02',brand:'We Art Leaves',name:'Silicone Toilet Brush Black 2pk',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,asin:'B0D33PPM3C',status:'Active',supplierId:'SUP-001',certCost:0},
-  {sku:'WAL-TB-GRY-02',brand:'We Art Leaves',name:'Silicone Toilet Brush Grey TB2',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,asin:'B0DT1P77DP',status:'Active',supplierId:'SUP-001',certCost:0},
-  {sku:'WAL-TB-FBM-01',brand:'We Art Leaves',name:'Silicone Toilet Brush FBM',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,asin:'B0C6QY4HGJ',status:'Active',supplierId:'SUP-001',certCost:0},
-  {sku:'WAL-SHC-BLK-01',brand:'We Art Leaves',name:'Shower Caddy Black',category:'Bathroom',platform:'Amazon UK',costRmb:28.0,asin:'B0TEST00001',status:'Active',supplierId:'SUP-001',certCost:0},
-  {sku:'WAL-HK-SUC-01',brand:'We Art Leaves',name:'Suction Cup Hook 4pk',category:'Bathroom',platform:'TikTok Shop UK',costRmb:12.0,asin:'',status:'Active',supplierId:'SUP-001',certCost:0},
-  // We Art Leaves — Hair
-  {sku:'WAL-OIL-RAW-01',brand:'We Art Leaves',name:'Batana Oil Raw',category:'Hair Oil',platform:'Amazon UK',costRmb:45.0,asin:'B0DT4M5KGT',status:'Active',supplierId:'SUP-002',certCost:0},
-  {sku:'WAL-OIL-RAW-02',brand:'We Art Leaves',name:'Batana Oil Raw 2pcs',category:'Hair Oil',platform:'Amazon UK',costRmb:85.0,asin:'B0F66SVPF6',status:'Active',supplierId:'SUP-002',certCost:0},
-  {sku:'WAL-OIL-3IN1-01',brand:'We Art Leaves',name:'Batana Oil 3-in-1',category:'Hair Oil',platform:'Amazon UK',costRmb:52.0,asin:'B0F6773V6C',status:'Active',supplierId:'SUP-002',certCost:0},
-  {sku:'WAL-OIL-PUR-118',brand:'We Art Leaves',name:'Batana Oil Pure 118ml',category:'Hair Oil',platform:'Amazon UK',costRmb:48.0,asin:'B0DT4K328T',status:'Active',supplierId:'SUP-002',certCost:0},
-  {sku:'WAL-SRM-60',brand:'We Art Leaves',name:'Batana Serum 60ml',category:'Hair Oil',platform:'Amazon UK',costRmb:38.0,asin:'B0DT4NMH4H',status:'Active',supplierId:'SUP-002',certCost:0},
-  {sku:'WAL-CON-HERB-01',brand:'We Art Leaves',name:'Batana Conditioner Herb',category:'Hair Care',platform:'Amazon UK',costRmb:42.0,asin:'B0FBRT8SGH',status:'Active',supplierId:'SUP-002',certCost:0},
-  {sku:'WAL-CON-ROSE-01',brand:'We Art Leaves',name:'Batana Conditioner Rose',category:'Hair Care',platform:'Amazon UK',costRmb:42.0,asin:'B0FBRTNPW6',status:'Active',supplierId:'SUP-002',certCost:0},
-  {sku:'WAL-SHP-HERB-01',brand:'We Art Leaves',name:'Batana Shampoo Herb',category:'Shampoo',platform:'Amazon UK',costRmb:38.0,asin:'B0FBRQQRJC',status:'Active',supplierId:'SUP-002',certCost:0},
-  // LaMNooN
-  {sku:'LMN-DHB-1PC',brand:'LaMNooN',name:'Dehumidifier Bag 1pc',category:'Household',platform:'Amazon UK',costRmb:12.0,asin:'B0GHGCKGX4',status:'Active',supplierId:'SUP-003',certCost:0},
-  {sku:'LMN-DHB-2PC',brand:'LaMNooN',name:'Dehumidifier Bag 2pcs',category:'Household',platform:'Amazon UK',costRmb:22.0,asin:'B0GHGMKXDQ',status:'Active',supplierId:'SUP-003',certCost:0},
-  {sku:'LMN-EWR-01',brand:'LaMNooN',name:'Ear Wax Removal Kit',category:'Health',platform:'Amazon UK',costRmb:28.0,asin:'B0GY1P3XN6',status:'Active',supplierId:'SUP-003',certCost:0},
-  {sku:'LMN-FGR-ELC-01',brand:'LaMNooN',name:'Electric Foot Grinder',category:'Health',platform:'Amazon UK',costRmb:35.0,asin:'B0TEST00002',status:'Active',supplierId:'SUP-003',certCost:45},
-  // BYMO
-  {sku:'WAL-WH-WHT-01',brand:'We Art Leaves',name:'Window Handle White 1pc',category:'Hardware',platform:'Amazon UK',costRmb:32.0,asin:'B0FYGDXBR3',status:'Active',supplierId:'SUP-003',certCost:0},
-  {sku:'BYM-SOP-TUR-01',brand:'BYMO',name:'Turmeric Soap',category:'Soap',platform:'Amazon UK',costRmb:15.0,asin:'B0FSKV6YKL',status:'Active',supplierId:'SUP-002',certCost:0},
-  {sku:'BYM-OIL-ROS-50',brand:'BYMO',name:'Rosemary Oil 50ml',category:'Hair Oil',platform:'Amazon UK',costRmb:22.0,asin:'B0TEST00003',status:'Active',supplierId:'SUP-002',certCost:120},
-  {sku:'BYM-OIL-BAT-100',brand:'BYMO',name:'Batana Oil 100ml Premium',category:'Hair Oil',platform:'TikTok Shop UK',costRmb:48.0,asin:'',status:'Active',supplierId:'SUP-002',certCost:120},
-  {sku:'BYM-RSW-SPR-200',brand:'BYMO',name:'Rosemary Rice Water Spray 200ml',category:'Hair Care',platform:'Amazon UK',costRmb:18.0,asin:'',status:'Pipeline',supplierId:'SUP-002',certCost:150},
+  // ── We Art Leaves — Bathroom (Toilet Brushes) ──
+  {sku:'VAL-FBA-TOILET-BRUSH-1',brand:'We Art Leaves',name:'Silicone Toilet Brush with Holder Set Pack of 1 - White',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,sellGbp:7.99,asin:'B0CCPPFZCT',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'FBA-TOILET-BRUSH-BLK-1',brand:'We Art Leaves',name:'Silicone Toilet Brush with Holder Set Pack of 1 - Black',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,sellGbp:7.99,asin:'B0D33S5PQW',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'TB 1-Grey-FBA',brand:'We Art Leaves',name:'Silicone Toilet Brush with Holder Set Pack of 1 - Grey',category:'Bathroom',platform:'Amazon UK',costRmb:18.5,sellGbp:7.99,asin:'B0DT1YPSYN',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'VAL-FBM-TOILET-BRUSH-1',brand:'We Art Leaves',name:'Silicone Toilet Brushes & Holders – Pack of 2 White',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,sellGbp:10.99,asin:'B0C6QY4HGJ',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'FBA-TOILET-BRUSH-BLK-2',brand:'We Art Leaves',name:'Silicone Toilet Brush with Holder Set Pack of 2 - Black',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,sellGbp:10.99,asin:'B0D33PPM3C',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'TB 2-Grey-FBA',brand:'We Art Leaves',name:'Silicone Toilet Brush with Holder Set Pack of 2 - Grey',category:'Bathroom',platform:'Amazon UK',costRmb:35.0,sellGbp:10.99,asin:'B0DT1P77DP',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'VAL-FBA-TOILET-BRUSH-4',brand:'We Art Leaves',name:'Silicone Toilet Brush with Holder Set Pack of 4 - White',category:'Bathroom',platform:'Amazon UK',costRmb:62.0,sellGbp:19.99,asin:'B0CDYH3KJ3',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'FBA-TOILET-BRUSH-BLK-4',brand:'We Art Leaves',name:'Silicone Toilet Brush with Holder Set Pack of 4 - Black',category:'Bathroom',platform:'Amazon UK',costRmb:62.0,sellGbp:19.99,asin:'B0D33QY8GY',status:'Active',supplierId:'SUP-001',certCost:0},
+  {sku:'TB 3-Grey-FBA',brand:'We Art Leaves',name:'Silicone Toilet Brush with Holder Set Pack of 4 - Grey',category:'Bathroom',platform:'Amazon UK',costRmb:62.0,sellGbp:19.99,asin:'B0DT257LR5',status:'Active',supplierId:'SUP-001',certCost:0},
+  // ── We Art Leaves — Craft (Edible Leaf Sheets) ──
+  {sku:'VAL-5.08X5.08-S-10',brand:'We Art Leaves',name:'Edible Silver Leaf Sheets 5x5cm 10Pcs',category:'Craft',platform:'Amazon UK',costRmb:8.0,sellGbp:4.99,asin:'B0BK5HRDG2',status:'Active',supplierId:'SUP-003',certCost:0},
+  {sku:'VAL-FBA-5x5-S-25',brand:'We Art Leaves',name:'Edible Silver Leaf Sheets 5x5cm 25Pcs',category:'Craft',platform:'Amazon UK',costRmb:14.0,sellGbp:6.49,asin:'B0CWLJTMBP',status:'Active',supplierId:'SUP-003',certCost:0},
+  {sku:'VAL-FBM-10X10-S-10',brand:'We Art Leaves',name:'Edible Silver Leaf Sheets 10x10cm 10Pcs',category:'Craft',platform:'Amazon UK',costRmb:10.0,sellGbp:5.99,asin:'B0BK2T62MT',status:'Active',supplierId:'SUP-003',certCost:0},
+  {sku:'VAL-FBM-10X10-S-25',brand:'We Art Leaves',name:'Edible Silver Leaf Sheets 10x10cm 25Pcs',category:'Craft',platform:'Amazon UK',costRmb:18.0,sellGbp:6.99,asin:'B0BK5KL8KM',status:'Active',supplierId:'SUP-003',certCost:0},
+  {sku:'VAL-4.3×4.3-G-20',brand:'We Art Leaves',name:'Edible Gold Leaf Sheets 4.33x4.33cm 20Pcs',category:'Craft',platform:'Amazon UK',costRmb:22.0,sellGbp:10.99,asin:'B0D9Z8BK9M',status:'Active',supplierId:'SUP-003',certCost:0},
+  // ── We Art Leaves — Pet ──
+  {sku:'DOG-COAT-XXL-PUR',brand:'We Art Leaves',name:'Dog Towel XXL Purple Microfiber Drying Coat 400 GSM',category:'Pet',platform:'Amazon UK',costRmb:45.0,sellGbp:15.99,asin:'B0CPB1KWH9',status:'Active',supplierId:'SUP-001',certCost:0},
+  // ── BYMO — Hair Care (Batana & Oils) ──
+  {sku:'WAL-Batana-Raw',brand:'BYMO',name:'Raw Batana Oil 156ml – Hair Growth Dr Sebi',category:'Hair Care',platform:'Amazon UK',costRmb:28.0,sellGbp:12.99,asin:'B0DT4M5KGT',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-Batana-Serum',brand:'BYMO',name:'Raw Batana Oil 60ml – Hair Growth Dr Sebi',category:'Hair Care',platform:'Amazon UK',costRmb:16.0,sellGbp:6.99,asin:'B0DT4NMH4H',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-Batana-Pure',brand:'BYMO',name:'Pure Batana Oil 118ml – Hair Growth Dr Sebi',category:'Hair Care',platform:'Amazon UK',costRmb:24.0,sellGbp:11.99,asin:'B0DT4K328T',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-Batana-Raw 2Pcs',brand:'BYMO',name:'Raw Batana Oil 156ml Pack of 2 – Hair Growth Dr Sebi',category:'Hair Care',platform:'Amazon UK',costRmb:52.0,sellGbp:16.99,asin:'B0F66SVPF6',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-Batana-3in1',brand:'BYMO',name:'Batana Oil Pack of 3 (156ml + 118ml + 60ml)',category:'Hair Care',platform:'Amazon UK',costRmb:60.0,sellGbp:20.99,asin:'B0F6773V6C',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-Argan Oil-50ml',brand:'BYMO',name:'100% Organic Moroccan Argan Oil 50ml – Hair Growth',category:'Hair Care',platform:'Amazon UK',costRmb:20.0,sellGbp:8.99,asin:'B0FDR9DF15',status:'Active',supplierId:'SUP-002',certCost:0},
+  // ── BYMO — Hair Care (Conditioners & Shampoos) ──
+  {sku:'WAL-BatanaContainer-Herb',brand:'BYMO',name:'Batana Herbal Conditioner 500g – Sulphate-Free Vegan',category:'Hair Care',platform:'Amazon UK',costRmb:30.0,sellGbp:9.99,asin:'B0FBRT8SGH',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-BatanaContainer-Rose',brand:'BYMO',name:'Batana Rosemary Conditioner 500g – Sulphate-Free Vegan',category:'Hair Care',platform:'Amazon UK',costRmb:30.0,sellGbp:9.99,asin:'B0FBRTNPW6',status:'Active',supplierId:'SUP-002',certCost:0},
+  {sku:'WAL-BatanaSampoo-Herb',brand:'BYMO',name:'Batana Herbal Shampoo 500g – Sulphate-Free Natural',category:'Hair Care',platform:'Amazon UK',costRmb:30.0,sellGbp:9.99,asin:'B0FBRQQRJC',status:'Active',supplierId:'SUP-002',certCost:0},
+  // ── BYMO — Skin Care ──
+  {sku:'BYMO-Beef Tallow-1pcs',brand:'BYMO',name:'BYMO Beef Tallow Skin Care Balm 60g – Grass-Fed with Manuka Honey',category:'Skin Care',platform:'Amazon UK',costRmb:22.0,sellGbp:9.99,asin:'B0G4DZG88V',status:'Active',supplierId:'SUP-002',certCost:0},
  ],
  suppliers:[
   {id:'SUP-001',name:'Joy Plastics Co.',type:'Supplier',contact:'Joy Wang',email:'joy@joyplastics.cn',country:'China',payTerms:'30% deposit 70% on shipment',leadDays:45,bank:'Bank of China',currency:'RMB',onTimeRate:92,qualityScore:88,notes:'Main bathroom accessories supplier. MOQ 200 units.'},
