@@ -7696,9 +7696,6 @@ function _activate(){
     window._forgeMobileNavWrapped=true;
     const _origNav=window.nav;
     window.nav=function(page){
-      // Restore any mobile-hidden desktop pages before switching
-      const prev=document.getElementById('page-'+(typeof CP!=='undefined'?CP:''));
-      if(prev&&prev._mobileHidden){ prev.style.display=''; prev._mobileHidden=false; }
       const r=_origNav?_origNav(page):undefined;
       _updatePageLabel(page);
       _updateBottomBar(page);
@@ -7733,7 +7730,7 @@ function _activate(){
 /* ── 11. Deactivate (on resize back to desktop) ── */
 function _deactivate(){
   document.body.classList.remove('forge-mobile-active');
-  const ids=['forge-mobile-topbar','forge-bottom-bar','forge-fullscreen-menu','forge-more-panel'];
+  const ids=['forge-mobile-topbar','forge-bottom-bar','forge-fullscreen-menu','forge-more-panel','forge-mobile-ws'];
   ids.forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
 }
 
@@ -8059,8 +8056,22 @@ function _injectWorkspaceContainer(){
   if(document.getElementById('forge-mobile-ws')) return;
   const ws=document.createElement('div');
   ws.id='forge-mobile-ws';
-  ws.style.cssText='display:none;flex-direction:column;height:100%;overflow-y:auto;';
-  document.querySelector('.content')?.appendChild(ws);
+  // Fixed overlay at body level — NOT inside .content
+  // This ensures it sits over the desktop pages, not in DOM flow after them
+  ws.style.cssText=[
+    'display:none',
+    'position:fixed',
+    'top:52px',
+    'bottom:calc(56px + env(safe-area-inset-bottom,0px))',
+    'left:0',
+    'right:0',
+    'z-index:110',
+    'overflow-y:auto',
+    '-webkit-overflow-scrolling:touch',
+    'background:var(--bg)',
+    'flex-direction:column',
+  ].join(';');
+  document.body.appendChild(ws);
 }
 
 /* ── 12d. Show workspace for a tab ── */
@@ -8070,6 +8081,7 @@ function _showWorkspace(page){
   const WS_PAGES=['dashboard','orders','inventory','activity'];
   if(!WS_PAGES.includes(page)){
     ws.style.display='none';
+    ws.innerHTML='';
     return;
   }
   let html='';
@@ -8085,12 +8097,7 @@ function _showWorkspace(page){
   ws.innerHTML=html;
   ws.style.display='flex';
   ws.style.flexDirection='column';
-  // Hide the desktop page content on mobile for these pages
-  const pg=document.getElementById('page-'+page);
-  if(pg){
-    pg._mobileHidden=true;
-    pg.style.display='none';
-  }
+  // No need to hide desktop pages — fixed overlay covers them
 }
 
 /* ── 13. Backward-compat: sidebar toggle (no-op on mobile — menu replaces it) ── */
