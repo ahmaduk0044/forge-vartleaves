@@ -344,198 +344,263 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
 .launch-next-btn:hover{background:rgba(37,99,235,0.25);}
 
 /* ═══════════════════════════════════════════════════════════════
-   FORGE MOBILE RESPONSIVENESS  — v3.0
-   Breakpoints: 768px (mobile) | 1024px (tablet)
-   Test floor: 375px (iPhone SE)
-   Rule: Desktop layout must not break.
+   FORGE MOBILE — v3.1  Native App Feel
+   Philosophy: Mobile is NOT a shrunk desktop.
+   Tables → Cards. Sidebar → Drawer. Modals → Bottom sheets.
+   Touch targets → 48px min. Typography → readable at arm's length.
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Hamburger button — hidden on desktop ── */
+/* ── Hamburger — desktop hidden ── */
 .hamburger-btn{
-  display:none;
-  flex-direction:column;justify-content:center;align-items:center;
-  width:44px;height:44px;min-width:44px;
-  background:transparent;border:none;cursor:pointer;
-  padding:8px;border-radius:8px;flex-shrink:0;
-  -webkit-tap-highlight-color:transparent;
+  display:none;flex-direction:column;justify-content:center;align-items:center;
+  width:48px;height:48px;min-width:48px;background:transparent;border:none;
+  cursor:pointer;padding:10px;border-radius:10px;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;gap:5px;
 }
-.hamburger-btn:hover{background:var(--surface3);}
+.hamburger-btn:active{background:var(--surface3);}
 .ham-line{
-  display:block;width:18px;height:2px;
-  background:var(--text2);border-radius:2px;
-  transition:all 0.25s ease;margin:2px 0;
+  display:block;width:20px;height:2px;background:var(--text2);
+  border-radius:2px;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
 }
-.hamburger-btn.open .ham-line:nth-child(1){transform:translateY(6px) rotate(45deg);}
+.hamburger-btn.open .ham-line:nth-child(1){transform:translateY(7px) rotate(45deg);}
 .hamburger-btn.open .ham-line:nth-child(2){opacity:0;transform:scaleX(0);}
-.hamburger-btn.open .ham-line:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
+.hamburger-btn.open .ham-line:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
-/* ── Sidebar overlay — hidden on desktop ── */
+/* ── Sidebar overlay ── */
 .sidebar-overlay{
   display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,0.6);z-index:149;
-  backdrop-filter:blur(2px);
+  background:rgba(0,0,0,0.65);z-index:149;
   -webkit-tap-highlight-color:transparent;
 }
 
-/* ══════════════════════════════════════
-   TABLET  — 1024px and below
-   ══════════════════════════════════════ */
-@media (max-width:1024px){
-  :root{ --nav-w:200px; }
+/* ── Mobile card layout — rows as cards ── */
+.mobile-card-list{ display:none; }
 
-  /* KPI strip: 3 cols on tablet */
-  .kpi-strip{ grid-template-columns:repeat(3,1fr); }
-  .kpi-box:nth-child(3){ border-right:none; }
-  .kpi-box:nth-child(4){ border-top:1px solid var(--border); }
-
-  /* AMZ kpis: 3 cols */
-  .amz-kpis{ grid-template-columns:repeat(3,1fr); }
-
-  /* Launch field grid: 2 cols */
-  .launch-field-grid{ grid-template-columns:1fr 1fr; }
-
-  /* Search box narrower */
-  .search-box{ width:160px; }
-
-  /* Hide some topbar labels on tablet */
-  #drive-ind-text{ display:none; }
+/* ══════════════════════════════════
+   TABLET ≤1024px
+   ══════════════════════════════════ */
+@media(max-width:1024px){
+  :root{--nav-w:200px;}
+  .kpi-strip{grid-template-columns:repeat(3,1fr);}
+  .kpi-box:nth-child(3n){border-right:none;}
+  .kpi-box:nth-child(4){border-top:1px solid var(--border);}
+  .amz-kpis{grid-template-columns:repeat(3,1fr);}
+  .launch-field-grid{grid-template-columns:1fr 1fr;}
+  .search-box{width:150px;}
 }
 
-/* ══════════════════════════════════════
-   MOBILE  — 768px and below
-   ══════════════════════════════════════ */
-@media (max-width:768px){
+/* ══════════════════════════════════
+   MOBILE ≤768px  — Full Treatment
+   ══════════════════════════════════ */
+@media(max-width:768px){
 
-  /* ── Body layout ── */
-  body{ overflow:hidden; }
+  /* Body */
+  body{overflow:hidden;}
 
-  /* ── Hamburger visible ── */
-  .hamburger-btn{ display:flex; }
+  /* Hamburger visible */
+  .hamburger-btn{display:flex;}
 
-  /* ── Sidebar becomes slide-in drawer ── */
+  /* ── Sidebar drawer ── */
   #forge-sidebar{
     position:fixed;left:0;top:0;bottom:0;
-    width:260px;max-width:80vw;
+    width:280px;max-width:85vw;height:100dvh;
     z-index:150;
     transform:translateX(-100%);
-    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
-    height:100dvh;
+    transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:none;
   }
   #forge-sidebar.mobile-open{
     transform:translateX(0);
-    box-shadow:4px 0 24px rgba(0,0,0,0.4);
+    box-shadow:6px 0 32px rgba(0,0,0,0.5);
   }
-  .sidebar-overlay.active{ display:block; }
+  .sidebar-overlay.active{display:block;}
+  .main{width:100%;min-width:0;}
 
-  /* ── Main area takes full width ── */
-  .main{ width:100%; min-width:0; }
+  /* Bigger nav items in sidebar */
+  .nav-item{padding:13px 12px;min-height:52px;font-size:13.5px;gap:10px;}
+  .nav-icon{font-size:15px;width:20px;}
+  .nav-label{font-size:9.5px;padding:2px 10px;}
+  .logo{padding:20px 16px 16px;}
+  .logo-mark{font-size:19px;}
+  .logo-sub{font-size:9px;}
 
   /* ── Topbar ── */
   .topbar{
-    padding:0 8px;gap:6px;height:52px;
-    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    height:56px;padding:0 6px 0 4px;gap:4px;
+    overflow:visible;position:relative;
   }
-  .topbar-title{ font-size:13px; }
-  .topbar-title span{ display:none; }/* hide subtitle on mobile */
+  .topbar-title{font-size:14px;font-weight:700;margin-left:2px;}
+  .topbar-title span{display:none;}
 
-  /* Hide topbar items that don't fit */
-  .search-box{ display:none; }
-  #drive-indicator{ display:none; }
-  #undo-btn{ display:none; }
-  #redo-btn{ display:none; }
+  /* Hide topbar items that don't fit on mobile */
+  .search-box{display:none;}
+  #drive-indicator{display:none;}
+  #undo-btn{display:none;}
+  #redo-btn{display:none;}
+  .mobile-hide{display:none!important;}
 
-  /* ── Tap targets: all interactive elements ── */
-  .btn{ min-height:44px;padding:10px 14px; }
-  .btn-sm{ min-height:40px;padding:8px 12px; }
-  .nav-item{ padding:11px 10px;min-height:44px; }
-  .filter-select{ min-height:44px;padding:10px 9px; }
-  .form-input,.form-select,input,select,textarea{
-    min-height:44px;font-size:16px!important;/* prevents iOS zoom */
+  /* ── ALL touch targets 48px min ── */
+  .btn{min-height:48px;padding:12px 16px;font-size:13px;border-radius:10px;}
+  .btn-sm{min-height:44px;padding:10px 14px;font-size:12.5px;}
+  .filter-select{min-height:48px;padding:10px 12px;font-size:14px;border-radius:10px;}
+  .action-btn{min-height:40px;padding:8px 14px;font-size:12.5px;}
+  .modal-close{
+    width:48px;height:48px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;border-radius:10px;
   }
-  .modal-close{ width:44px;height:44px;display:flex;align-items:center;justify-content:center; }
 
-  /* ── KPI strip: 2 cols ── */
-  .kpi-strip{ grid-template-columns:repeat(2,1fr); }
-  .kpi-box{ border-right:1px solid var(--border); }
-  .kpi-box:nth-child(2n){ border-right:none; }
-  .kpi-box:nth-child(3){ border-top:1px solid var(--border); }
-  .kpi-value{ font-size:16px; }
+  /* ── Inputs — 16px prevents iOS zoom ── */
+  input,select,textarea,.form-input,.form-select{
+    min-height:48px;font-size:16px!important;
+    border-radius:10px!important;padding:12px 14px!important;
+  }
 
-  /* ── Dashboard cards: single column ── */
-  .dash-grid{ grid-template-columns:1fr;padding:10px 10px; }
+  /* ── KPI strip: 2×3 grid ── */
+  .kpi-strip{
+    grid-template-columns:repeat(2,1fr);
+    border-bottom:1px solid var(--border);
+  }
+  .kpi-box{padding:14px 14px;}
+  .kpi-box:nth-child(2n){border-right:none;}
+  .kpi-box:nth-child(n+3){border-top:1px solid var(--border);}
+  .kpi-label{font-size:9px;letter-spacing:0.5px;}
+  .kpi-value{font-size:20px;}
+  .kpi-delta{font-size:10.5px;margin-top:4px;}
 
-  /* ── Form grids: single column ── */
-  .form-grid{ grid-template-columns:1fr; }
+  /* ── Filter bar ── */
+  .filter-bar{
+    padding:10px 12px;gap:8px;flex-wrap:wrap;
+  }
+  .filter-bar .btn{flex:1;min-width:0;justify-content:center;}
+
+  /* ── Dashboard grid: single col ── */
+  .dash-grid{grid-template-columns:1fr;gap:12px;padding:12px;}
+  .dash-card-head{padding:13px 14px;font-size:11px;}
+
+  /* ── Form grids: single col ── */
+  .form-grid{grid-template-columns:1fr;gap:14px;}
+  .form-grid label{font-size:12.5px;font-weight:600;}
 
   /* ── AMZ kpis: 2 cols ── */
-  .amz-kpis{ grid-template-columns:repeat(2,1fr); }
+  .amz-kpis{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .amz-kpi{padding:13px 14px;}
+  .amz-kpi-val{font-size:20px;}
 
-  /* ── Launch field grid: single col ── */
-  .launch-field-grid{ grid-template-columns:1fr; }
+  /* ── Launch / ICC field grid: single col ── */
+  .launch-field-grid{grid-template-columns:1fr;}
+  .pi-grid{grid-template-columns:1fr;}
 
-  /* ── Filter bar: wraps cleanly ── */
-  .filter-bar{ gap:6px;padding:8px 10px; }
-
-  /* ── Tables: horizontally scrollable ── */
-  .table-wrap{ overflow-x:auto;-webkit-overflow-scrolling:touch; }
-  table{ font-size:12px;white-space:nowrap; }
-  th,td{ padding:8px 10px!important; }
-
-  /* ── Modals: full-screen friendly ── */
+  /* ── Modals: bottom sheet ── */
+  .modal-overlay{align-items:flex-end!important;}
   .modal{
-    width:100%!important;max-width:100vw!important;
-    margin:0;border-radius:16px 16px 0 0;
-    position:fixed;bottom:0;left:0;right:0;
-    max-height:92dvh;
+    width:100%!important;max-width:100%!important;
+    border-radius:20px 20px 0 0!important;
+    margin:0!important;
+    position:fixed!important;bottom:0!important;left:0!important;right:0!important;
+    max-height:94dvh!important;
+    transform:translateY(20px)!important;
   }
-  .modal-overlay{
-    align-items:flex-end!important;
+  .modal-overlay.open .modal{transform:translateY(0)!important;}
+  /* Drag handle on modals */
+  .modal-head::before{
+    content:'';display:block;width:40px;height:4px;
+    background:var(--border2);border-radius:2px;
+    margin:0 auto 12px;
   }
-  .modal-body{ padding:14px 15px; }
-  .modal-head{ padding:14px 15px 11px; }
+  .modal-head{padding:8px 16px 13px;flex-direction:column;gap:0;}
+  .modal-head h3{font-size:16px;font-weight:700;text-align:left;width:100%;}
+  .modal-body{padding:16px;overflow-y:auto;}
   .modal-foot{
-    padding:10px 15px 20px;/* extra bottom for home bar */
-    flex-wrap:wrap;gap:8px;
+    padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px));
+    gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);
   }
-  .modal-foot .btn{ flex:1;min-width:120px;justify-content:center; }
+  .modal-foot .btn{flex:1;min-width:140px;justify-content:center;font-size:14px;}
 
-  /* ── Content area bottom padding for phones with home bar ── */
-  .content{ padding-bottom:env(safe-area-inset-bottom,0px); }
+  /* ── TABLES → CARD LAYOUT ── */
+  /* Hide desktop tables on mobile */
+  .table-wrap{display:none!important;}
 
-  /* ── PI grid: single col ── */
-  .pi-grid{ grid-template-columns:1fr; }
+  /* Show mobile card lists */
+  .mobile-card-list{
+    display:flex;flex-direction:column;gap:10px;
+    padding:12px;overflow-y:auto;
+  }
 
-  /* ── ICC KPI row ── */
-  .icc-kpi{ padding:10px 12px; }
-  .icc-kpi-val{ font-size:18px; }
+  /* Each data row becomes a card */
+  .m-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .m-card-head{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .m-card-title{
+    font-size:14px;font-weight:700;color:var(--text);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;
+  }
+  .m-card-id{
+    font-size:11px;font-weight:600;color:var(--text3);
+    font-family:'JetBrains Mono',monospace;
+    background:var(--surface3);padding:2px 7px;border-radius:5px;
+    white-space:nowrap;
+  }
+  .m-card-row{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:12.5px;gap:8px;
+  }
+  .m-card-label{color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+  .m-card-val{color:var(--text2);text-align:right;font-size:12.5px;}
+  .m-card-val.mono{font-family:'JetBrains Mono',monospace;color:var(--text);}
+  .m-card-val.green{color:var(--green);font-weight:700;}
+  .m-card-val.red{color:var(--red);font-weight:700;}
+  .m-card-val.yellow{color:var(--yellow);font-weight:700;}
+  .m-card-val.blue{color:var(--accent2);font-weight:700;}
+  .m-card-divider{height:1px;background:var(--border);margin:2px 0;}
+  .m-card-actions{
+    display:flex;gap:8px;margin-top:4px;
+  }
+  .m-card-actions .btn{
+    flex:1;justify-content:center;
+    min-height:44px;font-size:13px;
+  }
 
-  /* ── Sidebar footer ── */
-  .sidebar-footer .drive-status span:last-child{ display:none; }
+  /* ── Content safe area ── */
+  .content{padding-bottom:env(safe-area-inset-bottom,0px);}
 
-  /* ── Admin status grid ── */
-  .admin-status-grid,
+  /* ── Section headings inside pages ── */
+  .page-section-title{
+    font-size:18px;font-weight:700;
+    padding:16px 12px 8px;color:var(--text);
+  }
+
+  /* ── ICC / Reorder / PnL ── */
+  .icc-kpi{padding:13px 14px;}
+  .icc-kpi-val{font-size:22px;}
+  .timeline-item{padding:13px 14px;border-radius:12px;}
+
+  /* ── Admin panel ── */
   [style*="repeat(auto-fill,minmax(160px"]{
     grid-template-columns:repeat(2,1fr)!important;
   }
-
-  /* ── Page padding ── */
-  .page-pad,.page-inner{ padding:10px!important; }
+  #admin-content>div[style*="max-width:420px"]{
+    max-width:100%!important;
+  }
 }
 
-/* ── Hide non-essential topbar items on mobile ── */
-@media (max-width:768px){
-  .mobile-hide{ display:none!important; }
-}
-
-/* ══════════════════════════════════════
-   EXTRA SMALL — 480px and below
-   ══════════════════════════════════════ */
-@media (max-width:480px){
-  .kpi-strip{ grid-template-columns:1fr 1fr; }
-  .kpi-value{ font-size:15px; }
-  .kpi-label{ font-size:8px; }
-  .amz-kpis{ grid-template-columns:1fr 1fr; }
-  .dash-grid{ padding:8px; }
+/* ══════════════════════════════════
+   SMALL ≤480px
+   ══════════════════════════════════ */
+@media(max-width:480px){
+  .kpi-strip{grid-template-columns:1fr 1fr;}
+  .kpi-value{font-size:18px;}
+  .amz-kpis{grid-template-columns:1fr 1fr;}
+  .dash-grid{padding:8px;gap:8px;}
+  .topbar{height:52px;}
+  .modal-foot .btn{min-width:100px;}
 }
 </style>
 </head>
@@ -686,6 +751,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <thead><tr><th onclick="srt('products','sku')">SKU ↕</th><th>Brand</th><th>Product Name</th><th>Category</th><th>Platform</th><th onclick="srt('products','costRmb')">Cost RMB ↕</th><th>Cost GBP</th><th>ASIN</th><th>Supplier</th><th>Status</th><th></th></tr></thead>
  <tbody id="products-tbody"></tbody>
  </table></div>
+ <div class="mobile-card-list" id="products-mobile"></div>
  </div>
 
  <!-- SUPPLIERS -->
@@ -699,6 +765,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Contact</th><th>Country</th><th>Payment Terms</th><th>Lead Days</th><th>On-Time %</th><th>Quality %</th><th>Active POs</th><th>Total Paid</th><th></th></tr></thead>
  <tbody id="suppliers-tbody"></tbody>
  </table></div>
+ <div class="mobile-card-list" id="suppliers-mobile"></div>
  </div>
 
  <!-- PURCHASE ORDERS -->
@@ -713,6 +780,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <thead><tr><th>PO#</th><th>Date</th><th>SKU</th><th>Product</th><th>Supplier</th><th>Qty</th><th>Unit Cost</th><th>Total GBP</th><th>Paid</th><th>Balance</th><th>Payment</th><th>Stage</th><th>Forwarder</th><th>Signal</th><th>Rate</th><th></th></tr></thead>
  <tbody id="orders-tbody"></tbody>
  </table></div>
+ <div class="mobile-card-list" id="orders-mobile"></div>
  </div>
 
  <!-- FREIGHT -->
@@ -727,6 +795,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <thead><tr><th>FR#</th><th>PO#</th><th>SKU</th><th>Forwarder</th><th>Mode</th><th>Tracking</th><th>Cost GBP</th><th>Departure</th><th>ETA</th><th>Status</th><th>Customs</th><th>Delivered To</th><th></th></tr></thead>
  <tbody id="freight-tbody"></tbody>
  </table></div>
+ <div class="mobile-card-list" id="freight-mobile"></div>
  </div>
 
  <!-- INVENTORY -->
@@ -741,6 +810,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <thead><tr><th>SKU</th><th>Brand</th><th>Product</th><th>FBA</th><th>3PL</th><th>Warehouse</th><th>In-Transit</th><th>Available</th><th>Vel/day</th><th>Days Stock</th><th>Reorder Lvl</th><th>Reorder Date</th><th>Alert</th><th>Value GBP</th><th>Location</th><th></th></tr></thead>
  <tbody id="inventory-tbody"></tbody>
  </table></div>
+ <div class="mobile-card-list" id="inventory-mobile"></div>
  </div>
 
  <!-- REORDER PLANNER -->
@@ -764,6 +834,7 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
  <thead><tr><th>SKU</th><th>Brand</th><th>Product</th><th>Platform</th><th>Cost GBP</th><th>Freight/Unit</th><th>Customs</th><th>Landed</th><th>Sell Price</th><th>Ref Fee</th><th>FBA Fee</th><th>Total Fees</th><th>Net Profit</th><th>Margin %</th><th>ROI %</th><th>Alert</th><th></th></tr></thead>
  <tbody id="profit-tbody"></tbody>
  </table></div>
+ <div class="mobile-card-list" id="profit-mobile"></div>
  </div>
 
  <!-- P&L -->
@@ -1542,6 +1613,47 @@ function renderProducts(){
  let rows=DB.products.filter(p=>(!CF.pb||p.brand===CF.pb)&&(!CF.pc||p.category===CF.pc)&&(!CF.ps||p.status===CF.ps)&&(!SQ||[p.sku,p.name,p.asin||''].join(' ').toLowerCase().includes(SQ)));
  document.getElementById('products-count').textContent=`${rows.length} products`;
  document.getElementById('products-tbody').innerHTML=rows.map(p=>`<tr><td class="mono">${p.sku}</td><td><span class="badge ${BC[p.brand]||'badge-grey'}">${p.brand}</span></td><td><strong>${p.name}</strong></td><td class="muted">${p.category}</td><td class="muted">${p.platform}</td><td class="mono">¥${p.costRmb}</td><td class="mono">${fmt(cgbp(p))}</td><td class="mono muted">${p.asin||'—'}</td><td class="muted">${gs(p.supplierId).name||'—'}</td><td><span class="badge ${p.status==='Active'?'badge-green':'badge-grey'}">${p.status}</span></td><td><div class="row-actions"><button class="action-btn" onclick="editProduct('${p.sku}')">Edit</button></div></td></tr>`).join('');
+ const mc=document.getElementById('products-mobile');
+ if(mc) mc.innerHTML=rows.length?rows.map(p=>`
+  <div class="m-card">
+   <div class="m-card-head">
+    <div class="m-card-title">${p.name}</div>
+    <span class="badge ${p.status==='Active'?'badge-green':'badge-grey'}">${p.status}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">SKU</span>
+    <span class="m-card-val mono">${p.sku}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Brand</span>
+    <span class="badge ${BC[p.brand]||'badge-grey'}">${p.brand}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Category</span>
+    <span class="m-card-val">${p.category}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Platform</span>
+    <span class="m-card-val">${p.platform}</span>
+   </div>
+   <div class="m-card-divider"></div>
+   <div class="m-card-row">
+    <span class="m-card-label">Cost RMB</span>
+    <span class="m-card-val mono">¥${p.costRmb}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Cost GBP</span>
+    <span class="m-card-val mono green">${fmt(cgbp(p))}</span>
+   </div>
+   ${p.asin?`<div class="m-card-row"><span class="m-card-label">ASIN</span><span class="m-card-val mono">${p.asin}</span></div>`:''}
+   <div class="m-card-row">
+    <span class="m-card-label">Supplier</span>
+    <span class="m-card-val">${gs(p.supplierId).name||'—'}</span>
+   </div>
+   <div class="m-card-actions">
+    <button class="btn btn-sm" onclick="editProduct('${p.sku}')">✏️ Edit Product</button>
+   </div>
+  </div>`).join(''):'<div class="empty-state"><div style="font-size:32px">📦</div><div>No products found</div></div>';
 }
 
 function renderSuppliers(){
@@ -1553,6 +1665,58 @@ function renderSuppliers(){
  const oc=s.onTimeRate>=90?'var(--green)':s.onTimeRate>=80?'var(--yellow)':'var(--red)';
  return`<tr><td class="mono">${s.id}</td><td><strong>${s.name}</strong></td><td><span class="badge ${s.type==='Supplier'?'badge-teal':'badge-purple'}">${s.type}</span></td><td class="muted">${s.contact}</td><td class="muted">${s.country}</td><td class="muted" style="font-size:11px">${s.payTerms}</td><td class="mono">${s.leadDays||'—'}</td><td class="mono"><span style="color:${oc};font-weight:700">${s.onTimeRate||'—'}%</span></td><td class="mono">${s.qualityScore||'—'}%</td><td class="mono">${ap}</td><td class="mono">${fmt(tp)}</td><td><div class="row-actions"><button class="action-btn" onclick="editSupplier('${s.id}')">Edit</button></div></td></tr>`;
  }).join('');
+ const mc=document.getElementById('suppliers-mobile');
+ if(mc) mc.innerHTML=rows.length?rows.map(s=>{
+  const ap=DB.orders.filter(o=>o.supplierId===s.id).length;
+  const tp=DB.orders.filter(o=>o.supplierId===s.id).reduce((sum,o)=>sum+o.paid,0);
+  const oc=s.onTimeRate>=90?'var(--green)':s.onTimeRate>=80?'var(--yellow)':'var(--red)';
+  return`<div class="m-card">
+   <div class="m-card-head">
+    <div class="m-card-title">${s.name}</div>
+    <span class="badge ${s.type==='Supplier'?'badge-teal':'badge-purple'}">${s.type}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">ID</span>
+    <span class="m-card-val mono">${s.id}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Country</span>
+    <span class="m-card-val">${s.country}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Contact</span>
+    <span class="m-card-val">${s.contact}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Pay Terms</span>
+    <span class="m-card-val">${s.payTerms}</span>
+   </div>
+   <div class="m-card-divider"></div>
+   <div class="m-card-row">
+    <span class="m-card-label">On-Time</span>
+    <span class="m-card-val mono" style="color:${oc};font-weight:700">${s.onTimeRate||'—'}%</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Quality</span>
+    <span class="m-card-val mono">${s.qualityScore||'—'}%</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Lead Days</span>
+    <span class="m-card-val mono">${s.leadDays||'—'}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Active POs</span>
+    <span class="m-card-val mono blue">${ap}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Total Paid</span>
+    <span class="m-card-val mono green">${fmt(tp)}</span>
+   </div>
+   <div class="m-card-actions">
+    <button class="btn btn-sm" onclick="editSupplier('${s.id}')">✏️ Edit Supplier</button>
+   </div>
+  </div>`;
+ }).join(''):'<div class="empty-state"><div style="font-size:32px">🏭</div><div>No suppliers found</div></div>';
 }
 
 function renderOrders(){
@@ -1564,12 +1728,120 @@ function renderOrders(){
  const sig=o.stage==='Ready to Ship'||o.stage==='Shipped'?(inFrt?'<span class="badge badge-green">✅ In Freight</span>':'<span class="badge badge-blue">⚡ Push to Freight</span>'):o.stage==='Delivered'?'<span class="badge badge-green">✅ Done</span>':'<span class="badge badge-grey">⏳ '+o.stage+'</span>';
  return`<tr><td class="mono"><strong>${o.poNum}</strong></td><td class="muted">${o.date}</td><td class="mono">${o.sku}</td><td>${p.name||'—'}</td><td class="muted">${gs(o.supplierId).name||'—'}</td><td class="mono">${o.qty}</td><td class="mono">${fmt(uc)}</td><td class="mono">${fmt(total)}</td><td class="mono">${fmt(o.paid)}</td><td class="mono">${bal>0?`<span style="color:var(--red)">${fmt(bal)}</span>`:'<span style="color:var(--green)">£0.00</span>'}</td><td>${payBadge(o.payStatus)}</td><td>${stageBadge(o.stage)}</td><td class="muted">${o.forwarder||'—'}</td><td>${sig}</td><td class="mono muted">${rate}</td><td><div class="row-actions"><button class="action-btn" onclick="editOrder('${o.poNum}')">Edit</button><button class="action-btn del" onclick="delOrder('${o.poNum}')">Del</button></div></td></tr>`;
  }).join('');
+ const mc=document.getElementById('orders-mobile');
+ if(mc) mc.innerHTML=rows.length?rows.map(o=>{
+  const p=gp(o.sku);const rate=o.rateGbp||DB.config.rmbGbp;const uc=cgbp(p,rate);
+  const total=+(uc*o.qty).toFixed(2);const bal=+(total-o.paid).toFixed(2);
+  const inFrt=DB.freight.some(f=>f.poNum===o.poNum);
+  return`<div class="m-card">
+   <div class="m-card-head">
+    <div class="m-card-title">${o.poNum}</div>
+    ${payBadge(o.payStatus)}
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Product</span>
+    <span class="m-card-val">${p.name||o.sku}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">SKU</span>
+    <span class="m-card-val mono">${o.sku}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Supplier</span>
+    <span class="m-card-val">${gs(o.supplierId).name||'—'}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Date</span>
+    <span class="m-card-val">${o.date}</span>
+   </div>
+   <div class="m-card-divider"></div>
+   <div class="m-card-row">
+    <span class="m-card-label">Qty</span>
+    <span class="m-card-val mono">${o.qty} units</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Total</span>
+    <span class="m-card-val mono green">${fmt(total)}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Paid</span>
+    <span class="m-card-val mono">${fmt(o.paid)}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Balance</span>
+    <span class="m-card-val mono ${bal>0?'red':'green'}">${bal>0?fmt(bal):'£0.00'}</span>
+   </div>
+   <div class="m-card-divider"></div>
+   <div class="m-card-row">
+    <span class="m-card-label">Stage</span>
+    ${stageBadge(o.stage)}
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Forwarder</span>
+    <span class="m-card-val">${o.forwarder||'—'}</span>
+   </div>
+   ${(o.stage==='Ready to Ship'||o.stage==='Shipped')?`<div class="m-card-row"><span class="m-card-label">Freight</span>${inFrt?'<span class="badge badge-green">✅ In Freight</span>':'<span class="badge badge-blue">⚡ Not in Freight</span>'}</div>`:''}
+   <div class="m-card-actions">
+    <button class="btn btn-sm" onclick="editOrder('${o.poNum}')">✏️ Edit</button>
+    <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border-color:var(--red)" onclick="delOrder('${o.poNum}')">🗑️ Delete</button>
+   </div>
+  </div>`;
+ }).join(''):'<div class="empty-state"><div style="font-size:32px">📋</div><div>No orders found</div></div>';
 }
 
 function renderFreight(){
  let rows=DB.freight.filter(f=>{const st=frtStatus(f);const fs=CF.fs||'';const sOk=!fs||(fs==='transit'&&!f.arrivalDate)||(fs==='delivered'&&f.arrivalDate)||(fs==='delayed'&&st.label.includes('late'));return(!CF.ff||f.forwarder===CF.ff)&&(!CF.fm||f.mode===CF.fm)&&sOk&&(!SQ||[f.frNum,f.poNum,f.sku,f.forwarder,f.tracking].join(' ').toLowerCase().includes(SQ));});
  document.getElementById('freight-count').textContent=`${rows.length} shipments`;
  document.getElementById('freight-tbody').innerHTML=rows.map(f=>{const st=frtStatus(f);return`<tr><td class="mono"><strong>${f.frNum}</strong></td><td class="mono">${f.poNum}</td><td class="mono">${f.sku}</td><td>${f.forwarder||'—'}</td><td class="muted">${f.mode}</td><td class="mono muted">${f.tracking}</td><td class="mono">${fmt(f.costGbp)}</td><td class="muted">${f.departure}</td><td class="muted">${f.eta}</td><td><span class="badge ${st.cls}">${st.label}</span></td><td class="muted">${f.customs}</td><td class="muted">${f.deliveredTo||'—'}</td><td><div class="row-actions"><button class="action-btn" onclick="editFreight('${f.frNum}')">Edit</button></div></td></tr>`;}).join('');
+ const mc=document.getElementById('freight-mobile');
+ if(mc) mc.innerHTML=rows.length?rows.map(f=>{
+  const st=frtStatus(f);
+  const modeIcons={'Sea LCL':'🚢','Sea FCL':'🚢','Air Express':'✈️','Courier':'📦'};
+  return`<div class="m-card">
+   <div class="m-card-head">
+    <div class="m-card-title">${modeIcons[f.mode]||'📦'} ${f.frNum}</div>
+    <span class="badge ${st.cls}">${st.label}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">PO#</span>
+    <span class="m-card-val mono">${f.poNum}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">SKU</span>
+    <span class="m-card-val mono">${f.sku}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Forwarder</span>
+    <span class="m-card-val">${f.forwarder||'—'}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Mode</span>
+    <span class="m-card-val">${f.mode}</span>
+   </div>
+   <div class="m-card-divider"></div>
+   <div class="m-card-row">
+    <span class="m-card-label">Departure</span>
+    <span class="m-card-val">${f.departure}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">ETA</span>
+    <span class="m-card-val">${f.eta}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Cost</span>
+    <span class="m-card-val mono green">${fmt(f.costGbp)}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Customs</span>
+    <span class="m-card-val">${f.customs}</span>
+   </div>
+   ${f.tracking?`<div class="m-card-row"><span class="m-card-label">Tracking</span><span class="m-card-val mono" style="font-size:11px">${f.tracking}</span></div>`:''}
+   ${f.deliveredTo?`<div class="m-card-row"><span class="m-card-label">Delivered To</span><span class="m-card-val">${f.deliveredTo}</span></div>`:''}
+   <div class="m-card-actions">
+    <button class="btn btn-sm" onclick="editFreight('${f.frNum}')">✏️ Edit Shipment</button>
+   </div>
+  </div>`;
+ }).join(''):'<div class="empty-state"><div style="font-size:32px">🚢</div><div>No shipments found</div></div>';
 }
 
 function renderInventory(){
@@ -1581,6 +1853,64 @@ function renderInventory(){
  const rdc=rd.includes('NOW')?'var(--red)':'var(--text)';
  return`<tr><td class="mono">${inv.sku}</td><td><span class="badge ${BC[p.brand]||'badge-grey'}" style="font-size:10px">${p.brand||'—'}</span></td><td>${p.name||inv.sku}</td><td class="mono">${inv.fba}</td><td class="mono">${inv.tpl}</td><td class="mono">${inv.warehouse}</td><td class="mono ${inT>0?'':'muted'}">${inT}</td><td class="mono"><strong>${avail}</strong></td><td class="mono">${inv.velocity||'—'}</td><td class="mono"><span style="color:${dsc}">${ds}</span></td><td class="mono">${rl||'—'}</td><td class="mono"><span style="color:${rdc};font-weight:${rd.includes('NOW')?700:400}">${rd}</span></td><td><span class="badge ${a.cls}">${a.label}</span></td><td class="mono">${fmt(+(avail*cgbp(p)).toFixed(2))}</td><td class="muted">${inv.location}</td><td><div class="row-actions"><button class="action-btn" onclick="editInventory('${inv.sku}')">Edit</button></div></td></tr>`;
  }).join('');
+ const mc=document.getElementById('inventory-mobile');
+ if(mc) mc.innerHTML=rows.length?rows.map(inv=>{
+  const p=gp(inv.sku);const inT=getInTransit(inv.sku);const avail=getAvail(inv);
+  const rl=getRL(inv);const a=getAlert(inv);const ds=getDS(inv);const rd=getRD(inv);
+  const dsc=typeof ds==='number'?ds<14?'var(--red)':ds<=30?'var(--yellow)':'var(--green)':'var(--text3)';
+  const rdc=rd.includes('NOW')?'var(--red)':'var(--text)';
+  const val=fmt(+(avail*cgbp(p)).toFixed(2));
+  const bp=rl>0?Math.min(100,Math.round(avail/rl*100)):100;
+  const bc=bp<=20?'var(--red)':bp<=50?'var(--yellow)':'var(--green)';
+  return`<div class="m-card">
+   <div class="m-card-head">
+    <div class="m-card-title">${p.name||inv.sku}</div>
+    <span class="badge ${a.cls}">${a.label}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">SKU</span>
+    <span class="m-card-val mono">${inv.sku}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Brand</span>
+    <span class="badge ${BC[p.brand]||'badge-grey'}">${p.brand||'—'}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Location</span>
+    <span class="m-card-val">${inv.location}</span>
+   </div>
+   <div class="m-card-divider"></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:2px 0">
+    <div style="text-align:center;background:var(--surface3);border-radius:8px;padding:8px 4px">
+     <div style="font-size:18px;font-weight:700;color:var(--text)">${avail}</div>
+     <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Available</div>
+    </div>
+    <div style="text-align:center;background:var(--surface3);border-radius:8px;padding:8px 4px">
+     <div style="font-size:18px;font-weight:700;color:${dsc}">${ds}</div>
+     <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Days Left</div>
+    </div>
+    <div style="text-align:center;background:var(--surface3);border-radius:8px;padding:8px 4px">
+     <div style="font-size:18px;font-weight:700;color:var(--green)">${val}</div>
+     <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Value</div>
+    </div>
+   </div>
+   <div style="background:var(--surface3);border-radius:6px;overflow:hidden;height:6px;margin:4px 0">
+    <div style="height:100%;width:${bp}%;background:${bc};border-radius:6px;transition:width 0.3s"></div>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">FBA / 3PL / WH</span>
+    <span class="m-card-val mono">${inv.fba} / ${inv.tpl} / ${inv.warehouse}</span>
+   </div>
+   ${inT>0?`<div class="m-card-row"><span class="m-card-label">In Transit</span><span class="m-card-val mono blue">${inT}</span></div>`:''}
+   <div class="m-card-row">
+    <span class="m-card-label">Reorder By</span>
+    <span class="m-card-val mono" style="color:${rdc};font-weight:${rd.includes('NOW')?700:400}">${rd}</span>
+   </div>
+   <div class="m-card-actions">
+    <button class="btn btn-sm" onclick="editInventory('${inv.sku}')">✏️ Edit Stock</button>
+   </div>
+  </div>`;
+ }).join(''):'<div class="empty-state"><div style="font-size:32px">📊</div><div>No inventory found</div></div>';
 }
 
 function renderReorder(){
@@ -1602,6 +1932,55 @@ function renderProfit(){
  let rows=DB.profit.filter(pr=>{const p=gp(pr.sku);const{margin}=calcP(pr);const fa=CF.pa||'';const aOk=!fa||(fa==='OK'&&margin>=DB.config.margin*100)||(fa==='BELOW'&&margin<DB.config.margin*100);return(!CF.pp||pr.platform===CF.pp)&&(!CF.prb||p.brand===CF.prb)&&aOk&&(!SQ||[pr.sku,p.name||''].join(' ').toLowerCase().includes(SQ));});
  document.getElementById('profit-count').textContent=`${rows.length} SKUs`;
  document.getElementById('profit-tbody').innerHTML=rows.map(pr=>{const p=gp(pr.sku);const c=calcP(pr);const ok=c.margin>=DB.config.margin*100;return`<tr><td class="mono">${pr.sku}</td><td><span class="badge ${BC[p.brand]||'badge-grey'}" style="font-size:10px">${p.brand||'—'}</span></td><td>${p.name||pr.sku}</td><td class="muted">${pr.platform}</td><td class="mono">${fmt(c.cost)}</td><td class="mono">${fmt(c.fpu)}</td><td class="mono">${fmt(c.cust)}</td><td class="mono"><strong>${fmt(c.landed)}</strong></td><td class="mono"><strong>${fmt(pr.sellGbp)}</strong></td><td class="mono">${fmt(c.refFee)}</td><td class="mono">${fmt(pr.fbaFee)}</td><td class="mono">${fmt(c.fees)}</td><td class="mono" style="color:${c.net>=0?'var(--green)':'var(--red)'}"><strong>${fmt(c.net)}</strong></td><td class="mono" style="color:${ok?'var(--green)':'var(--red)'}">${pct(c.margin)}</td><td class="mono" style="color:${c.roi>=0?'var(--green)':'var(--red)'}">${pct(c.roi)}</td><td><span class="badge ${ok?'badge-green':'badge-red'}">${ok?'🟢 OK':'🔴 BELOW'}</span></td><td><div class="row-actions"><button class="action-btn" onclick="editProfit('${pr.sku}')">Edit</button></div></td></tr>`;}).join('');
+ const mc=document.getElementById('profit-mobile');
+ if(mc) mc.innerHTML=rows.length?rows.map(pr=>{
+  const p=gp(pr.sku);const c=calcP(pr);const ok=c.margin>=DB.config.margin*100;
+  return`<div class="m-card">
+   <div class="m-card-head">
+    <div class="m-card-title">${p.name||pr.sku}</div>
+    <span class="badge ${ok?'badge-green':'badge-red'}">${ok?'✅ OK':'⚠ BELOW'}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">SKU</span>
+    <span class="m-card-val mono">${pr.sku}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Platform</span>
+    <span class="m-card-val">${pr.platform}</span>
+   </div>
+   <div class="m-card-divider"></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:2px 0">
+    <div style="background:var(--surface3);border-radius:8px;padding:10px 12px">
+     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Sell Price</div>
+     <div style="font-size:17px;font-weight:700;color:var(--text)">${fmt(pr.sellGbp)}</div>
+    </div>
+    <div style="background:var(--surface3);border-radius:8px;padding:10px 12px">
+     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Net Profit</div>
+     <div style="font-size:17px;font-weight:700;color:${c.net>=0?'var(--green)':'var(--red)'}">${fmt(c.net)}</div>
+    </div>
+    <div style="background:var(--surface3);border-radius:8px;padding:10px 12px">
+     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Margin</div>
+     <div style="font-size:17px;font-weight:700;color:${ok?'var(--green)':'var(--red)'}">${pct(c.margin)}</div>
+    </div>
+    <div style="background:var(--surface3);border-radius:8px;padding:10px 12px">
+     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">ROI</div>
+     <div style="font-size:17px;font-weight:700;color:${c.roi>=0?'var(--green)':'var(--red)'}">${pct(c.roi)}</div>
+    </div>
+   </div>
+   <div class="m-card-divider"></div>
+   <div class="m-card-row">
+    <span class="m-card-label">Landed Cost</span>
+    <span class="m-card-val mono">${fmt(c.landed)}</span>
+   </div>
+   <div class="m-card-row">
+    <span class="m-card-label">Total Fees</span>
+    <span class="m-card-val mono red">${fmt(c.fees)}</span>
+   </div>
+   <div class="m-card-actions">
+    <button class="btn btn-sm" onclick="editProfit('${pr.sku}')">✏️ Edit</button>
+   </div>
+  </div>`;
+ }).join(''):'<div class="empty-state"><div style="font-size:32px">💰</div><div>No margin data found</div></div>';
 }
 
 function renderPnL(){
