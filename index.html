@@ -1486,6 +1486,17 @@ const SEED={
   {sku:'WAL-BatanaSampoo-Herb',brand:'BYMO',name:'Batana Herbal Shampoo 500g – Sulphate-Free Natural',category:'Hair Care',platform:'Amazon UK',costRmb:30.0,sellGbp:9.99,asin:'B0FBRQQRJC',status:'Active',supplierId:'SUP-002',certCost:0},
   // ── BYMO — Skin Care ──
   {sku:'BYMO-Beef Tallow-1pcs',brand:'BYMO',name:'BYMO Beef Tallow Skin Care Balm 60g – Grass-Fed with Manuka Honey',category:'Skin Care',platform:'Amazon UK',costRmb:22.0,sellGbp:9.99,asin:'B0G4DZG88V',status:'Active',supplierId:'SUP-002',certCost:0},
+
+  // ── LaMNooN products (in inventory, not in product master yet) ──
+  {sku:'LMN-DHB-1PC',brand:'LaMNooN',name:'LaMNooN Dermal Hair Brush 1pc',category:'Hair Care',platform:'Amazon UK',costRmb:25.0,sellGbp:12.99,asin:'',status:'Pipeline',supplierId:'SUP-003',certCost:0},
+  {sku:'LMN-DHB-2PC',brand:'LaMNooN',name:'LaMNooN Dermal Hair Brush 2pc',category:'Hair Care',platform:'Amazon UK',costRmb:45.0,sellGbp:22.99,asin:'',status:'Pipeline',supplierId:'SUP-003',certCost:0},
+  {sku:'LMN-EWR-01',brand:'LaMNooN',name:'LaMNooN Ear Wax Removal Kit',category:'Health',platform:'Amazon UK',costRmb:18.0,sellGbp:9.99,asin:'',status:'Pipeline',supplierId:'SUP-003',certCost:0},
+  {sku:'LMN-FGR-ELC-01',brand:'LaMNooN',name:'LaMNooN Electric Foot Grinder',category:'Health',platform:'Amazon UK',costRmb:35.0,sellGbp:19.99,asin:'',status:'Pipeline',supplierId:'SUP-003',certCost:0},
+  // ── BYMO pipeline products ──
+  {sku:'BYM-SOP-TUR-01',brand:'BYMO',name:'BYMO Turkish Soap Bar',category:'Skin Care',platform:'Amazon UK',costRmb:15.0,sellGbp:7.99,asin:'',status:'Pipeline',supplierId:'SUP-002',certCost:0},
+  {sku:'BYM-OIL-ROS-50',brand:'BYMO',name:'BYMO Rosemary Oil 50ml',category:'Hair Care',platform:'Amazon UK',costRmb:18.0,sellGbp:9.99,asin:'',status:'Pipeline',supplierId:'SUP-002',certCost:0},
+  // ── We Art Leaves pipeline ──
+  {sku:'WAL-WH-WHT-01',brand:'We Art Leaves',name:'We Art Leaves Wooden Hanger White',category:'Home',platform:'Amazon UK',costRmb:12.0,sellGbp:6.99,asin:'',status:'Pipeline',supplierId:'SUP-001',certCost:0},
  ],
  suppliers:[
   {id:'SUP-001',name:'Joy Plastics Co.',type:'Supplier',contact:'Joy Wang',email:'joy@joyplastics.cn',country:'China',payTerms:'30% deposit 70% on shipment',leadDays:45,bank:'Bank of China',currency:'RMB',onTimeRate:92,qualityScore:88,notes:'Main bathroom accessories supplier. MOQ 200 units.'},
@@ -1498,13 +1509,13 @@ const SEED={
  ],
  orders:[
   // Delivered POs
-  {poNum:'PO-2026-001',date:'15/03/2026',sku:'WAL-TB-FBA-01',supplierId:'SUP-001',qty:500,payStatus:'Paid',paid:1017.5,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'Spring restock'},
-  {poNum:'PO-2026-002',date:'22/03/2026',sku:'WAL-OIL-RAW-01',supplierId:'SUP-002',qty:200,payStatus:'Paid',paid:990,stage:'Delivered',forwarder:'Eco',rateGbp:0.11,notes:''},
-  {poNum:'PO-2026-003',date:'01/04/2026',sku:'WAL-TB-GRY-02',supplierId:'SUP-001',qty:300,payStatus:'Paid',paid:1155,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'New colourway launch'},
+  {poNum:'PO-2026-001',date:'15/03/2026',sku:'VAL-FBA-TOILET-BRUSH-1',supplierId:'SUP-001',qty:500,payStatus:'Paid',paid:1017.5,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'Spring restock'},
+  {poNum:'PO-2026-002',date:'22/03/2026',sku:'WAL-Batana-Raw 2Pcs',supplierId:'SUP-002',qty:200,payStatus:'Paid',paid:990,stage:'Delivered',forwarder:'Eco',rateGbp:0.11,notes:''},
+  {poNum:'PO-2026-003',date:'01/04/2026',sku:'TB 2-Grey-FBA',supplierId:'SUP-001',qty:300,payStatus:'Paid',paid:1155,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'New colourway launch'},
   {poNum:'PO-2026-004',date:'10/04/2026',sku:'LMN-DHB-1PC',supplierId:'SUP-003',qty:400,payStatus:'Paid',paid:528,stage:'Delivered',forwarder:'Polling',rateGbp:0.11,notes:''},
   // In transit / production
-  {poNum:'PO-2026-005',date:'05/05/2026',sku:'WAL-OIL-PUR-118',supplierId:'SUP-002',qty:300,payStatus:'Partial',paid:792,stage:'Shipped',forwarder:'Eco',rateGbp:0.11,notes:'Air express - urgent'},
-  {poNum:'PO-2026-006',date:'12/05/2026',sku:'WAL-TB-FBA-04',supplierId:'SUP-001',qty:250,payStatus:'Partial',paid:852.5,stage:'In Production',forwarder:'Colin',rateGbp:0.11,notes:''},
+  {poNum:'PO-2026-005',date:'05/05/2026',sku:'WAL-Batana-Serum',supplierId:'SUP-002',qty:300,payStatus:'Partial',paid:792,stage:'Shipped',forwarder:'Eco',rateGbp:0.11,notes:'Air express - urgent'},
+  {poNum:'PO-2026-006',date:'12/05/2026',sku:'VAL-FBA-TOILET-BRUSH-4',supplierId:'SUP-001',qty:250,payStatus:'Partial',paid:852.5,stage:'In Production',forwarder:'Colin',rateGbp:0.11,notes:''},
   {poNum:'PO-2026-007',date:'20/05/2026',sku:'BYM-OIL-ROS-50',supplierId:'SUP-002',qty:200,payStatus:'Partial',paid:242,stage:'QC Check',forwarder:'Eco',rateGbp:0.11,notes:'New BYMO launch stock'},
   // Pending / new
   {poNum:'PO-2026-008',date:'01/06/2026',sku:'LMN-EWR-01',supplierId:'SUP-003',qty:150,payStatus:'Pending',paid:0,stage:'Order Placed',forwarder:'',rateGbp:0.11,notes:'Test order small qty'},
@@ -1513,30 +1524,30 @@ const SEED={
  ],
  freight:[
   // Delivered shipments
-  {frNum:'FR-2026-001',poNum:'PO-2026-001',sku:'WAL-TB-FBA-01',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU12345678',costGbp:93.5,departure:'25/03/2026',eta:'10/04/2026',customs:'Cleared',arrivalDate:'12/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
-  {frNum:'FR-2026-002',poNum:'PO-2026-002',sku:'WAL-OIL-RAW-01',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL987654321',costGbp:132.0,departure:'25/03/2026',eta:'02/04/2026',customs:'Cleared',arrivalDate:'03/04/2026',deliveredTo:'Own Warehouse',shipStage:'Delivered to FBA/Warehouse'},
-  {frNum:'FR-2026-003',poNum:'PO-2026-003',sku:'WAL-TB-GRY-02',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU87654321',costGbp:85.8,departure:'12/04/2026',eta:'28/04/2026',customs:'Cleared',arrivalDate:'30/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-001',poNum:'PO-2026-001',sku:'VAL-FBA-TOILET-BRUSH-1',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU12345678',costGbp:93.5,departure:'25/03/2026',eta:'10/04/2026',customs:'Cleared',arrivalDate:'12/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-002',poNum:'PO-2026-002',sku:'WAL-Batana-Raw 2Pcs',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL987654321',costGbp:132.0,departure:'25/03/2026',eta:'02/04/2026',customs:'Cleared',arrivalDate:'03/04/2026',deliveredTo:'Own Warehouse',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-003',poNum:'PO-2026-003',sku:'TB 2-Grey-FBA',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU87654321',costGbp:85.8,departure:'12/04/2026',eta:'28/04/2026',customs:'Cleared',arrivalDate:'30/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
   {frNum:'FR-2026-004',poNum:'PO-2026-004',sku:'LMN-DHB-1PC',forwarder:'Polling',carrier:'UPS',mode:'Sea FCL',tracking:'MSKU9876543',costGbp:68.0,departure:'20/04/2026',eta:'05/05/2026',customs:'Cleared',arrivalDate:'07/05/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
   // In transit
-  {frNum:'FR-2026-005',poNum:'PO-2026-005',sku:'WAL-OIL-PUR-118',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL112233445',costGbp:188.0,departure:'08/05/2026',eta:'16/05/2026',customs:'Cleared',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
-  {frNum:'FR-2026-006',poNum:'PO-2026-006',sku:'WAL-TB-FBA-04',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU55566677',costGbp:112.0,departure:'25/05/2026',eta:'12/06/2026',customs:'Filed',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
+  {frNum:'FR-2026-005',poNum:'PO-2026-005',sku:'WAL-Batana-Serum',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL112233445',costGbp:188.0,departure:'08/05/2026',eta:'16/05/2026',customs:'Cleared',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
+  {frNum:'FR-2026-006',poNum:'PO-2026-006',sku:'VAL-FBA-TOILET-BRUSH-4',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU55566677',costGbp:112.0,departure:'25/05/2026',eta:'12/06/2026',customs:'Filed',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
   // Booked / dispatched
   {frNum:'FR-2026-007',poNum:'PO-2026-007',sku:'BYM-OIL-ROS-50',forwarder:'Eco',carrier:'Evri Business',mode:'Air Express',tracking:'EVR778899001',costGbp:95.0,departure:'',eta:'20/06/2026',customs:'Not Filed',arrivalDate:'',deliveredTo:'',shipStage:'Booked'},
  ],
  inventory:[
-  {sku:'WAL-TB-FBA-01',fba:145,tpl:0,warehouse:50,reserved:10,velocity:8.5,leadDays:45,location:'FBA UK'},
-  {sku:'WAL-TB-FBA-04',fba:38,tpl:0,warehouse:0,reserved:0,velocity:6.2,leadDays:45,location:'FBA UK'},
-  {sku:'WAL-TB-BLK-02',fba:72,tpl:0,warehouse:20,reserved:0,velocity:4.8,leadDays:45,location:'FBA UK'},
-  {sku:'WAL-TB-GRY-02',fba:95,tpl:0,warehouse:30,reserved:0,velocity:4.0,leadDays:45,location:'FBA UK'},
-  {sku:'WAL-TB-FBM-01',fba:28,tpl:15,warehouse:0,reserved:0,velocity:2.1,leadDays:45,location:'FBA UK'},
-  {sku:'WAL-OIL-RAW-01',fba:88,tpl:0,warehouse:30,reserved:5,velocity:5.2,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-OIL-RAW-02',fba:42,tpl:0,warehouse:0,reserved:0,velocity:3.1,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-OIL-3IN1-01',fba:35,tpl:0,warehouse:10,reserved:0,velocity:2.8,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-OIL-PUR-118',fba:55,tpl:0,warehouse:20,reserved:0,velocity:3.8,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-SRM-60',fba:22,tpl:0,warehouse:8,reserved:0,velocity:1.9,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-CON-HERB-01',fba:18,tpl:0,warehouse:0,reserved:0,velocity:1.5,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-CON-ROSE-01',fba:15,tpl:0,warehouse:0,reserved:0,velocity:1.3,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-SHP-HERB-01',fba:24,tpl:0,warehouse:10,reserved:0,velocity:2.0,leadDays:30,location:'FBA UK'},
+  {sku:'VAL-FBA-TOILET-BRUSH-1',fba:145,tpl:0,warehouse:50,reserved:10,velocity:8.5,leadDays:45,location:'FBA UK'},
+  {sku:'VAL-FBA-TOILET-BRUSH-4',fba:38,tpl:0,warehouse:0,reserved:0,velocity:6.2,leadDays:45,location:'FBA UK'},
+  {sku:'FBA-TOILET-BRUSH-BLK-2',fba:72,tpl:0,warehouse:20,reserved:0,velocity:4.8,leadDays:45,location:'FBA UK'},
+  {sku:'TB 2-Grey-FBA',fba:95,tpl:0,warehouse:30,reserved:0,velocity:4.0,leadDays:45,location:'FBA UK'},
+  {sku:'VAL-FBM-TOILET-BRUSH-1',fba:28,tpl:15,warehouse:0,reserved:0,velocity:2.1,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-Batana-Raw 2Pcs',fba:88,tpl:0,warehouse:30,reserved:5,velocity:5.2,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-Batana-3in1',fba:42,tpl:0,warehouse:0,reserved:0,velocity:3.1,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-Batana-Pure',fba:35,tpl:0,warehouse:10,reserved:0,velocity:2.8,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-Batana-Serum',fba:55,tpl:0,warehouse:20,reserved:0,velocity:3.8,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-Batana-Raw',fba:22,tpl:0,warehouse:8,reserved:0,velocity:1.9,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-BatanaContainer-Herb',fba:18,tpl:0,warehouse:0,reserved:0,velocity:1.5,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-BatanaContainer-Rose',fba:15,tpl:0,warehouse:0,reserved:0,velocity:1.3,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-BatanaSampoo-Herb',fba:24,tpl:0,warehouse:10,reserved:0,velocity:2.0,leadDays:30,location:'FBA UK'},
   {sku:'LMN-DHB-1PC',fba:32,tpl:20,warehouse:0,reserved:0,velocity:2.5,leadDays:40,location:'FBA UK'},
   {sku:'LMN-DHB-2PC',fba:14,tpl:10,warehouse:0,reserved:0,velocity:1.8,leadDays:40,location:'FBA UK'},
   {sku:'LMN-EWR-01',fba:8,tpl:0,warehouse:0,reserved:0,velocity:1.2,leadDays:35,location:'FBA UK'},
@@ -1546,13 +1557,13 @@ const SEED={
   {sku:'LMN-FGR-ELC-01',fba:0,tpl:0,warehouse:12,reserved:0,velocity:0.8,leadDays:40,location:'Own Warehouse'},
  ],
  profit:[
-  {sku:'WAL-TB-FBA-01',platform:'Amazon UK',sellGbp:9.99,referralPct:15,fbaFee:2.85,fbmFee:0,storageFee:0.05,returnRate:2},
-  {sku:'WAL-TB-FBA-04',platform:'Amazon UK',sellGbp:24.99,referralPct:15,fbaFee:4.50,fbmFee:0,storageFee:0.08,returnRate:2},
-  {sku:'WAL-TB-BLK-02',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.31,fbmFee:0,storageFee:0.06,returnRate:2},
-  {sku:'WAL-TB-GRY-02',platform:'TikTok Shop UK',sellGbp:9.99,referralPct:8,fbaFee:0,fbmFee:1.50,storageFee:0,returnRate:3},
-  {sku:'WAL-OIL-RAW-01',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
-  {sku:'WAL-OIL-PUR-118',platform:'Amazon UK',sellGbp:18.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
-  {sku:'WAL-OIL-3IN1-01',platform:'Amazon UK',sellGbp:16.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'VAL-FBA-TOILET-BRUSH-1',platform:'Amazon UK',sellGbp:9.99,referralPct:15,fbaFee:2.85,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'VAL-FBA-TOILET-BRUSH-4',platform:'Amazon UK',sellGbp:24.99,referralPct:15,fbaFee:4.50,fbmFee:0,storageFee:0.08,returnRate:2},
+  {sku:'FBA-TOILET-BRUSH-BLK-2',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.31,fbmFee:0,storageFee:0.06,returnRate:2},
+  {sku:'TB 2-Grey-FBA',platform:'TikTok Shop UK',sellGbp:9.99,referralPct:8,fbaFee:0,fbmFee:1.50,storageFee:0,returnRate:3},
+  {sku:'WAL-Batana-Raw 2Pcs',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-Batana-Serum',platform:'Amazon UK',sellGbp:18.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-Batana-Pure',platform:'Amazon UK',sellGbp:16.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
   {sku:'LMN-DHB-1PC',platform:'Amazon UK',sellGbp:7.99,referralPct:15,fbaFee:2.65,fbmFee:0,storageFee:0.04,returnRate:2},
   {sku:'LMN-DHB-2PC',platform:'Amazon UK',sellGbp:12.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.06,returnRate:2},
   {sku:'LMN-EWR-01',platform:'Amazon UK',sellGbp:16.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:3},
@@ -7824,48 +7835,73 @@ window.ForgeMobile={
 /* ── 12b. Mobile Workspace Renderers ── */
 
 function _renderMobileHome(){
-  // Read live data from DB
-  const totalOrders = DB.orders ? DB.orders.length : 0;
-  const pendingOrders = DB.orders ? DB.orders.filter(o=>o.stage!=='Delivered').length : 0;
-  const totalInv = DB.inventory ? DB.inventory.reduce((s,i)=>{
-    const avail=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
-    return s+avail;
-  },0) : 0;
-  const lowStock = DB.inventory ? DB.inventory.filter(i=>{
+  const orders    = DB.orders||[];
+  const products  = DB.products||[];
+  const inventory = DB.inventory||[];
+  const suppliers = DB.suppliers||[];
+
+  // Products
+  const totalProducts  = products.length;
+  const activeProducts = products.filter(p=>p.status==='Active').length;
+
+  // Orders — match real stage names
+  const totalOrders   = orders.length;
+  const pendingOrders = orders.filter(o=>['Order Placed','Deposit Paid','In Production','QC Check','Confirmed'].includes(o.stage)).length;
+  const inTransitOrders = orders.filter(o=>['Ready to Ship','Shipped','In Transit'].includes(o.stage)).length;
+  const completedOrders = orders.filter(o=>o.stage==='Delivered').length;
+  const pendingPayment  = orders.filter(o=>o.payStatus==='Pending'||o.payStatus==='Partial').length;
+
+  // Inventory
+  const totalInv = inventory.reduce((s,i)=>{
+    return s+(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
+  },0);
+  const lowStock = inventory.filter(i=>{
     const avail=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
     return avail>0&&avail<=(i.reorderPoint||20);
-  }).length : 0;
-  const outStock = DB.inventory ? DB.inventory.filter(i=>{
-    return (i.fba||0)+(i.tpl||0)+(i.warehouse||0)===0;
-  }).length : 0;
-  const recentOrders = DB.orders ? [...DB.orders].sort((a,b)=>b.date>a.date?1:-1).slice(0,3) : [];
+  }).length;
+  const outStock = inventory.filter(i=>(i.fba||0)+(i.tpl||0)+(i.warehouse||0)===0).length;
+
+  // Inventory value — use sellGbp from product if costRmb not matched
+  const invValue = inventory.reduce((s,i)=>{
+    const avail=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
+    const prod=typeof gp==='function'?gp(i.sku):{};
+    const unitCost=prod.sellGbp||cgbp(prod)||0;
+    return s+(avail*unitCost);
+  },0);
+
+  const recentOrders = [...orders].sort((a,b)=>b.date>a.date?1:-1).slice(0,4);
+
   const alerts = [];
   if(outStock>0) alerts.push({type:'red',icon:'🔴',text:`${outStock} SKU${outStock>1?'s':''} out of stock`});
-  if(lowStock>0) alerts.push({type:'yellow',icon:'⚠️',text:`${lowStock} SKU${lowStock>1?'s':''} low stock — reorder soon`});
-  const pendingPayment = DB.orders ? DB.orders.filter(o=>o.payStatus==='Unpaid'||o.payStatus==='Partial').length : 0;
+  if(lowStock>0) alerts.push({type:'yellow',icon:'⚠️',text:`${lowStock} SKU${lowStock>1?'s':''} below reorder point`});
   if(pendingPayment>0) alerts.push({type:'yellow',icon:'💳',text:`${pendingPayment} order${pendingPayment>1?'s':''} with payment pending`});
+  if(inTransitOrders>0) alerts.push({type:'green',icon:'🚢',text:`${inTransitOrders} order${inTransitOrders>1?'s':''} in transit`});
 
   return `
     <div class="mws-kpi-scroll">
       <div class="mws-kpi-card">
-        <div class="mws-kpi-val">${totalOrders}</div>
-        <div class="mws-kpi-label">Total Orders</div>
+        <div class="mws-kpi-val">${activeProducts}</div>
+        <div class="mws-kpi-label">Active SKUs</div>
       </div>
       <div class="mws-kpi-card">
         <div class="mws-kpi-val" style="color:var(--yellow)">${pendingOrders}</div>
-        <div class="mws-kpi-label">Pending</div>
+        <div class="mws-kpi-label">Pending Orders</div>
       </div>
       <div class="mws-kpi-card">
-        <div class="mws-kpi-val">${totalInv}</div>
-        <div class="mws-kpi-label">Total Stock</div>
+        <div class="mws-kpi-val" style="color:var(--accent2)">${inTransitOrders}</div>
+        <div class="mws-kpi-label">In Transit</div>
+      </div>
+      <div class="mws-kpi-card">
+        <div class="mws-kpi-val" style="color:var(--green)">${completedOrders}</div>
+        <div class="mws-kpi-label">Delivered</div>
       </div>
       <div class="mws-kpi-card">
         <div class="mws-kpi-val" style="color:${outStock>0?'var(--red)':'var(--green)'}">${outStock}</div>
         <div class="mws-kpi-label">Out of Stock</div>
       </div>
       <div class="mws-kpi-card">
-        <div class="mws-kpi-val" style="color:var(--text2)">${DB.products?DB.products.length:0}</div>
-        <div class="mws-kpi-label">Products</div>
+        <div class="mws-kpi-val" style="font-size:14px">${typeof fmt==='function'?fmt(invValue):'—'}</div>
+        <div class="mws-kpi-label">Stock Value</div>
       </div>
     </div>
     ${alerts.length?alerts.map(a=>`<div class="mws-alert ${a.type}"><span class="mws-alert-icon">${a.icon}</span><span class="mws-alert-text">${a.text}</span></div>`).join(''):''}
@@ -7888,16 +7924,17 @@ function _renderMobileHome(){
     <div class="mws-surface">
       ${recentOrders.map(o=>{
         const p=typeof gp==='function'?gp(o.sku):{name:o.sku};
-        return `<div class="mws-row">
+        const sc={'Delivered':'var(--green)','Shipped':'var(--accent2)','In Transit':'var(--accent2)','Ready to Ship':'var(--accent2)','Order Placed':'var(--yellow)','Deposit Paid':'var(--yellow)','In Production':'var(--text3)','QC Check':'var(--text3)'};
+        return \`<div class="mws-row">
           <div class="mws-row-left">
-            <div class="mws-row-title">${o.poNum}</div>
-            <div class="mws-row-sub">${p.name||o.sku} · ${o.date}</div>
+            <div class="mws-row-title">\${o.poNum}</div>
+            <div class="mws-row-sub">\${p.name||o.sku} · \${o.date}</div>
           </div>
           <div class="mws-row-right">
-            <div class="mws-row-val">${typeof fmt==='function'?fmt(o.paid):'—'}</div>
-            <div class="mws-row-sub2">${o.stage}</div>
+            <div class="mws-row-val" style="color:\${sc[o.stage]||'var(--text)'};\${o.stage==='Delivered'?'font-size:11px':''}">\${o.stage}</div>
+            <div class="mws-row-sub2">\${typeof fmt==='function'?fmt(o.paid):'—'}</div>
           </div>
-        </div>`;
+        </div>\`;
       }).join('')}
     </div>`:''}`;
 }
@@ -7905,8 +7942,9 @@ function _renderMobileHome(){
 function _renderMobileOrders(){
   const orders = DB.orders||[];
   const total   = orders.length;
-  const pending = orders.filter(o=>['Placed','Confirmed','Production'].includes(o.stage)).length;
-  const transit = orders.filter(o=>['Ready to Ship','Shipped'].includes(o.stage)).length;
+  // Match actual SEED stage names
+  const pending = orders.filter(o=>['Order Placed','Deposit Paid','In Production','QC Check','Confirmed'].includes(o.stage)).length;
+  const transit = orders.filter(o=>['Ready to Ship','Shipped','In Transit'].includes(o.stage)).length;
   const delivered= orders.filter(o=>o.stage==='Delivered').length;
   const recent  = [...orders].sort((a,b)=>b.date>a.date?1:-1).slice(0,8);
   return `
@@ -7924,14 +7962,15 @@ function _renderMobileOrders(){
     <div class="mws-surface">
       ${recent.length?recent.map(o=>{
         const p=typeof gp==='function'?gp(o.sku):{name:o.sku};
-        const stageColors={'Delivered':'var(--green)','Shipped':'var(--accent2)','Ready to Ship':'var(--accent2)','Placed':'var(--yellow)','Confirmed':'var(--yellow)','Production':'var(--text3)'};
+        const stageColors={'Delivered':'var(--green)','Shipped':'var(--accent2)','In Transit':'var(--accent2)','Ready to Ship':'var(--accent2)','Order Placed':'var(--yellow)','Deposit Paid':'var(--yellow)','In Production':'var(--text3)','QC Check':'var(--text3)','Confirmed':'var(--yellow)'};
+        const sup=typeof gs==='function'?gs(o.supplierId):{};
         return `<div class="mws-row">
           <div class="mws-row-left">
             <div class="mws-row-title">${o.poNum}</div>
-            <div class="mws-row-sub">${p.name||o.sku} · ${o.qty} units</div>
+            <div class="mws-row-sub">${p.name||o.sku} · ${o.qty} units · ${sup.name||''}</div>
           </div>
           <div class="mws-row-right">
-            <div class="mws-row-val" style="color:${stageColors[o.stage]||'var(--text)'}">${o.stage}</div>
+            <div class="mws-row-val" style="color:${stageColors[o.stage]||'var(--text)'}; font-size:11px">${o.stage}</div>
             <div class="mws-row-sub2">${o.date}</div>
           </div>
         </div>`;
@@ -7948,8 +7987,9 @@ function _renderMobileInventory(){
   const value  = inv.reduce((s,i)=>{
     const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
     const p=typeof gp==='function'?gp(i.sku):{};
-    const cost=typeof cgbp==='function'?cgbp(p):0;
-    return s+(a*cost);
+    // Use sellGbp first, fall back to costRmb conversion
+    const unitVal=p.sellGbp||(typeof cgbp==='function'?cgbp(p):0);
+    return s+(a*unitVal);
   },0);
   const sorted = [...inv].sort((a,b)=>{
     const aa=(a.fba||0)+(a.tpl||0)+(a.warehouse||0);
@@ -7991,15 +8031,17 @@ function _renderMobileInventory(){
 }
 
 function _renderMobileActivity(){
-  // Read audit log from localStorage
+  // PRIMARY source: DB.activity — operational activity log (product launches, changes etc)
+  const dbActivity = DB.activity||[];
+
+  // SECONDARY source: forge_audit_log — system audit (login/logout/settings)
   let auditLog=[];
   try{
     const raw=localStorage.getItem('forge_audit_log');
     if(raw) auditLog=JSON.parse(raw);
   }catch(e){}
-  const recent=auditLog.slice(0,15);
 
-  // Also check ForgeNotificationService cache for notifications
+  // Notifications from cache
   let notifs=[];
   try{
     if(typeof ForgeNotificationService!=='undefined'){
@@ -8008,15 +8050,17 @@ function _renderMobileActivity(){
     }
   }catch(e){}
 
-  // Task counts
-  const tasks=DB.tasks||[];
-  const myTasks=tasks.filter(t=>t.status!=='Done');
+  // Tasks
+  let tasks=[];
+  try{const raw=localStorage.getItem('forge_admin_tasks');if(raw)tasks=JSON.parse(raw);}catch(e){}
+  const openTasks=tasks.filter(t=>t.status!=='Done'&&t.status!=='Completed');
 
   return `
     <div class="mws-kpi-scroll">
-      <div class="mws-kpi-card"><div class="mws-kpi-val">${recent.length}</div><div class="mws-kpi-label">Audit Events</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--accent2)">${myTasks.length}</div><div class="mws-kpi-label">Open Tasks</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val">${notifs.filter(n=>!n.read).length}</div><div class="mws-kpi-label">Unread Notifs</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val">${dbActivity.length}</div><div class="mws-kpi-label">Op. Activity</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val">${auditLog.length}</div><div class="mws-kpi-label">Audit Events</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--accent2)">${openTasks.length}</div><div class="mws-kpi-label">Open Tasks</div></div>
+      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--yellow)">${notifs.filter(n=>!n.read).length}</div><div class="mws-kpi-label">Unread</div></div>
     </div>
     ${notifs.length?`
     <div class="mws-section-head">
@@ -8035,11 +8079,27 @@ function _renderMobileActivity(){
       </div>`).join('')}
     </div>`:''}
     <div class="mws-section-head">
-      <span class="mws-section-title">Recent Activity</span>
+      <span class="mws-section-title">Operational Activity</span>
       <button class="mws-section-link" onclick="ForgeMobile.navTo('activity')">Full Log</button>
     </div>
     <div class="mws-surface">
-      ${recent.length?recent.map(e=>`<div class="mws-row">
+      ${dbActivity.length?dbActivity.slice().reverse().slice(0,10).map(a=>`<div class="mws-row">
+        <div class="mws-row-left">
+          <div class="mws-row-title">${a.what||a.action||'Activity'}</div>
+          <div class="mws-row-sub">${a.category||''} · ${a.ref||''} · ${a.doneBy||''}</div>
+        </div>
+        <div class="mws-row-right">
+          <div class="mws-row-val" style="font-size:10px"><span class="badge badge-blue">${a.status||''}</span></div>
+          <div class="mws-row-sub2">${a.date||''}</div>
+        </div>
+      </div>`).join(''):'<div class="mws-empty"><div class="mws-empty-icon">📝</div><div>No operational activity yet</div></div>'}
+    </div>
+    ${auditLog.length?`
+    <div class="mws-section-head">
+      <span class="mws-section-title">System Audit</span>
+    </div>
+    <div class="mws-surface">
+      ${auditLog.slice(0,8).map(e=>`<div class="mws-row">
         <div class="mws-row-left">
           <div class="mws-row-title">${e.action||e.type||'Event'}</div>
           <div class="mws-row-sub">${e.user||e.userName||''} · ${e.details||''}</div>
@@ -8047,8 +8107,8 @@ function _renderMobileActivity(){
         <div class="mws-row-right">
           <div class="mws-row-sub2">${e.time||e.timestamp||''}</div>
         </div>
-      </div>`).join(''):'<div class="mws-empty"><div class="mws-empty-icon">📝</div><div>No activity yet</div></div>'}
-    </div>`;
+      </div>`).join('')}
+    </div>`:''}`;
 }
 
 /* ── 12c. Mobile Workspace Container (injected into .content) ── */
