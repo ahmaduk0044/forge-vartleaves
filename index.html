@@ -7925,16 +7925,17 @@ function _renderMobileHome(){
       ${recentOrders.map(o=>{
         const p=typeof gp==='function'?gp(o.sku):{name:o.sku};
         const sc={'Delivered':'var(--green)','Shipped':'var(--accent2)','In Transit':'var(--accent2)','Ready to Ship':'var(--accent2)','Order Placed':'var(--yellow)','Deposit Paid':'var(--yellow)','In Production':'var(--text3)','QC Check':'var(--text3)'};
-        return \`<div class="mws-row">
-          <div class="mws-row-left">
-            <div class="mws-row-title">\${o.poNum}</div>
-            <div class="mws-row-sub">\${p.name||o.sku} · \${o.date}</div>
-          </div>
-          <div class="mws-row-right">
-            <div class="mws-row-val" style="color:\${sc[o.stage]||'var(--text)'};\${o.stage==='Delivered'?'font-size:11px':''}">\${o.stage}</div>
-            <div class="mws-row-sub2">\${typeof fmt==='function'?fmt(o.paid):'—'}</div>
-          </div>
-        </div>\`;
+        const stageColor=sc[o.stage]||'var(--text)';
+        const paidFmt=typeof fmt==='function'?fmt(o.paid):'—';
+        return '<div class="mws-row">'
+          +'<div class="mws-row-left">'
+          +'<div class="mws-row-title">'+o.poNum+'</div>'
+          +'<div class="mws-row-sub">'+(p.name||o.sku)+' · '+o.date+'</div>'
+          +'</div>'
+          +'<div class="mws-row-right">'
+          +'<div class="mws-row-val" style="color:'+stageColor+';font-size:11px">'+o.stage+'</div>'
+          +'<div class="mws-row-sub2">'+paidFmt+'</div>'
+          +'</div></div>';
       }).join('')}
     </div>`:''}`;
 }
