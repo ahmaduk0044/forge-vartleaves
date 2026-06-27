@@ -384,19 +384,15 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
   .topbar{display:none!important;}
 
   /* ── Main area fills full width ── */
-  body{display:block!important;height:100dvh!important;overflow:hidden!important;}
+  body{display:block!important;}
   .main{
-    display:flex!important;flex-direction:column!important;
-    width:100vw!important;min-width:0!important;
-    height:calc(100dvh - 52px)!important;
-    overflow:hidden!important;position:relative!important;
+    display:flex;flex-direction:column;
+    width:100vw;min-width:0;
+    height:100dvh;overflow:hidden;
   }
   .content{
-    flex:1!important;overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    touch-action:pan-y!important;
-    padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;
-    min-height:0!important;
+    flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));
   }
 
   /* ── Mobile topbar ── */
@@ -6892,8 +6888,6 @@ async function adminTogglePermission(role, permKey, value){
     }
 
     // ── Get notifications for current user (most recent first) ──
-    // NOTE: .where+.orderBy requires a Firestore composite index.
-    // Fallback: if that fails (no index), fetch without orderBy and sort client-side.
     async function getMyNotifications(uid, limit){
       if(!_db) return [];
       try{
@@ -6907,27 +6901,8 @@ async function adminTogglePermission(role, permKey, value){
         _cache=list;
         return list;
       }catch(err){
-        // Composite index missing — fallback: fetch all for this user, sort client-side
-        console.warn('[ForgeNotification] orderBy query failed (likely missing index), using fallback:',err.message);
-        try{
-          const snap2 = await _db.collection(COLLECTION)
-            .where('targetUid','==',uid)
-            .limit(limit||30)
-            .get();
-          const list2=[];
-          snap2.forEach(doc=>list2.push({id:doc.id,...doc.data()}));
-          // Sort client-side by createdAt descending
-          list2.sort((a,b)=>{
-            const ta=a.createdAt?.toMillis?a.createdAt.toMillis():0;
-            const tb=b.createdAt?.toMillis?b.createdAt.toMillis():0;
-            return tb-ta;
-          });
-          _cache=list2;
-          return list2;
-        }catch(err2){
-          console.warn('[ForgeNotification] fallback also failed:',err2.message);
-          return [];
-        }
+        console.warn('[ForgeNotification] getMyNotifications failed:',err.message);
+        return [];
       }
     }
 
@@ -6954,11 +6929,9 @@ async function adminTogglePermission(role, permKey, value){
     }
 
     // ── Live listener — fires callback whenever notifications change ──
-    // Falls back to no-orderBy listener if composite index is missing
     function listen(uid, callback){
       if(!_db) return ()=>{};
       if(_unsubscribe) _unsubscribe();
-      // Try with orderBy first
       _unsubscribe = _db.collection(COLLECTION)
         .where('targetUid','==',uid)
         .orderBy('createdAt','desc')
@@ -6968,26 +6941,8 @@ async function adminTogglePermission(role, permKey, value){
           snap.forEach(doc=>list.push({id:doc.id,...doc.data()}));
           _cache=list;
           callback(list);
-        }, err=>{
-          console.warn('[ForgeNotification] ordered listener failed, falling back:',err.message);
-          // Fallback: listen without orderBy, sort client-side
-          if(_unsubscribe) _unsubscribe();
-          _unsubscribe = _db.collection(COLLECTION)
-            .where('targetUid','==',uid)
-            .limit(30)
-            .onSnapshot(snap=>{
-              const list=[];
-              snap.forEach(doc=>list.push({id:doc.id,...doc.data()}));
-              list.sort((a,b)=>{
-                const ta=a.createdAt?.toMillis?a.createdAt.toMillis():0;
-                const tb=b.createdAt?.toMillis?b.createdAt.toMillis():0;
-                return tb-ta;
-              });
-              _cache=list;
-              callback(list);
-            }, err2=>console.warn('[ForgeNotification] fallback listener error:',err2.message));
-        });
-      return ()=>{ if(_unsubscribe) _unsubscribe(); };
+        }, err=>console.warn('[ForgeNotification] listener error:',err.message));
+      return _unsubscribe;
     }
 
     function getCache(){ return _cache; }
@@ -7754,19 +7709,17 @@ function _deactivate(){
 function _injectMorePanel(){
   if(document.getElementById('forge-more-panel')) return;
   const items=[
-    {icon:'📦',label:'Products',id:'products'},
-    {icon:'🏭',label:'Suppliers',id:'suppliers'},
-    {icon:'🚢',label:'Freight',id:'freight'},
-    {icon:'🔁',label:'Reorder',id:'reorder'},
-    {icon:'💰',label:'Landed Cost',id:'profit'},
+    {icon:'🧮',label:'FBA Calculator',id:'feecalc'},
+    {icon:'🚢',label:'Freight Calc',id:'freight'},
     {icon:'📉',label:'P&L',id:'pnl'},
     {icon:'💸',label:'Cashflow',id:'cashflow'},
-    {icon:'🧮',label:'FBA Calculator',id:'feecalc'},
+    {icon:'🏭',label:'Suppliers',id:'suppliers'},
+    {icon:'🔍',label:'Product Info',id:'prodinfo'},
     {icon:'🚀',label:'Launch Planner',id:'launch'},
     {icon:'📤',label:'FBA Ships',id:'fbaship'},
     {icon:'⟳',label:'ICC Calc',id:'icc'},
     {icon:'🛒',label:'Amazon',id:'amazon'},
-    {icon:'🔍',label:'Product Info',id:'prodinfo'},
+    {icon:'💰',label:'Landed Cost',id:'profit'},
     {icon:'⚙️',label:'Config',id:'config'},
     {icon:'🛡️',label:'Admin',id:'admin'},
   ];
