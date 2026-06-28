@@ -614,6 +614,17 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
   #admin-content [style*="max-width:420px"]{max-width:100%!important;}
 }
 
+  /* ── Active page fills content area and scrolls ── */
+  .page.active{
+    flex:1!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    touch-action:pan-y!important;
+    min-height:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+
 /* ━━━━━━━━━━━━━━━━━━
    ≤ 480px EXTRA SMALL
    ━━━━━━━━━━━━━━━━━━ */
