@@ -614,17 +614,6 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
   #admin-content [style*="max-width:420px"]{max-width:100%!important;}
 }
 
-  /* ── Active page fills content area and scrolls ── */
-  .page.active{
-    flex:1!important;
-    overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-    touch-action:pan-y!important;
-    min-height:0!important;
-    display:flex!important;
-    flex-direction:column!important;
-  }
-
 /* ━━━━━━━━━━━━━━━━━━
    ≤ 480px EXTRA SMALL
    ━━━━━━━━━━━━━━━━━━ */
@@ -632,107 +621,6 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
   .kpi-value{font-size:17px!important;}
   .amz-kpis{grid-template-columns:1fr 1fr!important;}
   .dash-grid{padding:8px!important;gap:8px!important;}
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━
-   MOBILE WORKSPACE STYLES
-   ━━━━━━━━━━━━━━━━━━━━━━━━━ */
-@media(max-width:768px){
-  /* ── KPI scroll strip ── */
-  .mws-kpi-scroll{
-    display:flex;gap:10px;overflow-x:auto;
-    padding:12px 12px 4px;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-  }
-  .mws-kpi-scroll::-webkit-scrollbar{display:none;}
-  .mws-kpi-card{
-    flex-shrink:0;background:var(--surface);
-    border:1px solid var(--border);border-radius:12px;
-    padding:12px 16px;min-width:110px;text-align:center;
-  }
-  .mws-kpi-val{font-size:20px;font-weight:800;color:var(--text);line-height:1.1;margin-bottom:3px;}
-  .mws-kpi-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
-  .mws-kpi-sub{font-size:10px;color:var(--green);margin-top:2px;}
-
-  /* ── Section header ── */
-  .mws-section-head{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:14px 12px 6px;
-  }
-  .mws-section-title{font-size:13px;font-weight:700;color:var(--text);}
-  .mws-section-link{font-size:11.5px;color:var(--accent2);font-weight:600;cursor:pointer;background:none;border:none;padding:0;}
-
-  /* ── Data rows in workspace ── */
-  .mws-row{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:11px 12px;border-bottom:1px solid var(--border);
-    gap:10px;
-  }
-  .mws-row:last-child{border-bottom:none;}
-  .mws-row-left{flex:1;min-width:0;}
-  .mws-row-title{font-size:13px;font-weight:600;color:var(--text);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .mws-row-sub{font-size:11px;color:var(--text3);margin-top:2px;}
-  .mws-row-right{text-align:right;flex-shrink:0;}
-  .mws-row-val{font-size:13px;font-weight:700;color:var(--text);}
-  .mws-row-sub2{font-size:10.5px;color:var(--text3);margin-top:1px;}
-
-  /* ── Alert card ── */
-  .mws-alert{
-    margin:0 12px 8px;padding:11px 13px;
-    border-radius:10px;border-left:3px solid var(--yellow);
-    background:rgba(234,179,8,.08);
-    display:flex;align-items:center;gap:10px;
-  }
-  .mws-alert.red{border-color:var(--red);background:rgba(239,68,68,.08);}
-  .mws-alert.green{border-color:var(--green);background:rgba(16,185,129,.08);}
-  .mws-alert-icon{font-size:18px;flex-shrink:0;}
-  .mws-alert-text{font-size:12px;color:var(--text2);line-height:1.4;}
-
-  /* ── Quick action grid ── */
-  .mws-qa-grid{
-    display:grid;grid-template-columns:repeat(3,1fr);
-    gap:8px;padding:8px 12px 12px;
-  }
-  .mws-qa-btn{
-    display:flex;flex-direction:column;align-items:center;gap:5px;
-    padding:12px 6px;background:var(--surface);border:1px solid var(--border);
-    border-radius:11px;cursor:pointer;min-height:66px;
-    -webkit-tap-highlight-color:transparent;
-    font-size:10.5px;font-weight:600;color:var(--text2);
-    text-align:center;line-height:1.3;
-  }
-  .mws-qa-btn:active{background:var(--surface3);}
-  .mws-qa-icon{font-size:22px;}
-
-  /* ── Workspace container ── */
-  .mws-workspace{display:none;flex-direction:column;overflow-y:auto;flex:1;}
-  .mws-workspace.active{display:flex;}
-  .mws-surface{background:var(--surface);border-radius:12px;margin:0 12px 10px;overflow:hidden;border:1px solid var(--border);}
-  .mws-empty{text-align:center;padding:32px 16px;color:var(--text3);}
-  .mws-empty-icon{font-size:36px;margin-bottom:8px;}
-  .mws-cta-btn{
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    margin:0 12px 12px;padding:13px;
-    background:var(--accent);color:#fff;border:none;
-    border-radius:11px;font-size:14px;font-weight:700;
-    cursor:pointer;min-height:48px;
-    -webkit-tap-highlight-color:transparent;width:calc(100% - 24px);
-  }
-  .mws-cta-btn:active{opacity:.85;}
-}
-
-/* Static bottom bar — always in HTML, shown only on mobile */
-@media(max-width:768px){
-  #forge-static-bottombar{
-    display:flex!important;
-    position:fixed;bottom:0;left:0;right:0;
-    height:calc(56px + env(safe-area-inset-bottom,0px));
-    padding-bottom:env(safe-area-inset-bottom,0px);
-    background:var(--surface);border-top:1px solid var(--border);
-    z-index:120;
-  }
 }
 </style>
 </head>
@@ -1509,17 +1397,6 @@ const SEED={
   {sku:'WAL-BatanaSampoo-Herb',brand:'BYMO',name:'Batana Herbal Shampoo 500g – Sulphate-Free Natural',category:'Hair Care',platform:'Amazon UK',costRmb:30.0,sellGbp:9.99,asin:'B0FBRQQRJC',status:'Active',supplierId:'SUP-002',certCost:0},
   // ── BYMO — Skin Care ──
   {sku:'BYMO-Beef Tallow-1pcs',brand:'BYMO',name:'BYMO Beef Tallow Skin Care Balm 60g – Grass-Fed with Manuka Honey',category:'Skin Care',platform:'Amazon UK',costRmb:22.0,sellGbp:9.99,asin:'B0G4DZG88V',status:'Active',supplierId:'SUP-002',certCost:0},
-
-  // ── LaMNooN products (in inventory, not in product master yet) ──
-  {sku:'LMN-DHB-1PC',brand:'LaMNooN',name:'LaMNooN Dermal Hair Brush 1pc',category:'Hair Care',platform:'Amazon UK',costRmb:25.0,sellGbp:12.99,asin:'',status:'Pipeline',supplierId:'SUP-003',certCost:0},
-  {sku:'LMN-DHB-2PC',brand:'LaMNooN',name:'LaMNooN Dermal Hair Brush 2pc',category:'Hair Care',platform:'Amazon UK',costRmb:45.0,sellGbp:22.99,asin:'',status:'Pipeline',supplierId:'SUP-003',certCost:0},
-  {sku:'LMN-EWR-01',brand:'LaMNooN',name:'LaMNooN Ear Wax Removal Kit',category:'Health',platform:'Amazon UK',costRmb:18.0,sellGbp:9.99,asin:'',status:'Pipeline',supplierId:'SUP-003',certCost:0},
-  {sku:'LMN-FGR-ELC-01',brand:'LaMNooN',name:'LaMNooN Electric Foot Grinder',category:'Health',platform:'Amazon UK',costRmb:35.0,sellGbp:19.99,asin:'',status:'Pipeline',supplierId:'SUP-003',certCost:0},
-  // ── BYMO pipeline products ──
-  {sku:'BYM-SOP-TUR-01',brand:'BYMO',name:'BYMO Turkish Soap Bar',category:'Skin Care',platform:'Amazon UK',costRmb:15.0,sellGbp:7.99,asin:'',status:'Pipeline',supplierId:'SUP-002',certCost:0},
-  {sku:'BYM-OIL-ROS-50',brand:'BYMO',name:'BYMO Rosemary Oil 50ml',category:'Hair Care',platform:'Amazon UK',costRmb:18.0,sellGbp:9.99,asin:'',status:'Pipeline',supplierId:'SUP-002',certCost:0},
-  // ── We Art Leaves pipeline ──
-  {sku:'WAL-WH-WHT-01',brand:'We Art Leaves',name:'We Art Leaves Wooden Hanger White',category:'Home',platform:'Amazon UK',costRmb:12.0,sellGbp:6.99,asin:'',status:'Pipeline',supplierId:'SUP-001',certCost:0},
  ],
  suppliers:[
   {id:'SUP-001',name:'Joy Plastics Co.',type:'Supplier',contact:'Joy Wang',email:'joy@joyplastics.cn',country:'China',payTerms:'30% deposit 70% on shipment',leadDays:45,bank:'Bank of China',currency:'RMB',onTimeRate:92,qualityScore:88,notes:'Main bathroom accessories supplier. MOQ 200 units.'},
@@ -1532,13 +1409,13 @@ const SEED={
  ],
  orders:[
   // Delivered POs
-  {poNum:'PO-2026-001',date:'15/03/2026',sku:'VAL-FBA-TOILET-BRUSH-1',supplierId:'SUP-001',qty:500,payStatus:'Paid',paid:1017.5,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'Spring restock'},
-  {poNum:'PO-2026-002',date:'22/03/2026',sku:'WAL-Batana-Raw 2Pcs',supplierId:'SUP-002',qty:200,payStatus:'Paid',paid:990,stage:'Delivered',forwarder:'Eco',rateGbp:0.11,notes:''},
-  {poNum:'PO-2026-003',date:'01/04/2026',sku:'TB 2-Grey-FBA',supplierId:'SUP-001',qty:300,payStatus:'Paid',paid:1155,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'New colourway launch'},
+  {poNum:'PO-2026-001',date:'15/03/2026',sku:'WAL-TB-FBA-01',supplierId:'SUP-001',qty:500,payStatus:'Paid',paid:1017.5,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'Spring restock'},
+  {poNum:'PO-2026-002',date:'22/03/2026',sku:'WAL-OIL-RAW-01',supplierId:'SUP-002',qty:200,payStatus:'Paid',paid:990,stage:'Delivered',forwarder:'Eco',rateGbp:0.11,notes:''},
+  {poNum:'PO-2026-003',date:'01/04/2026',sku:'WAL-TB-GRY-02',supplierId:'SUP-001',qty:300,payStatus:'Paid',paid:1155,stage:'Delivered',forwarder:'Colin',rateGbp:0.11,notes:'New colourway launch'},
   {poNum:'PO-2026-004',date:'10/04/2026',sku:'LMN-DHB-1PC',supplierId:'SUP-003',qty:400,payStatus:'Paid',paid:528,stage:'Delivered',forwarder:'Polling',rateGbp:0.11,notes:''},
   // In transit / production
-  {poNum:'PO-2026-005',date:'05/05/2026',sku:'WAL-Batana-Serum',supplierId:'SUP-002',qty:300,payStatus:'Partial',paid:792,stage:'Shipped',forwarder:'Eco',rateGbp:0.11,notes:'Air express - urgent'},
-  {poNum:'PO-2026-006',date:'12/05/2026',sku:'VAL-FBA-TOILET-BRUSH-4',supplierId:'SUP-001',qty:250,payStatus:'Partial',paid:852.5,stage:'In Production',forwarder:'Colin',rateGbp:0.11,notes:''},
+  {poNum:'PO-2026-005',date:'05/05/2026',sku:'WAL-OIL-PUR-118',supplierId:'SUP-002',qty:300,payStatus:'Partial',paid:792,stage:'Shipped',forwarder:'Eco',rateGbp:0.11,notes:'Air express - urgent'},
+  {poNum:'PO-2026-006',date:'12/05/2026',sku:'WAL-TB-FBA-04',supplierId:'SUP-001',qty:250,payStatus:'Partial',paid:852.5,stage:'In Production',forwarder:'Colin',rateGbp:0.11,notes:''},
   {poNum:'PO-2026-007',date:'20/05/2026',sku:'BYM-OIL-ROS-50',supplierId:'SUP-002',qty:200,payStatus:'Partial',paid:242,stage:'QC Check',forwarder:'Eco',rateGbp:0.11,notes:'New BYMO launch stock'},
   // Pending / new
   {poNum:'PO-2026-008',date:'01/06/2026',sku:'LMN-EWR-01',supplierId:'SUP-003',qty:150,payStatus:'Pending',paid:0,stage:'Order Placed',forwarder:'',rateGbp:0.11,notes:'Test order small qty'},
@@ -1547,30 +1424,30 @@ const SEED={
  ],
  freight:[
   // Delivered shipments
-  {frNum:'FR-2026-001',poNum:'PO-2026-001',sku:'VAL-FBA-TOILET-BRUSH-1',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU12345678',costGbp:93.5,departure:'25/03/2026',eta:'10/04/2026',customs:'Cleared',arrivalDate:'12/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
-  {frNum:'FR-2026-002',poNum:'PO-2026-002',sku:'WAL-Batana-Raw 2Pcs',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL987654321',costGbp:132.0,departure:'25/03/2026',eta:'02/04/2026',customs:'Cleared',arrivalDate:'03/04/2026',deliveredTo:'Own Warehouse',shipStage:'Delivered to FBA/Warehouse'},
-  {frNum:'FR-2026-003',poNum:'PO-2026-003',sku:'TB 2-Grey-FBA',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU87654321',costGbp:85.8,departure:'12/04/2026',eta:'28/04/2026',customs:'Cleared',arrivalDate:'30/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-001',poNum:'PO-2026-001',sku:'WAL-TB-FBA-01',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU12345678',costGbp:93.5,departure:'25/03/2026',eta:'10/04/2026',customs:'Cleared',arrivalDate:'12/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-002',poNum:'PO-2026-002',sku:'WAL-OIL-RAW-01',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL987654321',costGbp:132.0,departure:'25/03/2026',eta:'02/04/2026',customs:'Cleared',arrivalDate:'03/04/2026',deliveredTo:'Own Warehouse',shipStage:'Delivered to FBA/Warehouse'},
+  {frNum:'FR-2026-003',poNum:'PO-2026-003',sku:'WAL-TB-GRY-02',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU87654321',costGbp:85.8,departure:'12/04/2026',eta:'28/04/2026',customs:'Cleared',arrivalDate:'30/04/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
   {frNum:'FR-2026-004',poNum:'PO-2026-004',sku:'LMN-DHB-1PC',forwarder:'Polling',carrier:'UPS',mode:'Sea FCL',tracking:'MSKU9876543',costGbp:68.0,departure:'20/04/2026',eta:'05/05/2026',customs:'Cleared',arrivalDate:'07/05/2026',deliveredTo:'FBA UK',shipStage:'Delivered to FBA/Warehouse'},
   // In transit
-  {frNum:'FR-2026-005',poNum:'PO-2026-005',sku:'WAL-Batana-Serum',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL112233445',costGbp:188.0,departure:'08/05/2026',eta:'16/05/2026',customs:'Cleared',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
-  {frNum:'FR-2026-006',poNum:'PO-2026-006',sku:'VAL-FBA-TOILET-BRUSH-4',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU55566677',costGbp:112.0,departure:'25/05/2026',eta:'12/06/2026',customs:'Filed',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
+  {frNum:'FR-2026-005',poNum:'PO-2026-005',sku:'WAL-OIL-PUR-118',forwarder:'Eco',carrier:'DHL Express',mode:'Air Express',tracking:'DHL112233445',costGbp:188.0,departure:'08/05/2026',eta:'16/05/2026',customs:'Cleared',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
+  {frNum:'FR-2026-006',poNum:'PO-2026-006',sku:'WAL-TB-FBA-04',forwarder:'Colin',carrier:'DPD',mode:'Sea LCL',tracking:'COSU55566677',costGbp:112.0,departure:'25/05/2026',eta:'12/06/2026',customs:'Filed',arrivalDate:'',deliveredTo:'',shipStage:'In Transit'},
   // Booked / dispatched
   {frNum:'FR-2026-007',poNum:'PO-2026-007',sku:'BYM-OIL-ROS-50',forwarder:'Eco',carrier:'Evri Business',mode:'Air Express',tracking:'EVR778899001',costGbp:95.0,departure:'',eta:'20/06/2026',customs:'Not Filed',arrivalDate:'',deliveredTo:'',shipStage:'Booked'},
  ],
  inventory:[
-  {sku:'VAL-FBA-TOILET-BRUSH-1',fba:145,tpl:0,warehouse:50,reserved:10,velocity:8.5,leadDays:45,location:'FBA UK'},
-  {sku:'VAL-FBA-TOILET-BRUSH-4',fba:38,tpl:0,warehouse:0,reserved:0,velocity:6.2,leadDays:45,location:'FBA UK'},
-  {sku:'FBA-TOILET-BRUSH-BLK-2',fba:72,tpl:0,warehouse:20,reserved:0,velocity:4.8,leadDays:45,location:'FBA UK'},
-  {sku:'TB 2-Grey-FBA',fba:95,tpl:0,warehouse:30,reserved:0,velocity:4.0,leadDays:45,location:'FBA UK'},
-  {sku:'VAL-FBM-TOILET-BRUSH-1',fba:28,tpl:15,warehouse:0,reserved:0,velocity:2.1,leadDays:45,location:'FBA UK'},
-  {sku:'WAL-Batana-Raw 2Pcs',fba:88,tpl:0,warehouse:30,reserved:5,velocity:5.2,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-Batana-3in1',fba:42,tpl:0,warehouse:0,reserved:0,velocity:3.1,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-Batana-Pure',fba:35,tpl:0,warehouse:10,reserved:0,velocity:2.8,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-Batana-Serum',fba:55,tpl:0,warehouse:20,reserved:0,velocity:3.8,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-Batana-Raw',fba:22,tpl:0,warehouse:8,reserved:0,velocity:1.9,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-BatanaContainer-Herb',fba:18,tpl:0,warehouse:0,reserved:0,velocity:1.5,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-BatanaContainer-Rose',fba:15,tpl:0,warehouse:0,reserved:0,velocity:1.3,leadDays:30,location:'FBA UK'},
-  {sku:'WAL-BatanaSampoo-Herb',fba:24,tpl:0,warehouse:10,reserved:0,velocity:2.0,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-TB-FBA-01',fba:145,tpl:0,warehouse:50,reserved:10,velocity:8.5,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-FBA-04',fba:38,tpl:0,warehouse:0,reserved:0,velocity:6.2,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-BLK-02',fba:72,tpl:0,warehouse:20,reserved:0,velocity:4.8,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-GRY-02',fba:95,tpl:0,warehouse:30,reserved:0,velocity:4.0,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-TB-FBM-01',fba:28,tpl:15,warehouse:0,reserved:0,velocity:2.1,leadDays:45,location:'FBA UK'},
+  {sku:'WAL-OIL-RAW-01',fba:88,tpl:0,warehouse:30,reserved:5,velocity:5.2,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-OIL-RAW-02',fba:42,tpl:0,warehouse:0,reserved:0,velocity:3.1,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-OIL-3IN1-01',fba:35,tpl:0,warehouse:10,reserved:0,velocity:2.8,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-OIL-PUR-118',fba:55,tpl:0,warehouse:20,reserved:0,velocity:3.8,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-SRM-60',fba:22,tpl:0,warehouse:8,reserved:0,velocity:1.9,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-CON-HERB-01',fba:18,tpl:0,warehouse:0,reserved:0,velocity:1.5,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-CON-ROSE-01',fba:15,tpl:0,warehouse:0,reserved:0,velocity:1.3,leadDays:30,location:'FBA UK'},
+  {sku:'WAL-SHP-HERB-01',fba:24,tpl:0,warehouse:10,reserved:0,velocity:2.0,leadDays:30,location:'FBA UK'},
   {sku:'LMN-DHB-1PC',fba:32,tpl:20,warehouse:0,reserved:0,velocity:2.5,leadDays:40,location:'FBA UK'},
   {sku:'LMN-DHB-2PC',fba:14,tpl:10,warehouse:0,reserved:0,velocity:1.8,leadDays:40,location:'FBA UK'},
   {sku:'LMN-EWR-01',fba:8,tpl:0,warehouse:0,reserved:0,velocity:1.2,leadDays:35,location:'FBA UK'},
@@ -1580,13 +1457,13 @@ const SEED={
   {sku:'LMN-FGR-ELC-01',fba:0,tpl:0,warehouse:12,reserved:0,velocity:0.8,leadDays:40,location:'Own Warehouse'},
  ],
  profit:[
-  {sku:'VAL-FBA-TOILET-BRUSH-1',platform:'Amazon UK',sellGbp:9.99,referralPct:15,fbaFee:2.85,fbmFee:0,storageFee:0.05,returnRate:2},
-  {sku:'VAL-FBA-TOILET-BRUSH-4',platform:'Amazon UK',sellGbp:24.99,referralPct:15,fbaFee:4.50,fbmFee:0,storageFee:0.08,returnRate:2},
-  {sku:'FBA-TOILET-BRUSH-BLK-2',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.31,fbmFee:0,storageFee:0.06,returnRate:2},
-  {sku:'TB 2-Grey-FBA',platform:'TikTok Shop UK',sellGbp:9.99,referralPct:8,fbaFee:0,fbmFee:1.50,storageFee:0,returnRate:3},
-  {sku:'WAL-Batana-Raw 2Pcs',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
-  {sku:'WAL-Batana-Serum',platform:'Amazon UK',sellGbp:18.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
-  {sku:'WAL-Batana-Pure',platform:'Amazon UK',sellGbp:16.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-TB-FBA-01',platform:'Amazon UK',sellGbp:9.99,referralPct:15,fbaFee:2.85,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-TB-FBA-04',platform:'Amazon UK',sellGbp:24.99,referralPct:15,fbaFee:4.50,fbmFee:0,storageFee:0.08,returnRate:2},
+  {sku:'WAL-TB-BLK-02',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.31,fbmFee:0,storageFee:0.06,returnRate:2},
+  {sku:'WAL-TB-GRY-02',platform:'TikTok Shop UK',sellGbp:9.99,referralPct:8,fbaFee:0,fbmFee:1.50,storageFee:0,returnRate:3},
+  {sku:'WAL-OIL-RAW-01',platform:'Amazon UK',sellGbp:14.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-OIL-PUR-118',platform:'Amazon UK',sellGbp:18.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
+  {sku:'WAL-OIL-3IN1-01',platform:'Amazon UK',sellGbp:16.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:2},
   {sku:'LMN-DHB-1PC',platform:'Amazon UK',sellGbp:7.99,referralPct:15,fbaFee:2.65,fbmFee:0,storageFee:0.04,returnRate:2},
   {sku:'LMN-DHB-2PC',platform:'Amazon UK',sellGbp:12.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.06,returnRate:2},
   {sku:'LMN-EWR-01',platform:'Amazon UK',sellGbp:16.99,referralPct:15,fbaFee:3.05,fbmFee:0,storageFee:0.05,returnRate:3},
@@ -1662,10 +1539,6 @@ function nav(name){
  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
  const pg=document.getElementById('page-'+name);
  if(pg) pg.classList.add('active');
- // Update static bottom bar active state
- document.querySelectorAll('#forge-static-bottombar .fbb-tab').forEach(function(t){
-   t.classList.remove('active');
- });
  // page-title lives in desktop topbar (hidden on mobile) — null-safe
  const ptEl=document.getElementById('page-title');
  if(ptEl) ptEl.innerHTML=`${NTITLES[name]} <span>${NSUBS[name]}</span>`;
@@ -1676,8 +1549,6 @@ function nav(name){
  if(mAddEl) mAddEl.style.display=ADDP[name]?'flex':'none';
  document.querySelectorAll('.nav-item')[NIDX[name]]?.classList.add('active');
  rp();
- // Call workspace if mobile layer loaded
- try{if(window.innerWidth<=768&&typeof _showWorkspace==='function')_showWorkspace(name);}catch(e){}
 }
 function rp(){renderPage(CP);updateBadges();}
 
@@ -7578,17 +7449,14 @@ function _injectBottomBar(){
   if(document.getElementById('forge-bottom-bar')) return;
   const tabs=[
     {id:'dashboard',icon:'📊',label:'Home'},
-    {id:'orders',icon:'📋',label:'Orders'},
     {id:'inventory',icon:'📈',label:'Inventory'},
+    {id:'orders',icon:'📋',label:'Orders'},
     {id:'activity',icon:'📝',label:'Activity'},
-    {id:'__more__',icon:'⋯',label:'More'},
   ];
   const el=document.createElement('div');
   el.id='forge-bottom-bar';
   el.innerHTML=tabs.map(t=>`
-    <button class="fbb-tab" data-nav="${t.id}"
-      onclick="${t.id==='__more__'?'ForgeMobile.openMorePanel()':'ForgeMobile.navTo(\"'+t.id+'\")'}"
-      aria-label="${t.label}">
+    <button class="fbb-tab" data-nav="${t.id}" onclick="ForgeMobile.navTo('${t.id}')" aria-label="${t.label}">
       <span class="fbb-icon">${t.icon}</span>
       <span>${t.label}</span>
     </button>`).join('');
@@ -7686,7 +7554,6 @@ function _activate(){
   _injectTopbar();
   _injectBottomBar();
   _injectFullscreenMenu();
-  _injectMorePanel();
   // Sync badge periodically (only set up once)
   if(!window._forgeMobileBadgeTimer){
     window._forgeMobileBadgeTimer=setInterval(_syncNotifBadge,2000);
@@ -7700,8 +7567,6 @@ function _activate(){
       _updatePageLabel(page);
       _updateBottomBar(page);
       _updateMenuUser();
-      // Show workspace overlay for primary tabs
-      if(_isMob()) _showWorkspace(page);
       return r;
     };
   }
@@ -7714,9 +7579,6 @@ function _activate(){
   _updateBottomBar(curPage);
   // Re-render current page so mobile cards populate
   if(typeof rp==='function') setTimeout(rp,50);
-  // Inject workspace container + show initial workspace
-  _injectWorkspaceContainer();
-  setTimeout(()=>_showWorkspace(typeof CP!=='undefined'?CP:'dashboard'),80);
   // Also init fmt-add-btn visibility
   if(typeof ADDP!=='undefined'&&typeof CP!=='undefined'){
     const mab=document.getElementById('fmt-add-btn');
@@ -7730,47 +7592,8 @@ function _activate(){
 /* ── 11. Deactivate (on resize back to desktop) ── */
 function _deactivate(){
   document.body.classList.remove('forge-mobile-active');
-  const ids=['forge-mobile-topbar','forge-bottom-bar','forge-fullscreen-menu','forge-more-panel','forge-mobile-ws'];
+  const ids=['forge-mobile-topbar','forge-bottom-bar','forge-fullscreen-menu'];
   ids.forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
-}
-
-/* ── 11b. More Panel inject ── */
-function _injectMorePanel(){
-  if(document.getElementById('forge-more-panel')) return;
-  const items=[
-    {icon:'🧮',label:'FBA Calculator',id:'feecalc'},
-    {icon:'🚢',label:'Freight Calc',id:'freight'},
-    {icon:'📉',label:'P&L',id:'pnl'},
-    {icon:'💸',label:'Cashflow',id:'cashflow'},
-    {icon:'🏭',label:'Suppliers',id:'suppliers'},
-    {icon:'🔍',label:'Product Info',id:'prodinfo'},
-    {icon:'🚀',label:'Launch Planner',id:'launch'},
-    {icon:'📤',label:'FBA Ships',id:'fbaship'},
-    {icon:'⟳',label:'ICC Calc',id:'icc'},
-    {icon:'🛒',label:'Amazon',id:'amazon'},
-    {icon:'💰',label:'Landed Cost',id:'profit'},
-    {icon:'⚙️',label:'Config',id:'config'},
-    {icon:'🛡️',label:'Admin',id:'admin'},
-  ];
-  const el=document.createElement('div');
-  el.id='forge-more-panel';
-  el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)">
-      <div style="font-size:16px;font-weight:800;color:var(--accent2)">More</div>
-      <button onclick="ForgeMobile.closeMorePanel()" style="width:40px;height:40px;border:none;background:var(--surface2);border-radius:8px;font-size:18px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">✕</button>
-    </div>
-    <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:80px">
-      ${items.map(it=>`
-        <button onclick="ForgeMobile.navTo('${it.id}');ForgeMobile.closeMorePanel()"
-          style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-                 padding:16px 8px;background:var(--surface);border:1px solid var(--border);
-                 border-radius:12px;cursor:pointer;min-height:78px;
-                 -webkit-tap-highlight-color:transparent;transition:background .1s">
-          <span style="font-size:26px">${it.icon}</span>
-          <span style="font-size:11.5px;font-weight:600;color:var(--text2);text-align:center;line-height:1.3">${it.label}</span>
-        </button>`).join('')}
-    </div>`;
-  document.body.appendChild(el);
 }
 
 /* ── 12. Public API ── */
@@ -7788,369 +7611,12 @@ window.ForgeMobile={
     m.classList.remove('open');
     document.body.classList.remove('mobile-menu-open');
   },
-  openMorePanel:function(){
-    _injectMorePanel();
-    const mp=document.getElementById('forge-more-panel');
-    if(!mp) return;
-    mp.style.display='flex';
-    mp.style.flexDirection='column';
-    mp.style.position='fixed';
-    mp.style.inset='0';
-    mp.style.background='var(--bg)';
-    mp.style.zIndex='201';
-    mp.style.overflowY='auto';
-    // Mark More tab as active
-    document.querySelectorAll('.fbb-tab').forEach(t=>{
-      t.classList.toggle('active',t.dataset.nav==='__more__');
-    });
-    document.body.classList.add('mobile-menu-open');
-  },
-  closeMorePanel:function(){
-    const mp=document.getElementById('forge-more-panel');
-    if(mp) mp.style.display='none';
-    document.body.classList.remove('mobile-menu-open');
-    // Restore active tab
-    if(typeof CP!=='undefined'){
-      document.querySelectorAll('.fbb-tab').forEach(t=>{
-        t.classList.toggle('active',t.dataset.nav===CP);
-      });
-    }
-  },
   navTo:function(page){
     if(typeof nav==='function') nav(page);
   },
 };
 
-/* ── 12b. Mobile Workspace Renderers ── */
-
-function _renderMobileHome(){
-  const orders    = DB.orders||[];
-  const products  = DB.products||[];
-  const inventory = DB.inventory||[];
-  const suppliers = DB.suppliers||[];
-
-  // Products
-  const totalProducts  = products.length;
-  const activeProducts = products.filter(p=>p.status==='Active').length;
-
-  // Orders — match real stage names
-  const totalOrders   = orders.length;
-  const pendingOrders = orders.filter(o=>['Order Placed','Deposit Paid','In Production','QC Check','Confirmed'].includes(o.stage)).length;
-  const inTransitOrders = orders.filter(o=>['Ready to Ship','Shipped','In Transit'].includes(o.stage)).length;
-  const completedOrders = orders.filter(o=>o.stage==='Delivered').length;
-  const pendingPayment  = orders.filter(o=>o.payStatus==='Pending'||o.payStatus==='Partial').length;
-
-  // Inventory
-  const totalInv = inventory.reduce((s,i)=>{
-    return s+(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
-  },0);
-  const lowStock = inventory.filter(i=>{
-    const avail=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
-    return avail>0&&avail<=(i.reorderPoint||20);
-  }).length;
-  const outStock = inventory.filter(i=>(i.fba||0)+(i.tpl||0)+(i.warehouse||0)===0).length;
-
-  // Inventory value — use sellGbp from product if costRmb not matched
-  const invValue = inventory.reduce((s,i)=>{
-    const avail=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
-    const prod=typeof gp==='function'?gp(i.sku):{};
-    const unitCost=prod.sellGbp||cgbp(prod)||0;
-    return s+(avail*unitCost);
-  },0);
-
-  const recentOrders = [...orders].sort((a,b)=>b.date>a.date?1:-1).slice(0,4);
-
-  const alerts = [];
-  if(outStock>0) alerts.push({type:'red',icon:'🔴',text:`${outStock} SKU${outStock>1?'s':''} out of stock`});
-  if(lowStock>0) alerts.push({type:'yellow',icon:'⚠️',text:`${lowStock} SKU${lowStock>1?'s':''} below reorder point`});
-  if(pendingPayment>0) alerts.push({type:'yellow',icon:'💳',text:`${pendingPayment} order${pendingPayment>1?'s':''} with payment pending`});
-  if(inTransitOrders>0) alerts.push({type:'green',icon:'🚢',text:`${inTransitOrders} order${inTransitOrders>1?'s':''} in transit`});
-
-  return `
-    <div class="mws-kpi-scroll">
-      <div class="mws-kpi-card">
-        <div class="mws-kpi-val">${activeProducts}</div>
-        <div class="mws-kpi-label">Active SKUs</div>
-      </div>
-      <div class="mws-kpi-card">
-        <div class="mws-kpi-val" style="color:var(--yellow)">${pendingOrders}</div>
-        <div class="mws-kpi-label">Pending Orders</div>
-      </div>
-      <div class="mws-kpi-card">
-        <div class="mws-kpi-val" style="color:var(--accent2)">${inTransitOrders}</div>
-        <div class="mws-kpi-label">In Transit</div>
-      </div>
-      <div class="mws-kpi-card">
-        <div class="mws-kpi-val" style="color:var(--green)">${completedOrders}</div>
-        <div class="mws-kpi-label">Delivered</div>
-      </div>
-      <div class="mws-kpi-card">
-        <div class="mws-kpi-val" style="color:${outStock>0?'var(--red)':'var(--green)'}">${outStock}</div>
-        <div class="mws-kpi-label">Out of Stock</div>
-      </div>
-      <div class="mws-kpi-card">
-        <div class="mws-kpi-val" style="font-size:14px">${typeof fmt==='function'?fmt(invValue):'—'}</div>
-        <div class="mws-kpi-label">Stock Value</div>
-      </div>
-    </div>
-    ${alerts.length?alerts.map(a=>`<div class="mws-alert ${a.type}"><span class="mws-alert-icon">${a.icon}</span><span class="mws-alert-text">${a.text}</span></div>`).join(''):''}
-    <div class="mws-section-head">
-      <span class="mws-section-title">Quick Actions</span>
-    </div>
-    <div class="mws-qa-grid">
-      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('orders')"><span class="mws-qa-icon">➕</span>New Order</button>
-      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('inventory')"><span class="mws-qa-icon">📦</span>Add Stock</button>
-      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('feecalc')"><span class="mws-qa-icon">🧮</span>FBA Calc</button>
-      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('freight')"><span class="mws-qa-icon">🚢</span>Freight</button>
-      <button class="mws-qa-btn" onclick="ForgeMobile.navTo('pnl')"><span class="mws-qa-icon">📉</span>P&L</button>
-      <button class="mws-qa-btn" onclick="ForgeMobile.openMorePanel()"><span class="mws-qa-icon">⋯</span>More</button>
-    </div>
-    ${recentOrders.length?`
-    <div class="mws-section-head">
-      <span class="mws-section-title">Recent Orders</span>
-      <button class="mws-section-link" onclick="ForgeMobile.navTo('orders')">See all</button>
-    </div>
-    <div class="mws-surface">
-      ${recentOrders.map(o=>{
-        const p=typeof gp==='function'?gp(o.sku):{name:o.sku};
-        const sc={'Delivered':'var(--green)','Shipped':'var(--accent2)','In Transit':'var(--accent2)','Ready to Ship':'var(--accent2)','Order Placed':'var(--yellow)','Deposit Paid':'var(--yellow)','In Production':'var(--text3)','QC Check':'var(--text3)'};
-        const stageColor=sc[o.stage]||'var(--text)';
-        const paidFmt=typeof fmt==='function'?fmt(o.paid):'—';
-        return '<div class="mws-row">'
-          +'<div class="mws-row-left">'
-          +'<div class="mws-row-title">'+o.poNum+'</div>'
-          +'<div class="mws-row-sub">'+(p.name||o.sku)+' · '+o.date+'</div>'
-          +'</div>'
-          +'<div class="mws-row-right">'
-          +'<div class="mws-row-val" style="color:'+stageColor+';font-size:11px">'+o.stage+'</div>'
-          +'<div class="mws-row-sub2">'+paidFmt+'</div>'
-          +'</div></div>';
-      }).join('')}
-    </div>`:''}`;
-}
-
-function _renderMobileOrders(){
-  const orders = DB.orders||[];
-  const total   = orders.length;
-  // Match actual SEED stage names
-  const pending = orders.filter(o=>['Order Placed','Deposit Paid','In Production','QC Check','Confirmed'].includes(o.stage)).length;
-  const transit = orders.filter(o=>['Ready to Ship','Shipped','In Transit'].includes(o.stage)).length;
-  const delivered= orders.filter(o=>o.stage==='Delivered').length;
-  const recent  = [...orders].sort((a,b)=>b.date>a.date?1:-1).slice(0,8);
-  return `
-    <div class="mws-kpi-scroll">
-      <div class="mws-kpi-card"><div class="mws-kpi-val">${total}</div><div class="mws-kpi-label">Total</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--yellow)">${pending}</div><div class="mws-kpi-label">Pending</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--accent2)">${transit}</div><div class="mws-kpi-label">In Transit</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--green)">${delivered}</div><div class="mws-kpi-label">Delivered</div></div>
-    </div>
-    <button class="mws-cta-btn" onclick="if(typeof openAddModal==='function')openAddModal()">➕ Create New Order</button>
-    <div class="mws-section-head">
-      <span class="mws-section-title">Recent Orders</span>
-      <button class="mws-section-link" onclick="ForgeMobile.navTo('orders')">Full View</button>
-    </div>
-    <div class="mws-surface">
-      ${recent.length?recent.map(o=>{
-        const p=typeof gp==='function'?gp(o.sku):{name:o.sku};
-        const stageColors={'Delivered':'var(--green)','Shipped':'var(--accent2)','In Transit':'var(--accent2)','Ready to Ship':'var(--accent2)','Order Placed':'var(--yellow)','Deposit Paid':'var(--yellow)','In Production':'var(--text3)','QC Check':'var(--text3)','Confirmed':'var(--yellow)'};
-        const sup=typeof gs==='function'?gs(o.supplierId):{};
-        return `<div class="mws-row">
-          <div class="mws-row-left">
-            <div class="mws-row-title">${o.poNum}</div>
-            <div class="mws-row-sub">${p.name||o.sku} · ${o.qty} units · ${sup.name||''}</div>
-          </div>
-          <div class="mws-row-right">
-            <div class="mws-row-val" style="color:${stageColors[o.stage]||'var(--text)'}; font-size:11px">${o.stage}</div>
-            <div class="mws-row-sub2">${o.date}</div>
-          </div>
-        </div>`;
-      }).join(''):'<div class="mws-empty"><div class="mws-empty-icon">📋</div><div>No orders yet</div></div>'}
-    </div>`;
-}
-
-function _renderMobileInventory(){
-  const inv = DB.inventory||[];
-  const avail  = inv.reduce((s,i)=>{const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);return s+a;},0);
-  const low    = inv.filter(i=>{const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);return a>0&&a<=(i.reorderPoint||20);});
-  const out    = inv.filter(i=>(i.fba||0)+(i.tpl||0)+(i.warehouse||0)===0);
-  const inTrans= inv.reduce((s,i)=>{const t=typeof getInTransit==='function'?getInTransit(i.sku):0;return s+t;},0);
-  const value  = inv.reduce((s,i)=>{
-    const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
-    const p=typeof gp==='function'?gp(i.sku):{};
-    // Use sellGbp first, fall back to costRmb conversion
-    const unitVal=p.sellGbp||(typeof cgbp==='function'?cgbp(p):0);
-    return s+(a*unitVal);
-  },0);
-  const sorted = [...inv].sort((a,b)=>{
-    const aa=(a.fba||0)+(a.tpl||0)+(a.warehouse||0);
-    const ba=(b.fba||0)+(b.tpl||0)+(b.warehouse||0);
-    return aa-ba;
-  }).slice(0,8);
-  return `
-    <div class="mws-kpi-scroll">
-      <div class="mws-kpi-card"><div class="mws-kpi-val">${avail}</div><div class="mws-kpi-label">Available</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--yellow)">${low.length}</div><div class="mws-kpi-label">Low Stock</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--red)">${out.length}</div><div class="mws-kpi-label">Out of Stock</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--accent2)">${inTrans}</div><div class="mws-kpi-label">Incoming</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="font-size:14px">${typeof fmt==='function'?fmt(value):'—'}</div><div class="mws-kpi-label">Value</div></div>
-    </div>
-    ${out.length>0?`<div class="mws-alert red"><span class="mws-alert-icon">🔴</span><span class="mws-alert-text">${out.length} SKU${out.length>1?'s':''} out of stock: ${out.slice(0,2).map(i=>i.sku).join(', ')}${out.length>2?'…':''}</span></div>`:''}
-    ${low.length>0?`<div class="mws-alert"><span class="mws-alert-icon">⚠️</span><span class="mws-alert-text">${low.length} SKU${low.length>1?'s':''} below reorder point</span></div>`:''}
-    <button class="mws-cta-btn" onclick="if(typeof openAddModal==='function')openAddModal()">➕ Add Inventory</button>
-    <div class="mws-section-head">
-      <span class="mws-section-title">Stock Levels</span>
-      <button class="mws-section-link" onclick="ForgeMobile.navTo('inventory')">Full View</button>
-    </div>
-    <div class="mws-surface">
-      ${sorted.length?sorted.map(i=>{
-        const p=typeof gp==='function'?gp(i.sku):{name:i.sku};
-        const a=(i.fba||0)+(i.tpl||0)+(i.warehouse||0);
-        const alert=typeof getAlert==='function'?getAlert(i):{cls:'badge-grey',label:'—'};
-        return `<div class="mws-row">
-          <div class="mws-row-left">
-            <div class="mws-row-title">${p.name||i.sku}</div>
-            <div class="mws-row-sub">${i.sku}</div>
-          </div>
-          <div class="mws-row-right">
-            <div class="mws-row-val">${a} units</div>
-            <div class="mws-row-sub2"><span class="badge ${alert.cls}" style="font-size:9px">${alert.label}</span></div>
-          </div>
-        </div>`;
-      }).join(''):'<div class="mws-empty"><div class="mws-empty-icon">📦</div><div>No inventory yet</div></div>'}
-    </div>`;
-}
-
-function _renderMobileActivity(){
-  // PRIMARY source: DB.activity — operational activity log (product launches, changes etc)
-  const dbActivity = DB.activity||[];
-
-  // SECONDARY source: forge_audit_log — system audit (login/logout/settings)
-  let auditLog=[];
-  try{
-    const raw=localStorage.getItem('forge_audit_log');
-    if(raw) auditLog=JSON.parse(raw);
-  }catch(e){}
-
-  // Notifications from cache
-  let notifs=[];
-  try{
-    if(typeof ForgeNotificationService!=='undefined'){
-      const cached=ForgeNotificationService.getCache();
-      notifs=(Array.isArray(cached)?cached:[]).slice(0,5);
-    }
-  }catch(e){}
-
-  // Tasks
-  let tasks=[];
-  try{const raw=localStorage.getItem('forge_admin_tasks');if(raw)tasks=JSON.parse(raw);}catch(e){}
-  const openTasks=tasks.filter(t=>t.status!=='Done'&&t.status!=='Completed');
-
-  return `
-    <div class="mws-kpi-scroll">
-      <div class="mws-kpi-card"><div class="mws-kpi-val">${dbActivity.length}</div><div class="mws-kpi-label">Op. Activity</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val">${auditLog.length}</div><div class="mws-kpi-label">Audit Events</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--accent2)">${openTasks.length}</div><div class="mws-kpi-label">Open Tasks</div></div>
-      <div class="mws-kpi-card"><div class="mws-kpi-val" style="color:var(--yellow)">${notifs.filter(n=>!n.read).length}</div><div class="mws-kpi-label">Unread</div></div>
-    </div>
-    ${notifs.length?`
-    <div class="mws-section-head">
-      <span class="mws-section-title">Notifications</span>
-      <button class="mws-section-link" onclick="if(typeof openNotificationPanel==='function')openNotificationPanel()">See all</button>
-    </div>
-    <div class="mws-surface">
-      ${notifs.map(n=>`<div class="mws-row">
-        <div class="mws-row-left">
-          <div class="mws-row-title">${n.title||'Notification'}</div>
-          <div class="mws-row-sub">${n.message||''}</div>
-        </div>
-        <div class="mws-row-right">
-          <div class="mws-row-sub2">${n.read?'Read':'<span style="color:var(--accent2);font-weight:700">Unread</span>'}</div>
-        </div>
-      </div>`).join('')}
-    </div>`:''}
-    <div class="mws-section-head">
-      <span class="mws-section-title">Operational Activity</span>
-      <button class="mws-section-link" onclick="ForgeMobile.navTo('activity')">Full Log</button>
-    </div>
-    <div class="mws-surface">
-      ${dbActivity.length?dbActivity.slice().reverse().slice(0,10).map(a=>`<div class="mws-row">
-        <div class="mws-row-left">
-          <div class="mws-row-title">${a.what||a.action||'Activity'}</div>
-          <div class="mws-row-sub">${a.category||''} · ${a.ref||''} · ${a.doneBy||''}</div>
-        </div>
-        <div class="mws-row-right">
-          <div class="mws-row-val" style="font-size:10px"><span class="badge badge-blue">${a.status||''}</span></div>
-          <div class="mws-row-sub2">${a.date||''}</div>
-        </div>
-      </div>`).join(''):'<div class="mws-empty"><div class="mws-empty-icon">📝</div><div>No operational activity yet</div></div>'}
-    </div>
-    ${auditLog.length?`
-    <div class="mws-section-head">
-      <span class="mws-section-title">System Audit</span>
-    </div>
-    <div class="mws-surface">
-      ${auditLog.slice(0,8).map(e=>`<div class="mws-row">
-        <div class="mws-row-left">
-          <div class="mws-row-title">${e.action||e.type||'Event'}</div>
-          <div class="mws-row-sub">${e.user||e.userName||''} · ${e.details||''}</div>
-        </div>
-        <div class="mws-row-right">
-          <div class="mws-row-sub2">${e.time||e.timestamp||''}</div>
-        </div>
-      </div>`).join('')}
-    </div>`:''}`;
-}
-
-/* ── 12c. Mobile Workspace Container (injected into .content) ── */
-function _injectWorkspaceContainer(){
-  if(document.getElementById('forge-mobile-ws')) return;
-  const ws=document.createElement('div');
-  ws.id='forge-mobile-ws';
-  // Fixed overlay at body level — NOT inside .content
-  // This ensures it sits over the desktop pages, not in DOM flow after them
-  ws.style.cssText=[
-    'display:none',
-    'position:fixed',
-    'top:52px',
-    'bottom:calc(56px + env(safe-area-inset-bottom,0px))',
-    'left:0',
-    'right:0',
-    'z-index:110',
-    'overflow-y:auto',
-    '-webkit-overflow-scrolling:touch',
-    'background:var(--bg)',
-    'flex-direction:column',
-  ].join(';');
-  document.body.appendChild(ws);
-}
-
-/* ── 12d. Show workspace for a tab ── */
-function _showWorkspace(page){
-  const ws=document.getElementById('forge-mobile-ws');
-  if(!ws) return;
-  const WS_PAGES=['dashboard','orders','inventory','activity'];
-  if(!WS_PAGES.includes(page)){
-    ws.style.display='none';
-    ws.innerHTML='';
-    return;
-  }
-  let html='';
-  try{
-    if(page==='dashboard')  html=_renderMobileHome();
-    else if(page==='orders')     html=_renderMobileOrders();
-    else if(page==='inventory')  html=_renderMobileInventory();
-    else if(page==='activity')   html=_renderMobileActivity();
-  }catch(e){
-    html=`<div class="mws-empty"><div class="mws-empty-icon">⚠️</div><div>Could not load workspace</div></div>`;
-    console.warn('[FORGE Mobile WS]',e);
-  }
-  ws.innerHTML=html;
-  ws.style.display='flex';
-  ws.style.flexDirection='column';
-  // No need to hide desktop pages — fixed overlay covers them
-}
-
-/* ── 13. Backward-compat: sidebar toggle ── */
+/* ── 13. Backward-compat: sidebar toggle (no-op on mobile — menu replaces it) ── */
 window.toggleMobileSidebar=function(){
   if(_isMob()) ForgeMobile.openMenu();
 };
@@ -8160,16 +7626,6 @@ window.closeMobileSidebar=function(){
 window.openMobileSidebar=function(){
   if(_isMob()) ForgeMobile.openMenu();
 };
-
-/* ── 14. IMMEDIATE ACTIVATION — do not wait for _check() ── */
-try{
-  if(window.innerWidth<=768){
-    _mobileActive=true;
-    _activate();
-  }
-}catch(e){
-  console.error('[FORGE] Mobile activate error:',e);
-}
 
 /* ── 14. Init + resize listener ── */
 let _mobileActive=false;
@@ -8203,24 +7659,5 @@ document.addEventListener('keydown',function(e){
 
 })();
 </script>
-
-<!-- STATIC MOBILE BOTTOM BAR — always in DOM, shown on mobile -->
-<div id="forge-static-bottombar" style="display:none">
-  <button class="fbb-tab" onclick="try{if(typeof nav==='function')nav('dashboard')}catch(e){}" aria-label="Home">
-    <span class="fbb-icon">📊</span><span>Home</span>
-  </button>
-  <button class="fbb-tab" onclick="try{if(typeof nav==='function')nav('orders')}catch(e){}" aria-label="Orders">
-    <span class="fbb-icon">📋</span><span>Orders</span>
-  </button>
-  <button class="fbb-tab" onclick="try{if(typeof nav==='function')nav('inventory')}catch(e){}" aria-label="Inventory">
-    <span class="fbb-icon">📈</span><span>Inventory</span>
-  </button>
-  <button class="fbb-tab" onclick="try{if(typeof nav==='function')nav('activity')}catch(e){}" aria-label="Activity">
-    <span class="fbb-icon">📝</span><span>Activity</span>
-  </button>
-  <button class="fbb-tab" onclick="try{if(typeof ForgeMobile!=='undefined')ForgeMobile.openMorePanel();else{var m=document.getElementById('forge-fullscreen-menu');if(m)m.classList.add('open')}}catch(e){}" aria-label="More">
-    <span class="fbb-icon">⋯</span><span>More</span>
-  </button>
-</div>
 </body>
 </html>
