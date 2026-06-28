@@ -722,6 +722,18 @@ background:var(--surface);border:1px solid var(--border);border-radius:10px;over
   }
   .mws-cta-btn:active{opacity:.85;}
 }
+
+/* Static bottom bar — always in HTML, shown only on mobile */
+@media(max-width:768px){
+  #forge-static-bottombar{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;
+    height:calc(56px + env(safe-area-inset-bottom,0px));
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    background:var(--surface);border-top:1px solid var(--border);
+    z-index:120;
+  }
+}
 </style>
 </head>
 <body>
@@ -1650,6 +1662,10 @@ function nav(name){
  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
  const pg=document.getElementById('page-'+name);
  if(pg) pg.classList.add('active');
+ // Update static bottom bar active state
+ document.querySelectorAll('#forge-static-bottombar .fbb-tab').forEach(function(t){
+   t.classList.remove('active');
+ });
  // page-title lives in desktop topbar (hidden on mobile) — null-safe
  const ptEl=document.getElementById('page-title');
  if(ptEl) ptEl.innerHTML=`${NTITLES[name]} <span>${NSUBS[name]}</span>`;
@@ -1660,6 +1676,8 @@ function nav(name){
  if(mAddEl) mAddEl.style.display=ADDP[name]?'flex':'none';
  document.querySelectorAll('.nav-item')[NIDX[name]]?.classList.add('active');
  rp();
+ // Call workspace if mobile layer loaded
+ try{if(window.innerWidth<=768&&typeof _showWorkspace==='function')_showWorkspace(name);}catch(e){}
 }
 function rp(){renderPage(CP);updateBadges();}
 
@@ -8132,7 +8150,7 @@ function _showWorkspace(page){
   // No need to hide desktop pages — fixed overlay covers them
 }
 
-/* ── 13. Backward-compat: sidebar toggle (no-op on mobile — menu replaces it) ── */
+/* ── 13. Backward-compat: sidebar toggle ── */
 window.toggleMobileSidebar=function(){
   if(_isMob()) ForgeMobile.openMenu();
 };
@@ -8142,6 +8160,16 @@ window.closeMobileSidebar=function(){
 window.openMobileSidebar=function(){
   if(_isMob()) ForgeMobile.openMenu();
 };
+
+/* ── 14. IMMEDIATE ACTIVATION — do not wait for _check() ── */
+try{
+  if(window.innerWidth<=768){
+    _mobileActive=true;
+    _activate();
+  }
+}catch(e){
+  console.error('[FORGE] Mobile activate error:',e);
+}
 
 /* ── 14. Init + resize listener ── */
 let _mobileActive=false;
@@ -8175,5 +8203,24 @@ document.addEventListener('keydown',function(e){
 
 })();
 </script>
+
+<!-- STATIC MOBILE BOTTOM BAR — always in DOM, shown on mobile -->
+<div id="forge-static-bottombar" style="display:none">
+  <button class="fbb-tab" onclick="try{if(typeof nav==='function')nav('dashboard')}catch(e){}" aria-label="Home">
+    <span class="fbb-icon">📊</span><span>Home</span>
+  </button>
+  <button class="fbb-tab" onclick="try{if(typeof nav==='function')nav('orders')}catch(e){}" aria-label="Orders">
+    <span class="fbb-icon">📋</span><span>Orders</span>
+  </button>
+  <button class="fbb-tab" onclick="try{if(typeof nav==='function')nav('inventory')}catch(e){}" aria-label="Inventory">
+    <span class="fbb-icon">📈</span><span>Inventory</span>
+  </button>
+  <button class="fbb-tab" onclick="try{if(typeof nav==='function')nav('activity')}catch(e){}" aria-label="Activity">
+    <span class="fbb-icon">📝</span><span>Activity</span>
+  </button>
+  <button class="fbb-tab" onclick="try{if(typeof ForgeMobile!=='undefined')ForgeMobile.openMorePanel();else{var m=document.getElementById('forge-fullscreen-menu');if(m)m.classList.add('open')}}catch(e){}" aria-label="More">
+    <span class="fbb-icon">⋯</span><span>More</span>
+  </button>
+</div>
 </body>
 </html>
